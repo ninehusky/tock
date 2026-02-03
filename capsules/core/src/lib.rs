@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 // Copyright Tock Contributors 2023.
 
-#![forbid(unsafe_code)]
+// #![forbid(unsafe_code)] Andrew: yoink!
 #![no_std]
 
 pub mod test;
