@@ -105,7 +105,10 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
                         start = cmp::min(start, end);
 
                         for (i, c) in src[start..end].iter().enumerate() {
-                            kwbuf[i] = c.get();
+                            // kwbuf[i] = c.get();
+                            unsafe {
+                                *kwbuf.get_unchecked_mut(i) = c.get();
+                            }
                         }
                         end - start
                     })
@@ -125,8 +128,7 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
 
 impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
     /// Provide read/write buffers to SpiPeripheral
-    ///
-    /// - allow_num 0: Provides a buffer to receive transfers into.
+    ///    /// - allow_num 0: Provides a buffer to receive transfers into.
 
     /// Provide read-only buffers to SpiPeripheral
     ///
@@ -298,7 +300,12 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
                                 let dest_area = &dest[start..end];
                                 let real_len = end - start;
 
-                                for (i, c) in src[0..real_len].iter().enumerate() {
+                                // to replace `src[0..real_len]`
+                                let src_area: &[u8] = unsafe {
+                                    core::slice::from_raw_parts((*src).as_ptr(), real_len)
+                                };
+
+                                for (i, c) in src_area.iter().enumerate() {
                                     dest_area[i].set(*c);
                                 }
                             })
