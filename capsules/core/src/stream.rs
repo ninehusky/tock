@@ -266,7 +266,10 @@ pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
 pub fn encode_bytes_be(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
     for (i, b) in bs.iter().rev().enumerate() {
-        buf[i] = *b;
+        // buf[i] = *b;
+        unsafe {
+            *buf.get_unchecked_mut(i) = *b;
+        }
     }
     stream_done!(bs.len());
 }

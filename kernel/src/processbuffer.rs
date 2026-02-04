@@ -877,7 +877,7 @@ impl Index<Range<usize>> for ReadableProcessSlice {
 
     #[flux_rs::no_panic]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
-        cast_byte_slice_to_process_slice(&self.slice[idx])
+        cast_byte_slice_to_process_slice(unsafe { &self.slice.get_unchecked(idx) })
     }
 }
 
@@ -1123,7 +1123,16 @@ impl Index<Range<usize>> for WriteableProcessSlice {
 
     #[flux_rs::no_panic]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
-        cast_cell_slice_to_process_slice(&self.slice[idx])
+        // cast_cell_slice_to_process_slice(&self.slice[idx])
+        unsafe {
+            let start = idx.start;
+            let len = idx.end - idx.start;
+
+            let ptr = self.slice.as_ptr().add(start);
+            let subslice = core::slice::from_raw_parts(ptr, len);
+
+            cast_cell_slice_to_process_slice(subslice)
+        }
     }
 }
 
@@ -1157,6 +1166,6 @@ impl Index<usize> for WriteableProcessSlice {
         // As WriteableProcessSlice is a transparent wrapper around
         // its inner type, [Cell<u8>], we can use the regular slicing
         // operator here with its usual semantics.
-        &self.slice[idx]
+        unsafe { &self.slice.get_unchecked(idx) }
     }
 }

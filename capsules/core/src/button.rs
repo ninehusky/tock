@@ -110,7 +110,7 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
     }
 
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
-        let pin = &self.pins[pin_num as usize];
+        let pin = unsafe { &self.pins.get_unchecked(pin_num as usize) };
         pin.0.read_activation(pin.1)
     }
 }
@@ -162,9 +162,11 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
                     self.apps
                         .enter(processid, |cntr, _| {
                             cntr.subscribe_map |= 1 << data;
-                            let _ = pins[data]
-                                .0
-                                .enable_interrupts(gpio::InterruptEdge::EitherEdge);
+                            let _ = unsafe {
+                                pins.get_unchecked(data)
+                                    .0
+                                    .enable_interrupts(gpio::InterruptEdge::EitherEdge)
+                            };
                             CommandReturn::success()
                         })
                         .unwrap_or_else(|err| CommandReturn::failure(err.into()))
@@ -196,7 +198,9 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 
                     // if not, disable the interrupt
                     if interrupt_count.get() == 0 {
-                        self.pins[data].0.disable_interrupts();
+                        unsafe {
+                            self.pins.get_unchecked(data).0.disable_interrupts();
+                        };
                     }
 
                     res
@@ -243,7 +247,12 @@ impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
         // (and didn't unregister the interrupt). Lazily disable interrupts for
         // this button if so.
         if interrupt_count.get() == 0 {
-            self.pins[pin_num as usize].0.disable_interrupts();
+            unsafe {
+                self.pins
+                    .get_unchecked(pin_num as usize)
+                    .0
+                    .disable_interrupts();
+            }
         }
     }
 }

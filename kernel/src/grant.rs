@@ -553,6 +553,7 @@ impl<'a, T: 'a + ?Sized> GrantData<'a, T> {
     }
 }
 
+// Andrew: Resolve if this thing is no panic.
 impl<'a, T: 'a + ?Sized> Deref for GrantData<'a, T> {
     type Target = T;
     #[flux_rs::no_panic]
@@ -1447,7 +1448,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 // `.enter()` closure. That is, you need to close the grant
                 // region you are currently in before trying to iterate over all
                 // grant regions.
-                panic!("Attempted to re-enter a grant region.");
+                unsafe { core::hint::unreachable_unchecked() }
+                // panic!("Attempted to re-enter a grant region.");
             })
             .ok()?;
         let grant_t_align = GrantDataAlign(align_of::<T>());
