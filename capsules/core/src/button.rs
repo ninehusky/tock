@@ -115,7 +115,7 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
         Self { pins, apps: grant }
     }
 
-    #[flux_rs::sig(fn (&Self[@r], pin_num: u32) -> gpio::ActivationState requires pin_num < pin_len)]
+    #[flux_rs::sig(fn (&Self[@r], pin_num: u32) -> gpio::ActivationState requires pin_num < r)]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
         // SAFETY: Caller must ensure pin_num is a valid index into self.pins.
         let pin = unsafe { &self.pins.get_unchecked(pin_num as usize) };
