@@ -105,7 +105,7 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
                         start = cmp::min(start, end);
 
                         for (i, c) in src[start..end].iter().enumerate() {
-                            // kwbuf[i] = c.get();
+                            // SAFETY: `i` must be a valid index into `kwbuf`, which is guaranteed by the length checks above.
                             unsafe {
                                 *kwbuf.get_unchecked_mut(i) = c.get();
                             }
@@ -301,6 +301,7 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
                                 let real_len = end - start;
 
                                 // to replace `src[0..real_len]`
+                                // SAFETY: `real_len` must be less than or equal to the length of `src`.
                                 let src_area: &[u8] = unsafe {
                                     core::slice::from_raw_parts((*src).as_ptr(), real_len)
                                 };
