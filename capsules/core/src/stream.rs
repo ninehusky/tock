@@ -265,8 +265,8 @@ pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
 // This function assumes that the host is little-endian
 pub fn encode_bytes_be(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
+    // SAFETY: if we make it here, we know that buf.len() >= bs.len(), so the following `unsafe` block is sound.
     for (i, b) in bs.iter().rev().enumerate() {
-        // buf[i] = *b;
         unsafe {
             *buf.get_unchecked_mut(i) = *b;
         }
