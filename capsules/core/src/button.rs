@@ -110,7 +110,7 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
         Self { pins, apps: grant }
     }
 
-    #[flux_rs::sig(fn (&Self[@r], pin_num: u32) -> gpio::ActivationState requires pin_num >= 0 && pin_num < r.pins.len())]
+    #[flux_rs::sig(fn (&Self[@r], pin_num: u32) -> gpio::ActivationState requires pin_num < r.pins.len())]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
         // SAFETY: Caller must ensure pin_num is a valid index into self.pins.
         let pin = unsafe { &self.pins.get_unchecked(pin_num as usize) };
@@ -144,11 +144,12 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
     /// - `2`: Disable interrupts for a button. No affect or reliance on
     ///   registered callback.
     /// - `3`: Read the current state of the button.
+    #[flux_rs::sig(fn (&Self[@r], command_num: usize, data: usize, _arg2: usize, processid: ProcessId) -> CommandReturn requires (command_num == 0) || (data < r.pins.len()))]
     fn command(
         &self,
         command_num: usize,
         data: usize,
-        _: usize,
+        _arg2: usize,
         processid: ProcessId,
     ) -> CommandReturn {
         let pins = self.pins;
@@ -165,6 +166,7 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
                     self.apps
                         .enter(processid, |cntr, _| {
                             cntr.subscribe_map |= 1 << data;
+                            // SAFETY: `data` has to be a valid index into `pins`.
                             let _ = unsafe {
                                 pins.get_unchecked(data)
                                     .0
@@ -201,6 +203,7 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 
                     // if not, disable the interrupt
                     if interrupt_count.get() == 0 {
+                        // SAFETY: `data` has to be a valid index into `pins`.
                         unsafe {
                             self.pins.get_unchecked(data).0.disable_interrupts();
                         };
@@ -215,6 +218,7 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
                 if data >= pins.len() {
                     CommandReturn::failure(ErrorCode::INVAL) /* impossible button */
                 } else {
+                    // SAFETY: `data` has to be a valid index into `pins`.
                     let button_state = self.get_button_state(data as u32);
                     CommandReturn::success_u32(button_state as u32)
                 }
