@@ -20,7 +20,7 @@ macro_rules! const_assume {
     ($cond:expr) => {
         const { assert!($cond) };
         $crate::assume($cond);
-    }
+    };
 }
 
 #[allow(dead_code)]

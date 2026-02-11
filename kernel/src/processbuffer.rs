@@ -1039,6 +1039,7 @@ impl WriteableProcessSlice {
     }
 
     /// Return the length of the slice in bytes.
+    #[flux_rs::sig(fn(&Self[@len]) -> usize [len])]
     pub fn len(&self) -> usize {
         self.slice.len()
     }
@@ -1090,10 +1091,12 @@ impl WriteableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(self: Self, idx: Range<int>) -> bool { idx.end <= self })]
 impl Index<Range<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &Self[@v], index: Range<usize> { Self::in_bounds(v, index) }) -> &Self::Output)]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
         // cast_cell_slice_to_process_slice(&self.slice[idx])
         unsafe {
@@ -1108,19 +1111,23 @@ impl Index<Range<usize>> for WriteableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(self: Self, idx: RangeTo<int>) -> bool { idx.end <= self })]
 impl Index<RangeTo<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &Self[@v], index: RangeTo<usize> { Self::in_bounds(v, index) }) -> &Self::Output)]
     fn index(&self, idx: RangeTo<usize>) -> &Self::Output {
         &self[0..idx.end]
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(self: Self, idx: RangeTo<int>) -> bool { idx.start <= self })]
 impl Index<RangeFrom<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &Self[@v], index: RangeFrom<usize> { Self::in_bounds(v, index) }) -> &Self::Output)]
     fn index(&self, idx: RangeFrom<usize>) -> &Self::Output {
         &self[idx.start..self.len()]
     }

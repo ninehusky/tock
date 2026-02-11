@@ -1,4 +1,5 @@
 mod cmp;
+mod index;
 mod iter;
 mod mem;
 mod non_null;
