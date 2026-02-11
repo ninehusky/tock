@@ -91,6 +91,7 @@ pub struct Button<'a, P: gpio::InterruptPin<'a>> {
     apps: Grant<App, UpcallCount<1>, AllowRoCount<0>, AllowRwCount<0>>,
 }
 
+#[flux_rs::assoc(fn pins_len(r: Self) -> int { r.pins.len() })]
 impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
     pub fn new(
         pins: &'a [(
@@ -109,7 +110,9 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
         Self { pins, apps: grant }
     }
 
+    #[flux_rs::sig(fn (&Self[@r], pin_num: u32) -> gpio::ActivationState requires pin_num >= 0 && pin_num < r.pins.len())]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
+        // SAFETY: Caller must ensure pin_num is a valid index into self.pins.
         let pin = unsafe { &self.pins.get_unchecked(pin_num as usize) };
         pin.0.read_activation(pin.1)
     }
