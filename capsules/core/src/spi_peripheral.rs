@@ -264,6 +264,13 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
 }
 
 impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
+    #[flux_rs::sig(fn (
+        &Self[@r],
+        Option<&mut [u8]>,
+        Option<&mut [u8]>,
+        usize,
+        Result<(), ErrorCode>
+    ))]
     fn read_write_done(
         &self,
         writebuf: Option<&'static mut [u8]>,

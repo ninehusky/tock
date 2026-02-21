@@ -4,8 +4,8 @@
 
 //! Types for Tock-compatible processes.
 
-use core::fmt;
 use core::fmt::Write;
+use core::fmt::{self, Binary};
 use core::num::NonZeroU32;
 use core::ptr::NonNull;
 use core::str;
@@ -315,14 +315,23 @@ pub enum StoppedExecutingReason {
     KernelPreemption,
 }
 
-/// The version of a binary.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+// Andrew: I need a way to specify Ord::min_no_panic,
+// but can't push that through to the `#derive[Ord]`
+// implementation.
+#[derive(PartialEq, Eq, PartialOrd, Debug)]
 pub struct BinaryVersion(NonZeroU32);
 
 impl BinaryVersion {
     /// Creates a new binary version.
     pub fn new(value: NonZeroU32) -> Self {
         Self(value)
+    }
+}
+
+#[flux_rs::assoc(fn min_no_panic() -> bool { true })]
+impl Ord for BinaryVersion {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.cmp(&other.0)
     }
 }
 

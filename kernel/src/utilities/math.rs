@@ -41,8 +41,17 @@ pub fn closest_power_of_two_usize(mut num: usize) -> usize {
     num
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
+// Andrew: pinching away the `derive[Ord]` here because we need the
+// associated refinement attached to it.
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq)]
 pub struct PowerOfTwo(u32);
+
+#[flux_rs::assoc(fn min_no_panic() -> bool { true })]
+impl Ord for PowerOfTwo {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
 
 /// Represents an integral power-of-two as an exponent
 impl PowerOfTwo {
@@ -66,7 +75,6 @@ impl PowerOfTwo {
     //     assume(v <= u32::MAX / 2);
     //     PowerOfTwo(log_base_two(closest_power_of_two(v)))
     // }
-
 
     /// Creates a new `PowerOfTwo` representing the number zero.
     pub fn zero() -> PowerOfTwo {

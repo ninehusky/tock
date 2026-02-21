@@ -1,8 +1,10 @@
+mod cmp;
 mod iter;
 mod mem;
 mod non_null;
 mod num;
 mod option;
+mod ord;
 mod partial_cmp;
 mod range;
 mod result;

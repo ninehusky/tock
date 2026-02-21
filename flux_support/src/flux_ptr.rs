@@ -121,6 +121,7 @@ impl core::ops::AddAssign<usize> for FluxPtr {
     }
 }
 
+#[flux_rs::assoc(fn min_no_panic() -> bool { true })]
 impl core::cmp::Ord for FluxPtr {
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.as_usize().cmp(&other.as_usize())
@@ -360,7 +361,12 @@ pub fn mem_slices_to_raw_ptrs(flash: &[u8], ram: &mut [u8]) -> Pair<SlicesToRaw,
 
 #[flux_rs::trusted(reason = "flux wrappers")]
 #[flux_rs::sig(fn (FluxPtr[@ptr], usize[@t_size], usize[@len], usize[@w_size]) -> &mut [T][len * t_size] requires ptr % w_size == 0 && ptr + len * t_size <= u32::MAX)]
-pub fn from_raw_parts_mut<'a, T>(data: FluxPtr, t_size: usize, len: usize, w_size: usize) -> &'a mut [T] {
+pub fn from_raw_parts_mut<'a, T>(
+    data: FluxPtr,
+    t_size: usize,
+    len: usize,
+    w_size: usize,
+) -> &'a mut [T] {
     unsafe { core::slice::from_raw_parts_mut(data.unsafe_as_ptr() as *mut T, len) }
 }
 

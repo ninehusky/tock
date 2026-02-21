@@ -540,6 +540,7 @@ impl PartialOrd for Ticks32 {
     }
 }
 
+#[flux_rs::assoc(fn min_no_panic() -> bool { true })] // See Andrew's note on Ticks24's Ord implementation
 impl Ord for Ticks32 {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
@@ -630,7 +631,12 @@ impl PartialOrd for Ticks24 {
     }
 }
 
+// Andrew note:
+// The `min_no_panic` annotation for this should actually be `u32.cmp`'s `no_panic`, but I don't know
+// how to attach that to this associated refinement.
+#[flux_rs::assoc(fn min_no_panic() -> bool { true })]
 impl Ord for Ticks24 {
+    #[flux_rs::no_panic]
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
     }
@@ -728,6 +734,7 @@ impl PartialOrd for Ticks16 {
     }
 }
 
+#[flux_rs::assoc(fn min_no_panic() -> bool { true })] // See Andrew's note on Ticks24's Ord implementation
 impl Ord for Ticks16 {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
@@ -822,6 +829,7 @@ impl PartialOrd for Ticks64 {
     }
 }
 
+#[flux_rs::assoc(fn min_no_panic() -> bool { true })] // See Andrew's note on Ticks24's Ord implementation
 impl Ord for Ticks64 {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
