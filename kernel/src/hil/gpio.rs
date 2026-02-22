@@ -146,9 +146,12 @@ pub trait ConfigureInputOutput: Configure {
     fn is_input_output(&self) -> bool;
 }
 
+#[flux_rs::assoc(fn set_no_panic() -> bool)]
 pub trait Output {
     /// Set the GPIO pin high. If the pin is not an output or
     /// input/output, this call is ignored.
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::set_no_panic())]
     fn set(&self);
 
     /// Set the GPIO pin low. If the pin is not an output or
@@ -362,7 +365,10 @@ impl<'a, IP: InterruptPin<'a>> Configure for InterruptValueWrapper<'a, IP> {
     }
 }
 
+#[flux_rs::assoc(fn set_no_panic() -> bool { IP::set_no_panic() })]
 impl<'a, IP: InterruptPin<'a>> Output for InterruptValueWrapper<'a, IP> {
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::set_no_panic())]
     fn set(&self) {
         self.source.set();
     }

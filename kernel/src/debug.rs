@@ -238,13 +238,19 @@ pub fn panic_blink_forever<L: hil::led::Led>(leds: &mut [&L]) -> ! {
     leds.iter_mut().for_each(|led| led.init());
     loop {
         for _ in 0..1000000 {
-            leds.iter_mut().for_each(|led| led.on());
+            // leds.iter_mut().for_each(|led| led.on());
+            for led in leds.iter_mut() {
+                led.on();
+            }
         }
         for _ in 0..100000 {
             leds.iter_mut().for_each(|led| led.off());
         }
         for _ in 0..1000000 {
-            leds.iter_mut().for_each(|led| led.on());
+            // leds.iter_mut().for_each(|led| led.on());
+            for led in leds.iter_mut() {
+                led.on();
+            }
         }
         for _ in 0..500000 {
             leds.iter_mut().for_each(|led| led.off());

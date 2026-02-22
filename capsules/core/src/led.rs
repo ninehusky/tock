@@ -93,6 +93,10 @@ impl<L: led::Led, const NUM_LEDS: usize> SyscallDriver for LedDriver<'_, L, NUM_
     ///        if the LED index is not valid.
     /// - `3`: Toggle the LED at index specified by `data` on or off. Returns
     ///        `INVAL` if the LED index is not valid.
+    #[flux_rs::sig(
+        fn (&Self, usize, usize, usize, ProcessId) -> CommandReturn
+    )]
+    #[flux_rs::no_panic_if(L::on_no_panic())]
     fn command(&self, command_num: usize, data: usize, _: usize, _: ProcessId) -> CommandReturn {
         match command_num {
             // get number of LEDs
