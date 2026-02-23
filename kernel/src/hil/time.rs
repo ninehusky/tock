@@ -322,6 +322,7 @@ pub trait AlarmClient {
 /// but can tolerate some jitter should use the `Timer` trait
 /// instead.
 #[flux_rs::assoc(fn disarm_no_panic() -> bool)]
+#[flux_rs::assoc(fn set_alarm_no_panic() -> bool)]
 pub trait Alarm<'a>: Time {
     /// Specify the callback for when the counter reaches the alarm
     /// value. If there was a previously installed callback this call
@@ -336,6 +337,8 @@ pub trait Alarm<'a>: Time {
     /// and `dt` rather than a single value denoting the counter value so it
     /// can distinguish between alarms which have very recently already
     /// passed and those in the far far future (see #1651).
+    #[flux_rs::sig(fn(&Self, Self::Ticks, Self::Ticks) -> ())]
+    #[flux_rs::no_panic_if(Self::set_alarm_no_panic())]
     fn set_alarm(&self, reference: Self::Ticks, dt: Self::Ticks);
 
     /// Return the current alarm value. This is undefined at boot and

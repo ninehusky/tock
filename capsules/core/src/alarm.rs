@@ -172,7 +172,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         <A::Ticks as Ticks>::u32_padding_no_panic() &&
         <A as kernel::hil::time::Time>::now_no_panic() &&
         <A::Ticks as Ticks>::into_usize_no_panic() &&
-        A::disarm_no_panic()
+        A::disarm_no_panic() &&
+        A::set_alarm_no_panic()
     )]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
@@ -412,7 +413,17 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     /// - `5`: Set an alarm to fire at a given clock value `time` relative to `now`
     /// - `6`: Set an alarm to fire at a given clock value `time` relative to a provided
     ///        reference point.
-    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
+    // Andrew: this crashes flux saying that it can't prove a precondition on the function signature?
+    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn requires
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A as kernel::hil::time::Time>::now_no_panic()
+    )]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
