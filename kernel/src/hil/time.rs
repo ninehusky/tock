@@ -321,6 +321,7 @@ pub trait AlarmClient {
 /// precise clock tick). Software that needs more functionality
 /// but can tolerate some jitter should use the `Timer` trait
 /// instead.
+#[flux_rs::assoc(fn disarm_no_panic() -> bool)]
 pub trait Alarm<'a>: Time {
     /// Specify the callback for when the counter reaches the alarm
     /// value. If there was a previously installed callback this call
@@ -347,6 +348,8 @@ pub trait Alarm<'a>: Time {
     ///   the callback in the future
     ///   - `Err(ErrorCode::FAIL)` the alarm could not be disarmed and will invoke
     ///   the callback in the future
+    #[flux_rs::sig(fn(&Self) -> Result<(), ErrorCode>)]
+    #[flux_rs::no_panic_if(Self::disarm_no_panic())]
     fn disarm(&self) -> Result<(), ErrorCode>;
 
     /// Returns whether the alarm is currently armed. Note that this

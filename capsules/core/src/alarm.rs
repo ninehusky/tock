@@ -171,7 +171,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         <A::Ticks as Ticks>::width_no_panic() &&
         <A::Ticks as Ticks>::u32_padding_no_panic() &&
         <A as kernel::hil::time::Time>::now_no_panic() &&
-        <A::Ticks as Ticks>::into_usize_no_panic()
+        <A::Ticks as Ticks>::into_usize_no_panic() &&
+        A::disarm_no_panic()
     )]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
