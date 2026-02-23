@@ -147,6 +147,8 @@ pub trait ConfigureInputOutput: Configure {
 }
 
 #[flux_rs::assoc(fn set_no_panic() -> bool)]
+#[flux_rs::assoc(fn toggle_no_panic() -> bool)]
+#[flux_rs::assoc(fn clear_no_panic() -> bool)]
 pub trait Output {
     /// Set the GPIO pin high. If the pin is not an output or
     /// input/output, this call is ignored.
@@ -156,12 +158,16 @@ pub trait Output {
 
     /// Set the GPIO pin low. If the pin is not an output or
     /// input/output, this call is ignored.
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::clear_no_panic())]
     fn clear(&self);
 
     /// Toggle the GPIO pin. If the pin was high, set it low. If
     /// the pin was low, set it high. If the pin is not an output or
     /// input/output, this call is ignored. Return the new value
     /// of the pin.
+    #[flux_rs::sig(fn (&Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::toggle_no_panic())]
     fn toggle(&self) -> bool;
 
     /// Activate or deactivate a GPIO pin, for a given activation mode.
@@ -366,6 +372,8 @@ impl<'a, IP: InterruptPin<'a>> Configure for InterruptValueWrapper<'a, IP> {
 }
 
 #[flux_rs::assoc(fn set_no_panic() -> bool { IP::set_no_panic() })]
+#[flux_rs::assoc(fn toggle_no_panic() -> bool { IP::toggle_no_panic() })]
+#[flux_rs::assoc(fn clear_no_panic() -> bool { IP::clear_no_panic() })]
 impl<'a, IP: InterruptPin<'a>> Output for InterruptValueWrapper<'a, IP> {
     #[flux_rs::sig(fn (&Self) -> ())]
     #[flux_rs::no_panic_if(Self::set_no_panic())]
@@ -373,10 +381,14 @@ impl<'a, IP: InterruptPin<'a>> Output for InterruptValueWrapper<'a, IP> {
         self.source.set();
     }
 
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::clear_no_panic())]
     fn clear(&self) {
         self.source.clear();
     }
 
+    #[flux_rs::sig(fn (&Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::toggle_no_panic())]
     fn toggle(&self) -> bool {
         self.source.toggle()
     }

@@ -15,6 +15,7 @@ use crate::hil::gpio;
 /// Since GPIO pins are synchronous in Tock the LED interface is synchronous as
 /// well.
 #[flux_rs::assoc(fn on_no_panic() -> bool)]
+#[flux_rs::assoc(fn toggle_no_panic() -> bool)]
 pub trait Led {
     /// Initialize the LED. Must be called before the LED is used.
     fn init(&self);
@@ -28,6 +29,8 @@ pub trait Led {
     fn off(&self);
 
     /// Toggle the LED.
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::toggle_no_panic())]
     fn toggle(&self);
 
     /// Return the on/off state of the LED. `true` if the LED is on, `false` if
@@ -58,6 +61,7 @@ impl<'a, P: gpio::Pin> LedLow<'a, P> {
 }
 
 #[flux_rs::assoc(fn on_no_panic() -> bool { P::set_no_panic() })]
+#[flux_rs::assoc(fn toggle_no_panic() -> bool { P::toggle_no_panic() })]
 impl<P: gpio::Pin> Led for LedHigh<'_, P> {
     fn init(&self) {
         self.pin.make_output();
@@ -73,6 +77,8 @@ impl<P: gpio::Pin> Led for LedHigh<'_, P> {
         self.pin.clear();
     }
 
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::toggle_no_panic())]
     fn toggle(&self) {
         self.pin.toggle();
     }
@@ -82,7 +88,8 @@ impl<P: gpio::Pin> Led for LedHigh<'_, P> {
     }
 }
 
-#[flux_rs::assoc(fn on_no_panic() -> bool { false })]
+#[flux_rs::assoc(fn on_no_panic() -> bool { P::clear_no_panic() })]
+#[flux_rs::assoc(fn toggle_no_panic() -> bool { P::toggle_no_panic() })]
 impl<P: gpio::Pin> Led for LedLow<'_, P> {
     fn init(&self) {
         self.pin.make_output();
@@ -97,6 +104,8 @@ impl<P: gpio::Pin> Led for LedLow<'_, P> {
         self.pin.set();
     }
 
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::toggle_no_panic())]
     fn toggle(&self) {
         self.pin.toggle();
     }
