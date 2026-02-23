@@ -22,6 +22,7 @@ use core::fmt;
 /// An integer type defining the width of a time value, which allows
 /// clients to know when wraparound will occur.
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool)]
+#[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool)]
 
 pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// Width of the actual underlying timer in bits.
@@ -116,6 +117,8 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     fn wrapping_add(self, other: Self) -> Self;
     /// Subtract two values, wrapping around on underflow using standard
     /// unsigned arithmetic.
+    #[flux_rs::sig(fn (Self, Self) -> Self)]
+    #[flux_rs::no_panic_if(Self::wrapping_add_no_panic())]
     fn wrapping_sub(self, other: Self) -> Self;
 
     /// Returns whether the value is in the range of [`start, `end`) using
@@ -482,6 +485,7 @@ impl From<u32> for Ticks32 {
 }
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 impl Ticks for Ticks32 {
     fn width() -> u32 {
         32
@@ -501,6 +505,8 @@ impl Ticks for Ticks32 {
         Ticks32(self.0.wrapping_add(other.0))
     }
 
+    #[flux_rs::sig(fn (Self, Self) -> Self)]
+    #[flux_rs::no_panic_if(Self::wrapping_add_no_panic())]
     fn wrapping_sub(self, other: Self) -> Self {
         Ticks32(self.0.wrapping_sub(other.0))
     }
@@ -576,6 +582,7 @@ impl From<u32> for Ticks24 {
 }
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 impl Ticks for Ticks24 {
     fn width() -> u32 {
         24
@@ -595,6 +602,8 @@ impl Ticks for Ticks24 {
         Ticks24(self.0.wrapping_add(other.0) & Self::MASK)
     }
 
+    #[flux_rs::sig(fn (Self, Self) -> Self)]
+    #[flux_rs::no_panic_if(Self::wrapping_sub_no_panic())]
     fn wrapping_sub(self, other: Self) -> Self {
         Ticks24(self.0.wrapping_sub(other.0) & Self::MASK)
     }
@@ -682,6 +691,7 @@ impl Ticks16 {
 }
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 impl Ticks for Ticks16 {
     fn width() -> u32 {
         16
@@ -701,6 +711,8 @@ impl Ticks for Ticks16 {
         Ticks16(self.0.wrapping_add(other.0))
     }
 
+    #[flux_rs::sig(fn (Self, Self) -> Self)]
+    #[flux_rs::no_panic_if(Self::wrapping_sub_no_panic())]
     fn wrapping_sub(self, other: Self) -> Self {
         Ticks16(self.0.wrapping_sub(other.0))
     }
@@ -784,6 +796,7 @@ impl From<u64> for Ticks64 {
 }
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 impl Ticks for Ticks64 {
     fn width() -> u32 {
         64
@@ -803,6 +816,8 @@ impl Ticks for Ticks64 {
         Ticks64(self.0.wrapping_add(other.0))
     }
 
+    #[flux_rs::sig(fn (Self, Self) -> Self)]
+    #[flux_rs::no_panic_if(Self::wrapping_sub_no_panic())]
     fn wrapping_sub(self, other: Self) -> Self {
         Ticks64(self.0.wrapping_sub(other.0))
     }
