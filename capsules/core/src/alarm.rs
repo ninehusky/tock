@@ -84,7 +84,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
     )]
     #[flux_rs::no_panic_if(
-        <A::Ticks as Ticks>::wrapping_add_no_panic()
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        F::no_panic()
     )]
     fn earliest_alarm<UD, R, F, I>(
         now: A::Ticks,
@@ -163,12 +164,13 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// - invoke upcalls for all expired app alarms, resetting them afterwards,
     /// - re-arming the alarm for the next earliest [`Expiration`], or
     /// - disarming the alarm if no unexpired [`Expiration`] is found.
-    #[flux_rs::sig(fn(&Self) -> ())]
-    #[flux_rs::no_panic_if(
+    #[flux_rs::sig(fn(&Self) -> () requires
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
         <A as kernel::hil::time::Time>::now_no_panic()
     )]
+    // #[flux_rs::no_panic_if(
+    // )]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
         // volatile read, and this may not be optimized if done in a loop:
