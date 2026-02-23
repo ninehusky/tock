@@ -34,7 +34,9 @@ impl<T: Ticks> Default for AlarmData<T> {
     }
 }
 
+// #[flux_rs::refined_by(alarm: &'a A)]
 pub struct AlarmDriver<'a, A: Alarm<'a>> {
+    // #[flux_rs::field(alarm: &'a A)]
     alarm: &'a A,
     app_alarms:
         Grant<AlarmData<A::Ticks>, UpcallCount<NUM_UPCALLS>, AllowRoCount<0>, AllowRwCount<0>>,
@@ -76,10 +78,24 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// To stop iteration on any expired [`Expiration`], its callback can return
     /// `Some(R)`. Then this function will return `Err(Expiration, UD, R)`.
     /// This avoids consuming the entire iterator.
-    fn earliest_alarm<UD, R, F: FnOnce(Expiration<A::Ticks>, &UD) -> Option<R>>(
+
+    #[flux_rs::sig(
+        fn (
+            now: A::Ticks,
+            expirations: I,
+        ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
+    )]
+    #[flux_rs::no_panic_if(
+        <A::Ticks as Ticks>::wrapping_add_no_panic()
+    )]
+    fn earliest_alarm<UD, R, F, I>(
         now: A::Ticks,
-        expirations: impl Iterator<Item = (Expiration<A::Ticks>, UD, F)>,
-    ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)> {
+        expirations: I,
+    ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
+    where
+        F: FnOnce(Expiration<A::Ticks>, &UD) -> Option<R>,
+        I: Iterator<Item = (Expiration<A::Ticks>, UD, F)>,
+    {
         let mut earliest: Option<(Expiration<A::Ticks>, UD)> = None;
 
         for (exp, ud, expired_handler) in expirations {
@@ -146,10 +162,11 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// Re-arm the timer. This must be called in response to the underlying
     /// timer firing, or the set of [`Expiration`]s changing. This will iterate
     /// over all [`Expiration`]s and
-    ///
     /// - invoke upcalls for all expired app alarms, resetting them afterwards,
     /// - re-arming the alarm for the next earliest [`Expiration`], or
     /// - disarming the alarm if no unexpired [`Expiration`] is found.
+    #[flux_rs::sig(fn(&Self) -> ())]
+    #[flux_rs::no_panic_if(<A::Ticks as Ticks>::wrapping_add_no_panic())]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
         // volatile read, and this may not be optimized if done in a loop:
@@ -171,6 +188,9 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
                         ALARM_CALLBACK_NUM,
                         (
                             now.into_u32_left_justified() as usize,
+                            // FIXME: (Andrew) why does the `wrapping_add` call here not "inherit" the
+                            // no-panic property of the parent function? Does it have something to do with the fact
+                            // that this is a closure within another closure?
                             expired.reference.wrapping_add(expired.dt).into_usize(),
                             0,
                         ),
@@ -220,6 +240,10 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         }
     }
 
+    #[flux_rs::sig(fn (now: A::Ticks, reference_u32: Option<u32>, dt_u32: u32, expiration: &mut Option<Expiration<A::Ticks>>) -> u32)]
+    #[flux_rs::no_panic_if(
+        <A::Ticks as Ticks>::wrapping_add_no_panic()
+    )]
     fn rearm_u32_left_justified_expiration(
         now: A::Ticks,
         reference_u32: Option<u32>,
