@@ -82,6 +82,7 @@ impl<'a, T: Pin + Interrupt<'a>> InterruptPin<'a> for T {}
 impl<'a, T: Pin + InterruptWithValue<'a>> InterruptValuePin<'a> for T {}
 
 /// Control and configure a GPIO pin.
+#[flux_rs::assoc(fn make_output_no_panic() -> bool)]
 pub trait Configure {
     /// Return the current pin configuration.
     fn configuration(&self) -> Configuration;
@@ -89,6 +90,8 @@ pub trait Configure {
     /// Make the pin an output, returning the current configuration,
     /// which should be either `Configuration::Output` or
     /// `Configuration::InputOutput`.
+    #[flux_rs::sig(fn (&Self) -> Configuration)]
+    #[flux_rs::no_panic_if(Self::make_output_no_panic())]
     fn make_output(&self) -> Configuration;
     /// Disable the pin as an output, returning the current configuration.
     fn disable_output(&self) -> Configuration;
@@ -329,11 +332,14 @@ impl<'a, IP: InterruptPin<'a>> Input for InterruptValueWrapper<'a, IP> {
     }
 }
 
+#[flux_rs::assoc(fn make_output_no_panic() -> bool { IP::make_output_no_panic() })]
 impl<'a, IP: InterruptPin<'a>> Configure for InterruptValueWrapper<'a, IP> {
     fn configuration(&self) -> Configuration {
         self.source.configuration()
     }
 
+    #[flux_rs::sig(fn (&Self) -> Configuration)]
+    #[flux_rs::no_panic_if(Self::make_output_no_panic())]
     fn make_output(&self) -> Configuration {
         self.source.make_output()
     }

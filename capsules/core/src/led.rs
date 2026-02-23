@@ -69,6 +69,8 @@ pub struct LedDriver<'a, L: led::Led, const NUM_LEDS: usize> {
 }
 
 impl<'a, L: led::Led, const NUM_LEDS: usize> LedDriver<'a, L, NUM_LEDS> {
+    #[flux_rs::sig(fn(_) -> Self)]
+    #[flux_rs::no_panic_if(L::init_no_panic())]
     pub fn new(leds: &'a [&'a L; NUM_LEDS]) -> Self {
         // Initialize all LEDs and turn them off
         for led in leds.iter() {
