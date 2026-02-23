@@ -237,11 +237,7 @@ pub unsafe fn panic_process_info<PP: ProcessPrinter, W: Write>(
 pub fn panic_blink_forever<L: hil::led::Led>(leds: &mut [&L]) -> ! {
     // Andrew: interesting point here is that we cannot use `iter_mut`, likely
     // due to the closure, perhaps?
-    // leds
-    // .iter_mut()
-    // .for_each(|led|
-    //     led.init()
-    // );
+    // leds.iter_mut().for_each(|led| led.init());
     for led in leds.iter_mut() {
         led.init();
     }

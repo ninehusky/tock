@@ -84,8 +84,7 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
     )]
     #[flux_rs::no_panic_if(
-        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
-        F::no_panic()
+        <A::Ticks as Ticks>::wrapping_add_no_panic()
     )]
     fn earliest_alarm<UD, R, F, I>(
         now: A::Ticks,
@@ -167,10 +166,9 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     #[flux_rs::sig(fn(&Self) -> () requires
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
-        <A as kernel::hil::time::Time>::now_no_panic()
+        <A as kernel::hil::time::Time>::now_no_panic() &&
+        <A::Ticks as Ticks>::into_usize_no_panic()
     )]
-    // #[flux_rs::no_panic_if(
-    // )]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
         // volatile read, and this may not be optimized if done in a loop:
@@ -244,10 +242,18 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         }
     }
 
-    #[flux_rs::sig(fn (now: A::Ticks, reference_u32: Option<u32>, dt_u32: u32, expiration: &mut Option<Expiration<A::Ticks>>) -> u32)]
+    #[flux_rs::sig(fn (now: A::Ticks, reference_u32: Option<u32>, dt_u32: u32, expiration: &mut Option<Expiration<A::Ticks>>) -> u32
+    requires
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic()
+    )]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
         <A::Ticks as Ticks>::into_u32_no_panic() &&
         <A::Ticks as Ticks>::width_no_panic()
     )]
@@ -406,7 +412,11 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
         <A::Ticks as Ticks>::into_u32_no_panic() &&
-        <A::Ticks as Ticks>::width_no_panic()
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A as kernel::hil::time::Time>::now_no_panic()
     )]
     fn command(
         &self,
@@ -554,14 +564,13 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     }
 }
 
-#[flux_rs::assoc(fn alarm_no_panic() -> bool { 
+impl<'a, A: Alarm<'a>> time::AlarmClient for AlarmDriver<'a, A> {
+    #[flux_rs::sig(fn(&Self) -> ())]
+    #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
         <A as kernel::hil::time::Time>::now_no_panic()
-})]
-impl<'a, A: Alarm<'a>> time::AlarmClient for AlarmDriver<'a, A> {
-    #[flux_rs::sig(fn(&Self) -> ())]
-    #[flux_rs::no_panic_if(Self::alarm_no_panic())]
+    )]
     fn alarm(&self) {
         self.process_rearm_or_callback();
     }
