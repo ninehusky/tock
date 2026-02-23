@@ -412,6 +412,7 @@ pub trait SpiSlave<'a> {
 /// It is the standard trait used by services within the kernel:
 /// `SpiSlave` is for lower-level access responsible for initializing
 /// hardware.
+#[flux_rs::assoc(fn get_phase_no_panic() -> bool)]
 pub trait SpiSlaveDevice<'a> {
     /// Specify the callback of `read_write_bytes` operations:
     fn set_client(&self, client: &'a dyn SpiSlaveClient);
@@ -466,5 +467,7 @@ pub trait SpiSlaveDevice<'a> {
     fn set_phase(&self, phase: ClockPhase) -> Result<(), ErrorCode>;
 
     /// Return the current bus phase.
+    #[flux_rs::sig(fn(&Self) -> ClockPhase)]
+    #[flux_rs::no_panic_if(Self::get_phase_no_panic())]
     fn get_phase(&self) -> ClockPhase;
 }

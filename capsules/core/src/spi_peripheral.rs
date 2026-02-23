@@ -162,6 +162,14 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
     /// - x+1: unlock spi
     ///   - does nothing if lock not held
     ///   - not implemented or currently supported
+    #[flux_rs::sig(fn (
+        &Self,
+        usize,
+        usize,
+        usize,
+        ProcessId
+    ) -> CommandReturn)]
+    #[flux_rs::no_panic_if(S::get_phase_no_panic())]
     fn command(
         &self,
         command_num: usize,
