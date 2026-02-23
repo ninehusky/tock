@@ -84,7 +84,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
     )]
     #[flux_rs::no_panic_if(
-        <A::Ticks as Ticks>::wrapping_add_no_panic()
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::within_range_no_panic()
     )]
     fn earliest_alarm<UD, R, F, I>(
         now: A::Ticks,
@@ -166,6 +167,9 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     #[flux_rs::sig(fn(&Self) -> () requires
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
         <A as kernel::hil::time::Time>::now_no_panic() &&
         <A::Ticks as Ticks>::into_usize_no_panic()
     )]

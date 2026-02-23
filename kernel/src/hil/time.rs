@@ -28,6 +28,7 @@ use core::fmt;
 #[flux_rs::assoc(fn width_no_panic() -> bool)]
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool)]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool)]
+#[flux_rs::assoc(fn within_range_no_panic() -> bool)]
 pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// Width of the actual underlying timer in bits.
     ///
@@ -143,6 +144,8 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// if, incrementing from `start`, the value will be reached before `end`.
     /// Put another way, it returns `(self - start) < (end - start)` in
     /// unsigned arithmetic.
+    #[flux_rs::sig(fn (Self, Self, Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::within_range_no_panic())]
     fn within_range(self, start: Self, end: Self) -> bool;
 
     /// Returns the maximum value of this type, which should be (2^width)-1.
@@ -512,6 +515,7 @@ impl From<u32> for Ticks32 {
 #[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
 impl Ticks for Ticks32 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
@@ -543,6 +547,8 @@ impl Ticks for Ticks32 {
         Ticks32(self.0.wrapping_sub(other.0))
     }
 
+    #[flux_rs::sig(fn (Self, Self, Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::within_range_no_panic())]
     fn within_range(self, start: Self, end: Self) -> bool {
         self.wrapping_sub(start).0 < end.wrapping_sub(start).0
     }
@@ -620,6 +626,7 @@ impl From<u32> for Ticks24 {
 #[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
 impl Ticks for Ticks24 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
@@ -651,6 +658,8 @@ impl Ticks for Ticks24 {
         Ticks24(self.0.wrapping_sub(other.0) & Self::MASK)
     }
 
+    #[flux_rs::sig(fn (Self, Self, Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::within_range_no_panic())]
     fn within_range(self, start: Self, end: Self) -> bool {
         self.wrapping_sub(start).0 < end.wrapping_sub(start).0
     }
@@ -740,6 +749,7 @@ impl Ticks16 {
 #[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
 impl Ticks for Ticks16 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
@@ -771,6 +781,8 @@ impl Ticks for Ticks16 {
         Ticks16(self.0.wrapping_sub(other.0))
     }
 
+    #[flux_rs::sig(fn (Self, Self, Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::within_range_no_panic())]
     fn within_range(self, start: Self, end: Self) -> bool {
         self.wrapping_sub(start).0 < end.wrapping_sub(start).0
     }
@@ -856,6 +868,7 @@ impl From<u64> for Ticks64 {
 #[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
 impl Ticks for Ticks64 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
@@ -887,6 +900,8 @@ impl Ticks for Ticks64 {
         Ticks64(self.0.wrapping_sub(other.0))
     }
 
+    #[flux_rs::sig(fn (Self, Self, Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::within_range_no_panic())]
     fn within_range(self, start: Self, end: Self) -> bool {
         self.wrapping_sub(start).0 < end.wrapping_sub(start).0
     }
