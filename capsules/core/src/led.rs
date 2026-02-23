@@ -70,7 +70,7 @@ pub struct LedDriver<'a, L: led::Led, const NUM_LEDS: usize> {
 
 impl<'a, L: led::Led, const NUM_LEDS: usize> LedDriver<'a, L, NUM_LEDS> {
     #[flux_rs::sig(fn(_) -> Self)]
-    #[flux_rs::no_panic_if(L::init_no_panic())]
+    #[flux_rs::no_panic_if(L::init_no_panic() && L::off_no_panic())]
     pub fn new(leds: &'a [&'a L; NUM_LEDS]) -> Self {
         // Initialize all LEDs and turn them off
         for led in leds.iter() {
@@ -98,7 +98,7 @@ impl<L: led::Led, const NUM_LEDS: usize> SyscallDriver for LedDriver<'_, L, NUM_
     #[flux_rs::sig(
         fn (&Self, usize, usize, usize, ProcessId) -> CommandReturn
     )]
-    #[flux_rs::no_panic_if(L::on_no_panic() && L::toggle_no_panic())]
+    #[flux_rs::no_panic_if(L::on_no_panic() && L::toggle_no_panic() && L::off_no_panic())]
     fn command(&self, command_num: usize, data: usize, _: usize, _: ProcessId) -> CommandReturn {
         match command_num {
             // get number of LEDs

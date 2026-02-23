@@ -16,6 +16,7 @@ use crate::hil::gpio;
 /// well.
 #[flux_rs::assoc(fn init_no_panic() -> bool)]
 #[flux_rs::assoc(fn on_no_panic() -> bool)]
+#[flux_rs::assoc(fn off_no_panic() -> bool)]
 #[flux_rs::assoc(fn toggle_no_panic() -> bool)]
 pub trait Led {
     /// Initialize the LED. Must be called before the LED is used.
@@ -29,6 +30,8 @@ pub trait Led {
     fn on(&self);
 
     /// Turn the LED off.
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::off_no_panic())]
     fn off(&self);
 
     /// Toggle the LED.
@@ -65,6 +68,7 @@ impl<'a, P: gpio::Pin> LedLow<'a, P> {
 
 #[flux_rs::assoc(fn init_no_panic() -> bool { P::make_output_no_panic() })]
 #[flux_rs::assoc(fn on_no_panic() -> bool { P::set_no_panic() })]
+#[flux_rs::assoc(fn off_no_panic() -> bool { P::clear_no_panic() })]
 #[flux_rs::assoc(fn toggle_no_panic() -> bool { P::toggle_no_panic() })]
 impl<P: gpio::Pin> Led for LedHigh<'_, P> {
     #[flux_rs::sig(fn (&Self) -> ())]
@@ -79,6 +83,8 @@ impl<P: gpio::Pin> Led for LedHigh<'_, P> {
         self.pin.set();
     }
 
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::off_no_panic())]
     fn off(&self) {
         self.pin.clear();
     }
@@ -96,6 +102,7 @@ impl<P: gpio::Pin> Led for LedHigh<'_, P> {
 
 #[flux_rs::assoc(fn init_no_panic() -> bool { P::make_output_no_panic() })]
 #[flux_rs::assoc(fn on_no_panic() -> bool { P::clear_no_panic() })]
+#[flux_rs::assoc(fn off_no_panic() -> bool { P::set_no_panic() })]
 #[flux_rs::assoc(fn toggle_no_panic() -> bool { P::toggle_no_panic() })]
 impl<P: gpio::Pin> Led for LedLow<'_, P> {
     #[flux_rs::sig(fn (&Self) -> ())]
@@ -109,6 +116,8 @@ impl<P: gpio::Pin> Led for LedLow<'_, P> {
         self.pin.clear();
     }
 
+    #[flux_rs::sig(fn (&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::off_no_panic())]
     fn off(&self) {
         self.pin.set();
     }
