@@ -168,6 +168,7 @@ pub trait Frequency {
 }
 
 /// Represents a moment in time, obtained by calling `now`.
+#[flux_rs::assoc(fn now_no_panic() -> bool)]
 pub trait Time {
     /// The number of ticks per second
     type Frequency: Frequency;
@@ -179,6 +180,8 @@ pub trait Time {
     /// a sample of a counter; if an implementation relies on
     /// it being constant or changing it should use `Timestamp`
     /// or `Counter`.
+    #[flux_rs::sig(fn(&Self) -> Self::Ticks)]
+    #[flux_rs::no_panic_if(Self::now_no_panic())]
     fn now(&self) -> Self::Ticks;
 }
 
@@ -295,10 +298,13 @@ pub trait Counter<'a>: Time {
 
 /// Callback handler for when an Alarm fires (a `Counter` reaches a specific
 /// value).
+#[flux_rs::assoc(fn alarm_no_panic() -> bool)]
 pub trait AlarmClient {
     /// Callback indicating the alarm time has been reached. The alarm
     /// MUST be disabled when this is called. If a new alarm is needed,
     /// the client can call `Alarm::set_alarm`.
+    #[flux_rs::sig(fn(&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::alarm_no_panic())]
     fn alarm(&self);
 }
 

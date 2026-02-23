@@ -34,9 +34,7 @@ impl<T: Ticks> Default for AlarmData<T> {
     }
 }
 
-// #[flux_rs::refined_by(alarm: &'a A)]
 pub struct AlarmDriver<'a, A: Alarm<'a>> {
-    // #[flux_rs::field(alarm: &'a A)]
     alarm: &'a A,
     app_alarms:
         Grant<AlarmData<A::Ticks>, UpcallCount<NUM_UPCALLS>, AllowRoCount<0>, AllowRwCount<0>>,
@@ -168,7 +166,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     #[flux_rs::sig(fn(&Self) -> ())]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
-        <A::Ticks as Ticks>::into_u32_left_justified_no_panic()
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A as kernel::hil::time::Time>::now_no_panic()
     )]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
@@ -401,6 +400,12 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     /// - `6`: Set an alarm to fire at a given clock value `time` relative to a provided
     ///        reference point.
     #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
+    #[flux_rs::no_panic_if(
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic()
+    )]
     fn command(
         &self,
         cmd_type: usize,
@@ -547,7 +552,14 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     }
 }
 
+#[flux_rs::assoc(fn alarm_no_panic() -> bool { 
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A as kernel::hil::time::Time>::now_no_panic()
+})]
 impl<'a, A: Alarm<'a>> time::AlarmClient for AlarmDriver<'a, A> {
+    #[flux_rs::sig(fn(&Self) -> ())]
+    #[flux_rs::no_panic_if(Self::alarm_no_panic())]
     fn alarm(&self) {
         self.process_rearm_or_callback();
     }
