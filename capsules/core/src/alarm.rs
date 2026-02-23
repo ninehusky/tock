@@ -414,16 +414,7 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     /// - `6`: Set an alarm to fire at a given clock value `time` relative to a provided
     ///        reference point.
     // Andrew: this crashes flux saying that it can't prove a precondition on the function signature?
-    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn requires
-        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
-        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
-        <A::Ticks as Ticks>::into_u32_no_panic() &&
-        <A::Ticks as Ticks>::u32_padding_no_panic() &&
-        <A::Ticks as Ticks>::width_no_panic() &&
-        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
-        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
-        <A as kernel::hil::time::Time>::now_no_panic()
-    )]
+    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&

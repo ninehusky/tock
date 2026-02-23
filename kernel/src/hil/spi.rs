@@ -413,6 +413,10 @@ pub trait SpiSlave<'a> {
 /// `SpiSlave` is for lower-level access responsible for initializing
 /// hardware.
 #[flux_rs::assoc(fn get_phase_no_panic() -> bool)]
+#[flux_rs::assoc(fn set_phase_no_panic() -> bool)]
+#[flux_rs::assoc(fn get_polarity_no_panic() -> bool)]
+#[flux_rs::assoc(fn set_polarity_no_panic() -> bool)]
+#[flux_rs::assoc(fn read_write_bytes_no_panic() -> bool)]
 pub trait SpiSlaveDevice<'a> {
     /// Specify the callback of `read_write_bytes` operations:
     fn set_client(&self, client: &'a dyn SpiSlaveClient);
@@ -436,6 +440,8 @@ pub trait SpiSlaveDevice<'a> {
     ///   - Err(INVAL): the `len` parameter is 0
     ///
     /// `Err` return values return the passed buffer `Option`s.
+    #[flux_rs::sig(fn(&Self, _, _, usize) -> Result<(), (ErrorCode, _, _)>)]
+    #[flux_rs::no_panic_if(Self::read_write_bytes_no_panic())]
     fn read_write_bytes(
         &self,
         write_buffer: Option<&'static mut [u8]>,
@@ -454,8 +460,12 @@ pub trait SpiSlaveDevice<'a> {
     ///   - Err(BUSY): the SPI bus is busy with a `read_write_bytes`
     ///     operation whose callback hasn't been called yet.
     ///   - Err(FAIL): other failure
+    #[flux_rs::sig(fn(&Self, ClockPolarity) -> Result<(), ErrorCode>)]
+    #[flux_rs::no_panic_if(Self::set_polarity_no_panic())]
     fn set_polarity(&self, polarity: ClockPolarity) -> Result<(), ErrorCode>;
     /// Return the current bus polarity.
+    #[flux_rs::sig(fn(&Self) -> ClockPolarity)]
+    #[flux_rs::no_panic_if(Self::get_polarity_no_panic())]
     fn get_polarity(&self) -> ClockPolarity;
 
     /// Set the bus phase (whether data is sent/received on leading or
@@ -464,6 +474,8 @@ pub trait SpiSlaveDevice<'a> {
     ///   - Err(BUSY): the SPI bus is busy with a `read_write_bytes`
     ///     operation whose callback hasn't been called yet.
     ///   - Err(FAIL): other failure
+    #[flux_rs::sig(fn(&Self, ClockPhase) -> Result<(), ErrorCode>)]
+    #[flux_rs::no_panic_if(Self::set_phase_no_panic())]
     fn set_phase(&self, phase: ClockPhase) -> Result<(), ErrorCode>;
 
     /// Return the current bus phase.

@@ -93,6 +93,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
 
     // Assumes checks for busy/etc. already done
     // Updates app.index to be index + length of op
+    #[flux_rs::sig(fn(&Self, &mut PeripheralApp, &GrantKernelData) -> ())]
+    #[flux_rs::no_panic_if(S::read_write_bytes_no_panic())]
     fn do_next_read_write(&self, app: &mut PeripheralApp, kernel_data: &GrantKernelData) {
         let write_len = self.kernel_write.map_or(0, |kwbuf| {
             let mut start = app.index;
@@ -169,7 +171,13 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
         usize,
         ProcessId
     ) -> CommandReturn)]
-    #[flux_rs::no_panic_if(S::get_phase_no_panic())]
+    #[flux_rs::no_panic_if(
+        S::get_phase_no_panic() &&
+        S::set_phase_no_panic() &&
+        S::get_polarity_no_panic() &&
+        S::set_polarity_no_panic() &&
+        S::read_write_bytes_no_panic()
+    )]
     fn command(
         &self,
         command_num: usize,
@@ -278,7 +286,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
         Option<&mut [u8]>,
         usize,
         Result<(), ErrorCode>
-    ))]
+    ) -> ())]
+    #[flux_rs::no_panic_if(S::read_write_bytes_no_panic())]
     fn read_write_done(
         &self,
         writebuf: Option<&'static mut [u8]>,
