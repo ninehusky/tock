@@ -166,7 +166,10 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// - re-arming the alarm for the next earliest [`Expiration`], or
     /// - disarming the alarm if no unexpired [`Expiration`] is found.
     #[flux_rs::sig(fn(&Self) -> ())]
-    #[flux_rs::no_panic_if(<A::Ticks as Ticks>::wrapping_add_no_panic())]
+    #[flux_rs::no_panic_if(
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic()
+    )]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
         // volatile read, and this may not be optimized if done in a loop:
@@ -187,10 +190,10 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
                     .schedule_upcall(
                         ALARM_CALLBACK_NUM,
                         (
-                            now.into_u32_left_justified() as usize,
                             // FIXME: (Andrew) why does the `wrapping_add` call here not "inherit" the
                             // no-panic property of the parent function? Does it have something to do with the fact
                             // that this is a closure within another closure?
+                            now.into_u32_left_justified() as usize,
                             expired.reference.wrapping_add(expired.dt).into_usize(),
                             0,
                         ),
@@ -242,7 +245,10 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
 
     #[flux_rs::sig(fn (now: A::Ticks, reference_u32: Option<u32>, dt_u32: u32, expiration: &mut Option<Expiration<A::Ticks>>) -> u32)]
     #[flux_rs::no_panic_if(
-        <A::Ticks as Ticks>::wrapping_add_no_panic()
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic()
     )]
     fn rearm_u32_left_justified_expiration(
         now: A::Ticks,
@@ -394,6 +400,7 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     /// - `5`: Set an alarm to fire at a given clock value `time` relative to `now`
     /// - `6`: Set an alarm to fire at a given clock value `time` relative to a provided
     ///        reference point.
+    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
     fn command(
         &self,
         cmd_type: usize,

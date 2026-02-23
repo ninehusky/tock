@@ -23,6 +23,9 @@ use core::fmt;
 /// clients to know when wraparound will occur.
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool)]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool)]
+#[flux_rs::assoc(fn into_u32_no_panic() -> bool)]
+#[flux_rs::assoc(fn into_u32_left_justified_no_panic() -> bool)]
+#[flux_rs::assoc(fn width_no_panic() -> bool)]
 
 pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// Width of the actual underlying timer in bits.
@@ -34,6 +37,8 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// The return value is a `u32`, in accordance with the bit widths
     /// specified using the BITS associated const on Rust integer
     /// types.
+    #[flux_rs::sig(fn() -> u32)]
+    #[flux_rs::no_panic_if(Self::width_no_panic())]
     fn width() -> u32;
 
     /// Converts the type into a `usize`, stripping the higher bits
@@ -75,6 +80,8 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// with 0 if it is smaller than `u32`. Included as a simple
     /// helper since Tock uses `u32` pervasively and most platforms
     /// are 32 bits.
+    #[flux_rs::sig(fn (Self) -> u32)]
+    #[flux_rs::no_panic_if(Self::into_u32_no_panic())]
     fn into_u32(self) -> u32;
 
     /// The amount of bits required to left-justify this ticks value
@@ -86,6 +93,8 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// The return value is a `u32`, in accordance with the bit widths
     /// specified using the BITS associated const on Rust integer
     /// types.
+    #[flux_rs::sig(fn() -> u32)]
+    #[flux_rs::no_panic_if(Self::width_no_panic())]
     fn u32_padding() -> u32 {
         u32::BITS.saturating_sub(Self::width())
     }
@@ -99,6 +108,11 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// `2 ** u32_padding()`). Use `u32_left_justified_scale_freq` to
     /// convert the underlying timer's frequency into the padded ticks
     /// frequency in Hertz.
+    #[flux_rs::sig(fn (Self) -> u32)]
+    // Andrew note: I'd like to be able to not include the `into_u32_no_panic`, because
+    // an arbitrary implementation of `Ticks` doesn't necessarily have to call `Self::into_u32`.
+    // However, if I don't include it, the verification here won't go through.
+    #[flux_rs::no_panic_if(Self::into_u32_left_justified_no_panic() && Self::into_u32_no_panic() && Self::width_no_panic())]
     fn into_u32_left_justified(self) -> u32 {
         self.into_u32() << Self::u32_padding()
     }
@@ -486,7 +500,12 @@ impl From<u32> for Ticks32 {
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_left_justified_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 impl Ticks for Ticks32 {
+    #[flux_rs::sig(fn() -> u32)]
+    #[flux_rs::no_panic_if(Self::width_no_panic())]
     fn width() -> u32 {
         32
     }
@@ -495,6 +514,8 @@ impl Ticks for Ticks32 {
         self.0 as usize
     }
 
+    #[flux_rs::sig(fn(Self) -> u32)]
+    #[flux_rs::no_panic_if(Self::into_u32_no_panic())]
     fn into_u32(self) -> u32 {
         self.0
     }
@@ -583,7 +604,12 @@ impl From<u32> for Ticks24 {
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_left_justified_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 impl Ticks for Ticks24 {
+    #[flux_rs::sig(fn() -> u32)]
+    #[flux_rs::no_panic_if(Self::width_no_panic())]
     fn width() -> u32 {
         24
     }
@@ -592,6 +618,8 @@ impl Ticks for Ticks24 {
         self.0 as usize
     }
 
+    #[flux_rs::sig(fn(Self) -> u32)]
+    #[flux_rs::no_panic_if(Self::into_u32_no_panic())]
     fn into_u32(self) -> u32 {
         self.0
     }
@@ -692,7 +720,12 @@ impl Ticks16 {
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_left_justified_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 impl Ticks for Ticks16 {
+    #[flux_rs::sig(fn() -> u32)]
+    #[flux_rs::no_panic_if(Self::width_no_panic())]
     fn width() -> u32 {
         16
     }
@@ -701,6 +734,8 @@ impl Ticks for Ticks16 {
         self.0 as usize
     }
 
+    #[flux_rs::sig(fn(Self) -> u32)]
+    #[flux_rs::no_panic_if(Self::into_u32_no_panic())]
     fn into_u32(self) -> u32 {
         self.0 as u32
     }
@@ -797,7 +832,12 @@ impl From<u64> for Ticks64 {
 
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn into_u32_left_justified_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn width_no_panic() -> bool { true })]
 impl Ticks for Ticks64 {
+    #[flux_rs::sig(fn() -> u32)]
+    #[flux_rs::no_panic_if(Self::width_no_panic())]
     fn width() -> u32 {
         64
     }
@@ -806,6 +846,8 @@ impl Ticks for Ticks64 {
         self.0 as usize
     }
 
+    #[flux_rs::sig(fn(Self) -> u32)]
+    #[flux_rs::no_panic_if(Self::into_u32_no_panic())]
     fn into_u32(self) -> u32 {
         self.0 as u32
     }
