@@ -92,6 +92,8 @@ pub struct Button<'a, P: gpio::InterruptPin<'a>> {
 }
 
 impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
+    #[flux_rs::sig(fn(_, _) -> Self)]
+    #[flux_rs::no_panic_if(P::make_input_no_panic())]
     pub fn new(
         pins: &'a [(
             &'a gpio::InterruptValueWrapper<'a, P>,
