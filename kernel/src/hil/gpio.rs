@@ -84,6 +84,7 @@ impl<'a, T: Pin + InterruptWithValue<'a>> InterruptValuePin<'a> for T {}
 /// Control and configure a GPIO pin.
 #[flux_rs::assoc(fn make_input_no_panic() -> bool)]
 #[flux_rs::assoc(fn make_output_no_panic() -> bool)]
+#[flux_rs::assoc(fn set_floating_state_no_panic() -> bool)]
 pub trait Configure {
     /// Return the current pin configuration.
     fn configuration(&self) -> Configuration;
@@ -115,6 +116,8 @@ pub trait Configure {
     fn deactivate_to_low_power(&self);
 
     /// Set the floating state of the pin.
+    #[flux_rs::sig(fn (&Self, FloatingState) -> ())]
+    #[flux_rs::no_panic_if(Self::set_floating_state_no_panic())]
     fn set_floating_state(&self, state: FloatingState);
     /// Return the current floating state of the pin.
     fn floating_state(&self) -> FloatingState;
@@ -347,6 +350,7 @@ impl<'a, IP: InterruptPin<'a>> Input for InterruptValueWrapper<'a, IP> {
 
 #[flux_rs::assoc(fn make_input_no_panic() -> bool { IP::make_input_no_panic() })]
 #[flux_rs::assoc(fn make_output_no_panic() -> bool { IP::make_output_no_panic() })]
+#[flux_rs::assoc(fn set_floating_state_no_panic() -> bool { IP::set_floating_state_no_panic() })]
 impl<'a, IP: InterruptPin<'a>> Configure for InterruptValueWrapper<'a, IP> {
     fn configuration(&self) -> Configuration {
         self.source.configuration()
@@ -376,6 +380,8 @@ impl<'a, IP: InterruptPin<'a>> Configure for InterruptValueWrapper<'a, IP> {
         self.source.deactivate_to_low_power();
     }
 
+    #[flux_rs::sig(fn (&Self, FloatingState) -> ())]
+    #[flux_rs::no_panic_if(Self::set_floating_state_no_panic())]
     fn set_floating_state(&self, state: FloatingState) {
         self.source.set_floating_state(state);
     }
