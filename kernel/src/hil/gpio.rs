@@ -188,13 +188,19 @@ pub trait Output {
     }
 }
 
+#[flux_rs::assoc(fn read_no_panic() -> bool)]
+#[flux_rs::assoc(fn read_activation_no_panic() -> bool)]
 pub trait Input {
     /// Get the current state of an input GPIO pin. For an output
     /// pin, return the output; for an input pin, return the input;
     /// for disabled or function pins the value is undefined.
+    #[flux_rs::sig(fn(&Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::read_no_panic())]
     fn read(&self) -> bool;
 
     /// Get the current state of a GPIO pin, for a given activation mode.
+    #[flux_rs::sig(fn(&Self, ActivationMode) -> ActivationState)]
+    #[flux_rs::no_panic_if(Self::read_activation_no_panic() && Self::read_no_panic())]
     fn read_activation(&self, mode: ActivationMode) -> ActivationState {
         let value = self.read();
         match (mode, value) {
@@ -326,7 +332,11 @@ impl<'a, IP: InterruptPin<'a>> InterruptWithValue<'a> for InterruptValueWrapper<
     }
 }
 
+#[flux_rs::assoc(fn read_activation_no_panic() -> bool { Self::read_no_panic() })]
+#[flux_rs::assoc(fn read_no_panic() -> bool { IP::read_no_panic() })]
 impl<'a, IP: InterruptPin<'a>> Input for InterruptValueWrapper<'a, IP> {
+    #[flux_rs::sig(fn(&Self) -> bool)]
+    #[flux_rs::no_panic_if(Self::read_no_panic())]
     fn read(&self) -> bool {
         self.source.read()
     }
