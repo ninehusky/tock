@@ -1,5 +1,9 @@
 #![no_std]
 #![feature(try_trait_v2)]
+// for unwrap_or_else
+#![feature(const_result_trait_fn)]
+#![feature(const_destruct)]
+#![feature(const_trait_impl)]
 
 mod extern_specs;
 mod flux_arr;

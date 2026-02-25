@@ -1,3 +1,5 @@
+use core::marker::Destruct;
+
 #[flux_rs::extern_spec]
 #[flux_rs::refined_by(b: bool)]
 enum Result<T, E> {
@@ -20,4 +22,10 @@ impl<T, E> Result<T, E> {
     fn unwrap_or_default(self) -> T
     where
         T: Default;
+
+    #[sig(fn(Self, F) -> T)]
+    #[flux_rs::no_panic_if(F::no_panic())]
+    const fn unwrap_or_else<F>(self, op: F) -> T
+    where
+        F: [const] FnOnce(E) -> T + [const] Destruct;
 }
