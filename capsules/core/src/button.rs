@@ -112,7 +112,7 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
     }
 
     #[flux_rs::sig(fn(&Self, u32) -> gpio::ActivationState)]
-    #[flux_rs::no_panic_if(P::read_activation_no_panic())]
+    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic())]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
         let pin = &self.pins[pin_num as usize];
         pin.0.read_activation(pin.1)
@@ -146,7 +146,7 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
     ///   registered callback.
     /// - `3`: Read the current state of the button.
     #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
-    #[flux_rs::no_panic_if(P::read_activation_no_panic())]
+    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic())]
     fn command(
         &self,
         command_num: usize,
@@ -231,7 +231,7 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 
 impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
     #[flux_rs::sig(fn(&Self, u32) -> ())]
-    #[flux_rs::no_panic_if(P::read_activation_no_panic())]
+    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic())]
     fn fired(&self, pin_num: u32) {
         // Read the value of the pin and get the button state.
         let button_state = self.get_button_state(pin_num);

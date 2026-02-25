@@ -82,10 +82,13 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
             now: A::Ticks,
             expirations: I,
         ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
+        requires F::no_panic()
     )]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
-        <A::Ticks as Ticks>::within_range_no_panic()
+        <A::Ticks as Ticks>::within_range_no_panic() &&
+        I::next_no_panic() &&
+        F::no_panic()
     )]
     fn earliest_alarm<UD, R, F, I>(
         now: A::Ticks,
@@ -413,7 +416,6 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     /// - `5`: Set an alarm to fire at a given clock value `time` relative to `now`
     /// - `6`: Set an alarm to fire at a given clock value `time` relative to a provided
     ///        reference point.
-    // Andrew: this crashes flux saying that it can't prove a precondition on the function signature?
     #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
