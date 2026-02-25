@@ -1823,11 +1823,15 @@ pub struct Iter<
     >,
 }
 
+#[flux_rs::assoc(fn next_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
 impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize> Iterator
     for Iter<'a, T, Upcalls, AllowROs, AllowRWs>
 {
     type Item = ProcessGrant<'a, T, Upcalls, AllowROs, AllowRWs>;
 
+    #[flux_rs::sig(fn (&mut Self) -> _)]
+    #[flux_rs::no_panic_if(Self::next_no_panic())]
     fn next(&mut self) -> Option<Self::Item> {
         let grant = self.grant;
         // Get the next `ProcessId` from the kernel processes array that is

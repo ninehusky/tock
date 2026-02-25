@@ -54,7 +54,10 @@ impl<'a> MLFQProcessNode<'a> {
     }
 }
 
+#[flux_rs::assoc(fn next_no_panic() -> bool { true })]
 impl<'a> ListNode<'a, MLFQProcessNode<'a>> for MLFQProcessNode<'a> {
+    #[flux_rs::sig(fn(_) -> _)]
+    #[flux_rs::no_panic_if(Self::next_no_panic())]
     fn next(&'a self) -> &'a ListLink<'a, MLFQProcessNode<'a>> {
         &self.next
     }
@@ -169,7 +172,7 @@ impl<'a, A: 'static + time::Alarm<'static>, C: Chip> Scheduler<C> for MLFQSched<
     fn result(&self, result: StoppedExecutingReason, execution_time_us: Option<u32>) {
         let execution_time_us = execution_time_us.unwrap(); // should never fail as we never run cooperatively
         let queue_idx = self.last_queue_idx.get();
-                                             // Last executed node will always be at head of its queue
+        // Last executed node will always be at head of its queue
         let node_ref = self.processes[queue_idx].head().unwrap();
         let last_timeslice = self.last_timeslice.get();
         // flux_support::assume(last_timeslice >= execution_time_us); // need refined scheduler_timer()?

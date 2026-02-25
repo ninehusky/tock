@@ -42,7 +42,10 @@ impl<'a> RoundRobinProcessNode<'a> {
     }
 }
 
+#[flux_rs::assoc(fn next_no_panic() -> bool { true })]
 impl<'a> ListNode<'a, RoundRobinProcessNode<'a>> for RoundRobinProcessNode<'a> {
+    #[flux_rs::sig(fn(_) -> _)]
+    #[flux_rs::no_panic_if(Self::next_no_panic())]
     fn next(&'a self) -> &'a ListLink<'a, RoundRobinProcessNode<'a>> {
         &self.next
     }

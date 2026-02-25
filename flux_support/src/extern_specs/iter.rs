@@ -1,15 +1,45 @@
-#![allow(unused)]
 use crate::assert;
+use core::ops::Try;
 use core::slice::Iter;
 
 #[flux_rs::extern_spec(core::slice)]
 #[flux_rs::refined_by(idx: int, len: int)]
 struct Iter<'a, T>;
 
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn next_no_panic() -> bool)]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool)]
+trait Iterator {
+    #[flux_rs::sig(fn(&mut Self) -> _)]
+    #[flux_rs::no_panic_if(Self::next_no_panic())]
+    fn next(&mut self) -> Option<Self::Item>;
+
+    #[flux_rs::sig(fn(&mut Self, F) -> Option<B>)]
+    #[flux_rs::no_panic_if(Self::find_map_no_panic())]
+    fn find_map<B, F>(&mut self, f: F) -> Option<B>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item) -> Option<B>;
+
+    #[flux_rs::sig(fn(&mut Self, B, F) -> R)]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Self::Item) -> R,
+        R: Try<Output = B>;
+}
+
+#[flux_rs::extern_spec(core::iter)]
+struct FilterMap<I, F>;
+
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
+impl<B, I: Iterator, F: FnMut(I::Item) -> Option<B>> Iterator for FilterMap<I, F> {}
+
 // #[flux_rs::extern_spec(std::iter)]
 // #[flux_rs::refined_by(idx: int, inner: I)]
 // struct Enumerate<I>;
-
 // #[flux_rs::extern_spec(std::iter)]
 // #[flux_rs::assoc(fn done(self: Self) -> bool )]
 // #[flux_rs::assoc(fn step(self: Self, other: Self) -> bool )]

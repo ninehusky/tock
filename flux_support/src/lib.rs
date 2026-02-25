@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(try_trait_v2)]
 
 mod extern_specs;
 mod flux_arr;
@@ -20,7 +21,7 @@ macro_rules! const_assume {
     ($cond:expr) => {
         const { assert!($cond) };
         $crate::assume($cond);
-    }
+    };
 }
 
 #[allow(dead_code)]

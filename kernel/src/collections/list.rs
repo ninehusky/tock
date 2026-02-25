@@ -14,7 +14,10 @@ impl<'a, T: ?Sized> ListLink<'a, T> {
     }
 }
 
+#[flux_rs::assoc(fn next_no_panic() -> bool)]
 pub trait ListNode<'a, T: ?Sized> {
+    #[flux_rs::sig(fn(_) -> _)]
+    #[flux_rs::no_panic_if(Self::next_no_panic())]
     fn next(&'a self) -> &'a ListLink<'a, T>;
 }
 
@@ -26,23 +29,30 @@ pub struct ListIterator<'a, T: 'a + ?Sized + ListNode<'a, T>> {
     cur: Option<&'a T>,
 }
 
+#[flux_rs::assoc(fn next_no_panic() -> bool { T::next_no_panic() })]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
 impl<'a, T: ?Sized + ListNode<'a, T>> Iterator for ListIterator<'a, T> {
     type Item = &'a T;
 
+    #[flux_rs::sig(fn(&mut Self) -> _)]
+    #[flux_rs::no_panic_if(Self::next_no_panic())]
     fn next(&mut self) -> Option<&'a T> {
-        #[flux_rs::spec(fn(this: &mut ListIterator<T>) -> _ ensures this: ListIterator<T>)]
-        fn next_strg<'b, T: ?Sized + ListNode<'b, T>>(
-            this: &mut ListIterator<'b, T>,
-        ) -> Option<&'b T> {
-            match this.cur {
-                Some(res) => {
-                    this.cur = res.next().0.get();
-                    Some(res)
-                }
-                None => None,
+        self.next_strg()
+    }
+}
+
+impl<'a, T: ?Sized + ListNode<'a, T>> ListIterator<'a, T> {
+    #[flux_rs::spec(fn(this: &mut ListIterator<T>) -> _ ensures this: ListIterator<T>)]
+    #[flux_rs::no_panic_if(<Self as Iterator>::next_no_panic())]
+    fn next_strg(&mut self) -> Option<&'a T> {
+        match self.cur {
+            Some(res) => {
+                // self.cur = <T as ListNode<'a, T>>::next(res).0.get();
+                self.cur = res.next().0.get();
+                Some(res)
             }
+            None => None,
         }
-        next_strg(self)
     }
 }
 
