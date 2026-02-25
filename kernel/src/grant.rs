@@ -736,7 +736,10 @@ struct SavedAllowRo {
     len: usize,
 }
 
+#[flux_rs::assoc(fn default_no_panic() -> bool { true })]
 impl Default for SavedAllowRo {
+    #[flux_rs::sig(fn () -> Self)]
+    #[flux_rs::no_panic_if(Self::default_no_panic())]
     fn default() -> Self {
         Self {
             ptr: FluxPtr::null(),
@@ -758,7 +761,10 @@ struct SavedAllowRw {
     len: usize,
 }
 
+#[flux_rs::assoc(fn default_no_panic() -> bool { true })]
 impl Default for SavedAllowRw {
+    #[flux_rs::sig(fn () -> Self)]
+    #[flux_rs::no_panic_if(Self::default_no_panic())]
     fn default() -> Self {
         Self {
             ptr: FluxPtr::null_mut(),

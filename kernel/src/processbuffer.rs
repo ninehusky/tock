@@ -362,7 +362,10 @@ impl ReadableProcessBuffer for ReadOnlyProcessBuffer {
     }
 }
 
+#[flux_rs::assoc(fn default_no_panic() -> bool { true })]
 impl Default for ReadOnlyProcessBuffer {
+    #[flux_rs::sig(fn () -> Self)]
+    #[flux_rs::no_panic_if(Self::default_no_panic())]
     fn default() -> Self {
         ReadOnlyProcessBuffer {
             ptr: FluxPtr::null_mut(),
@@ -612,7 +615,10 @@ impl WriteableProcessBuffer for ReadWriteProcessBuffer {
     }
 }
 
+#[flux_rs::assoc(fn default_no_panic() -> bool { true })]
 impl Default for ReadWriteProcessBuffer {
+    #[flux_rs::sig(fn () -> Self)]
+    #[flux_rs::no_panic_if(Self::default_no_panic())]
     fn default() -> Self {
         Self::const_default()
     }
