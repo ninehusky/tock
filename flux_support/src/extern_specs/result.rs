@@ -28,4 +28,15 @@ impl<T, E> Result<T, E> {
     const fn unwrap_or_else<F>(self, op: F) -> T
     where
         F: [const] FnOnce(E) -> T + [const] Destruct;
+
+    #[sig(fn(Self, U, F) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
+    const fn map_or<U, F>(self, default: U, f: F) -> U
+    where
+        F: [const] FnOnce(T) -> U + [const] Destruct,
+        T: [const] Destruct,
+        E: [const] Destruct,
+        U: [const] Destruct;
+
+    
 }
