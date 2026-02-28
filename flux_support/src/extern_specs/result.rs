@@ -38,5 +38,25 @@ impl<T, E> Result<T, E> {
         E: [const] Destruct,
         U: [const] Destruct;
 
+    #[sig(fn(Self, F) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
+    const fn and_then<U, F>(self, op: F) -> Result<U, E>
+    where
+        F: [const] FnOnce(T) -> Result<U, E> + [const] Destruct;
+
+
+    #[sig(fn(Self, F) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
+    const fn map<U, F>(self, op: F) -> Result<U, E>
+    where
+        F: [const] FnOnce(T) -> U + [const] Destruct;
+
+    #[sig(fn(Self, D, F) -> _)]
+    #[flux_rs::no_panic_if(D::no_panic() && F::no_panic())]
+    const fn map_or_else<U, D, F>(self, default: D, f: F) -> U
+    where
+        D: [const] FnOnce(E) -> U + [const] Destruct,
+        F: [const] FnOnce(T) -> U + [const] Destruct;
+
     
 }

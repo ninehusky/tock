@@ -1,3 +1,5 @@
+use core::marker::Destruct;
+
 #[flux_rs::extern_spec]
 #[flux_rs::refined_by(b: bool)]
 enum Option<T> {
@@ -20,4 +22,11 @@ impl<T> Option<T> {
     fn unwrap_or_default(self) -> T
     where
         T: Default;
+
+
+    #[sig(fn(Self, F) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
+    const fn map<U, F>(self, f: F) -> Option<U>
+    where
+        F: [const] FnOnce(T) -> U + [const] Destruct;
 }

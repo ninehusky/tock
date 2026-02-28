@@ -4,6 +4,7 @@
 #![feature(const_result_trait_fn)]
 #![feature(const_destruct)]
 #![feature(const_trait_impl)]
+#![feature(const_option_ops)]
 
 mod extern_specs;
 mod flux_arr;
