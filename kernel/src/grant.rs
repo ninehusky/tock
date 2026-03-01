@@ -1738,11 +1738,16 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// This creates a [`ProcessGrant`] which is a handle for a grant allocated
     /// for a specific process. Then, that [`ProcessGrant`] is entered and the
     /// provided closure is run with access to the memory in the grant region.
+    #[flux_rs::sig(fn (_, _, _) -> _)]
     pub fn enter<F, R>(&self, processid: ProcessId, fun: F) -> Result<R, Error>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
     {
-        let pg = ProcessGrant::new(self, processid)?;
+        // let pg = ProcessGrant::new(self, processid)?;
+        let pg = match ProcessGrant::new(self, processid) {
+            Ok(pg) => pg,
+            Err(err) => return Err(err),
+        };
 
         // If we have managed to create an `ProcessGrant`, all we need
         // to do is actually access the memory and run the

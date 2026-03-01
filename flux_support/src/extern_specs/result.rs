@@ -58,5 +58,11 @@ impl<T, E> Result<T, E> {
         D: [const] FnOnce(E) -> U + [const] Destruct,
         F: [const] FnOnce(T) -> U + [const] Destruct;
 
+    #[sig(fn(Self, O) -> _)]
+    #[flux_rs::no_panic_if(O::no_panic())]
+    const fn map_err<F, O>(self, op: O) -> Result<T, F>
+    where
+        O: [const] FnOnce(E) -> F + [const] Destruct;
+
     
 }

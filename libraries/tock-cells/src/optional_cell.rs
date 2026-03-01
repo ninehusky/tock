@@ -6,6 +6,8 @@
 
 use core::cell::Cell;
 
+use flux_support::*;
+
 /// `OptionalCell` is a `Cell` that wraps an `Option`. This is helper type
 /// that makes keeping types that can be `None` a little cleaner.
 pub struct OptionalCell<T> {
@@ -53,6 +55,8 @@ impl<T> OptionalCell<T> {
     }
 
     /// Check if the cell contains something.
+    #[flux_rs::sig(fn(&Self) -> bool)]
+    #[flux_rs::no_panic_if(<Option<T> as Default>::default_no_panic())]
     pub fn is_some(&self) -> bool {
         let value = self.value.take();
         let out = value.is_some();
@@ -137,6 +141,8 @@ impl<T> OptionalCell<T> {
     }
 
     /// Return the contained value and replace it with None.
+    #[flux_rs::no_panic_if(<Option<T> as Default>::default_no_panic())]
+    #[flux_rs::sig(fn(&Self) -> _)]
     pub fn take(&self) -> Option<T> {
         self.value.take()
     }
@@ -247,8 +253,11 @@ impl<T: Copy> OptionalCell<T> {
 
 // Manual implementation of the [`Default`] trait, as
 // `#[derive(Default)]` incorrectly constraints `T: Default`.
+#[flux_rs::assoc(fn default_no_panic() -> bool { true })]
 impl<T> Default for OptionalCell<T> {
     /// Returns an empty [`OptionalCell`].
+    #[flux_rs::sig(fn() -> Self)]
+    #[flux_rs::no_panic_if(Self::default_no_panic())]
     fn default() -> Self {
         OptionalCell::empty()
     }

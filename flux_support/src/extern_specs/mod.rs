@@ -1,3 +1,4 @@
+mod cell;
 mod cmp;
 mod default;
 mod iter;
@@ -10,3 +11,4 @@ mod partial_cmp;
 mod range;
 mod result;
 mod slice;
+mod try_trait;

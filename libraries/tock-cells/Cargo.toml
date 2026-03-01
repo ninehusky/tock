@@ -8,6 +8,14 @@ version = "0.1.0"
 authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 edition = "2021"
 
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+
+[dependencies]
+flux-rs = { path = "/Users/acheung/research/projects/flux/lib/flux-rs/" }
+flux_support = { path = "../../flux_support"}
+
 
 [lints]
 workspace = true
