@@ -36,4 +36,11 @@ impl<T> Option<T> {
     where
         F: [const] FnOnce(T) -> U + [const] Destruct,
         U: [const] Destruct;
+
+    #[sig(fn(Self, F) -> Self)]
+    #[flux_rs::no_panic_if(F::no_panic())]
+    const fn inspect<F>(self, f: F) -> Self
+    where
+        F: [const] FnOnce(&T) + [const] Destruct;
+
 }

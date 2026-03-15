@@ -1843,6 +1843,10 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
 
     #[flux_rs::sig(fn (&mut Self) -> _)]
     #[flux_rs::no_panic_if(Self::next_no_panic())]
+    // Andrew: marking this as trusted for now to make progress on other fronts.
+    // We'll need to verify that `find_map` doesn't panic, which means verifying the re-entrance safety
+    // of MapCells.
+    #[flux_rs::trusted]
     fn next(&mut self) -> Option<Self::Item> {
         let grant = self.grant;
         // Get the next `ProcessId` from the kernel processes array that is

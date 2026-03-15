@@ -65,6 +65,8 @@ impl<T> OptionalCell<T> {
     }
 
     /// Check if the cell is None.
+    #[flux_rs::sig(fn(&Self) -> bool)]
+    #[flux_rs::no_panic]
     pub fn is_none(&self) -> bool {
         let value = self.value.take();
         let out = value.is_none();
@@ -217,6 +219,8 @@ impl<T: Copy> OptionalCell<T> {
     }
 
     /// Call a closure on the value if the value exists.
+    #[flux_rs::sig(fn(&Self, F) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     pub fn map<F, R>(&self, closure: F) -> Option<R>
     where
         F: FnOnce(T) -> R,
