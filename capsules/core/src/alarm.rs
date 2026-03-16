@@ -198,9 +198,6 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
                     .schedule_upcall(
                         ALARM_CALLBACK_NUM,
                         (
-                            // FIXME: (Andrew) why does the `wrapping_add` call here not "inherit" the
-                            // no-panic property of the parent function? Does it have something to do with the fact
-                            // that this is a closure within another closure?
                             now.into_u32_left_justified() as usize,
                             expired.reference.wrapping_add(expired.dt).into_usize(),
                             0,
