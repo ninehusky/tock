@@ -63,6 +63,4 @@ impl<T, E> Result<T, E> {
     const fn map_err<F, O>(self, op: O) -> Result<T, F>
     where
         O: [const] FnOnce(E) -> F + [const] Destruct;
-
-    
 }

@@ -650,6 +650,7 @@ impl<'a> GrantKernelData<'a> {
     /// returns a [`crate::process::Error`] to allow for easy chaining of this
     /// function with the `ReadOnlyProcessBuffer::enter()` function with
     /// `and_then`.
+    #[flux_rs::no_panic]
     pub fn get_readonly_processbuffer(
         &self,
         allow_ro_num: usize,
@@ -691,6 +692,7 @@ impl<'a> GrantKernelData<'a> {
     /// returns a [`crate::process::Error`] to allow for easy chaining of this
     /// function with the `ReadWriteProcessBuffer::enter()` function with
     /// `and_then`.
+    #[flux_rs::no_panic]
     pub fn get_readwrite_processbuffer(
         &self,
         allow_rw_num: usize,
@@ -1808,6 +1810,8 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
     #[flux_rs::trusted(reason = "ICE: assertion `left == right` failed `infer.rs:869`")]
+    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn (_) -> _)]
     pub fn iter(&self) -> Iter<'_, T, Upcalls, AllowROs, AllowRWs> {
         Iter {
             grant: self,

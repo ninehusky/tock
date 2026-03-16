@@ -251,20 +251,14 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         }
     }
 
-    #[flux_rs::sig(fn (now: A::Ticks, reference_u32: Option<u32>, dt_u32: u32, expiration: &mut Option<Expiration<A::Ticks>>) -> u32
-    requires
-        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
-        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
-        <A::Ticks as Ticks>::u32_padding_no_panic() &&
-        <A::Ticks as Ticks>::into_u32_no_panic() &&
-        <A::Ticks as Ticks>::width_no_panic()
-    )]
+    #[flux_rs::sig(fn (now: A::Ticks, reference_u32: Option<u32>, dt_u32: u32, expiration: &mut Option<Expiration<A::Ticks>>) -> u32)]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
         <A::Ticks as Ticks>::u32_padding_no_panic() &&
         <A::Ticks as Ticks>::into_u32_no_panic() &&
-        <A::Ticks as Ticks>::width_no_panic()
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as From<u32>>::from_no_panic()
     )]
     fn rearm_u32_left_justified_expiration(
         now: A::Ticks,

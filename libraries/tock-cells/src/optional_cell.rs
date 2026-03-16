@@ -230,6 +230,8 @@ impl<T: Copy> OptionalCell<T> {
 
     /// Call a closure on the value if the value exists, or return the
     /// default if the value is `None`.
+    #[flux_rs::sig(fn(&Self, _, _) -> R)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     pub fn map_or<F, R>(&self, default: R, closure: F) -> R
     where
         F: FnOnce(T) -> R,

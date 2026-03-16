@@ -21,6 +21,7 @@ use core::fmt;
 
 /// An integer type defining the width of a time value, which allows
 /// clients to know when wraparound will occur.
+#[flux_rs::assoc(fn from_no_panic() -> bool)]
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool)]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool)]
 #[flux_rs::assoc(fn into_u32_no_panic() -> bool)]
@@ -514,6 +515,7 @@ impl From<u32> for Ticks32 {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]
@@ -625,6 +627,7 @@ impl From<u32> for Ticks24 {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]
@@ -748,6 +751,7 @@ impl Ticks16 {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]
@@ -867,6 +871,7 @@ impl From<u64> for Ticks64 {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_add_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn wrapping_sub_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_u32_no_panic() -> bool { true })]

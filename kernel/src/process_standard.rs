@@ -225,6 +225,7 @@ pub struct ProcessStandard<'a, C: 'static + Chip> {
 }
 
 impl<C: Chip> Process for ProcessStandard<'_, C> {
+    #[flux_rs::no_panic]
     fn processid(&self) -> ProcessId {
         self.process_id.get()
     }

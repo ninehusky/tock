@@ -311,6 +311,7 @@ impl ReadOnlyProcessBuffer {
 
 impl ReadableProcessBuffer for ReadOnlyProcessBuffer {
     /// Return the length of the buffer in bytes.
+    #[flux_rs::no_panic]
     fn len(&self) -> usize {
         self.process_id
             .map_or(0, |pid| pid.kernel.process_map_or(0, pid, |_| self.len))

@@ -125,6 +125,8 @@ impl<'a, T: ?Sized> TakeCell<'a, T> {
     }
 
     /// Performs a `map` or returns a default value if the `TakeCell` is empty
+    #[flux_rs::sig(fn(&Self, _, _) -> R)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     pub fn map_or<F, R>(&self, default: R, closure: F) -> R
     where
         F: FnOnce(&mut T) -> R,

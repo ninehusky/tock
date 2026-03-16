@@ -1,5 +1,6 @@
 mod cell;
 mod cmp;
+mod convert;
 mod default;
 mod iter;
 mod mem;
