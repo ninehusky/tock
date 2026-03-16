@@ -80,7 +80,11 @@ impl CommandReturn {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<Result<(), ErrorCode>> for CommandReturn {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
+    #[flux_rs::trusted(reason = "temporary")]
     fn from(rc: Result<(), ErrorCode>) -> Self {
         match rc {
             Ok(()) => CommandReturn::success(),
@@ -89,9 +93,13 @@ impl From<Result<(), ErrorCode>> for CommandReturn {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<process::Error> for CommandReturn {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(perr: process::Error) -> Self {
-        CommandReturn::failure(perr.into())
+        // CommandReturn::failure(perr.into())
+        CommandReturn::failure(ErrorCode::from(perr))
     }
 }
 

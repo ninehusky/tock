@@ -265,7 +265,10 @@ impl PartialEq for ShortId {
 }
 impl Eq for ShortId {}
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl core::convert::From<Option<core::num::NonZeroU32>> for ShortId {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(id: Option<core::num::NonZeroU32>) -> ShortId {
         match id {
             Some(fixed) => ShortId::Fixed(fixed),
@@ -924,7 +927,10 @@ pub enum Error {
     AlreadyInUse,
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<Error> for Result<(), ErrorCode> {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(err: Error) -> Result<(), ErrorCode> {
         match err {
             Error::OutOfMemory => Err(ErrorCode::NOMEM),
@@ -937,7 +943,10 @@ impl From<Error> for Result<(), ErrorCode> {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<Error> for ErrorCode {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(err: Error) -> ErrorCode {
         match err {
             Error::OutOfMemory => ErrorCode::NOMEM,

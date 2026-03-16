@@ -721,7 +721,10 @@ fn cast_byte_slice_to_process_slice(byte_slice: &[ReadableProcessByte]) -> &Read
 
 // Allow a u8 slice to be viewed as a ReadableProcessSlice to allow client code
 // to be authored once and accept either [u8] or ReadableProcessSlice.
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl<'a> From<&'a [u8]> for &'a ReadableProcessSlice {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: &'a [u8]) -> Self {
         // # Safety
         //
@@ -735,7 +738,10 @@ impl<'a> From<&'a [u8]> for &'a ReadableProcessSlice {
 // Allow a mutable u8 slice to be viewed as a ReadableProcessSlice to allow
 // client code to be authored once and accept either [u8] or
 // ReadableProcessSlice.
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl<'a> From<&'a mut [u8]> for &'a ReadableProcessSlice {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: &'a mut [u8]) -> Self {
         // # Safety
         //
@@ -926,7 +932,10 @@ fn cast_cell_slice_to_process_slice(cell_slice: &[Cell<u8>]) -> &WriteableProces
 // Allow a mutable u8 slice to be viewed as a WritableProcessSlice to allow
 // client code to be authored once and accept either [u8] or
 // WriteableProcessSlice.
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl<'a> From<&'a mut [u8]> for &'a WriteableProcessSlice {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: &'a mut [u8]) -> Self {
         // # Safety
         //

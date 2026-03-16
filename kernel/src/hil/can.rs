@@ -112,7 +112,10 @@ pub enum Error {
     SetBySoftware,
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<Error> for ErrorCode {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: Error) -> Self {
         match val {
             Error::ArbitrationLost => ErrorCode::RESERVE,

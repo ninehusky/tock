@@ -509,7 +509,10 @@ impl Frequency for Freq1KHz {
 #[derive(Clone, Copy, Debug)]
 pub struct Ticks32(u32);
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<u32> for Ticks32 {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: u32) -> Self {
         Ticks32(val)
     }
@@ -621,7 +624,10 @@ impl Ticks24 {
     pub const MASK: u32 = 0x00FFFFFF;
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<u32> for Ticks24 {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: u32) -> Self {
         Ticks24(val & Self::MASK)
     }
@@ -733,13 +739,19 @@ impl Eq for Ticks24 {}
 #[derive(Clone, Copy, Debug)]
 pub struct Ticks16(u16);
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<u16> for Ticks16 {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: u16) -> Self {
         Ticks16(val)
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<u32> for Ticks16 {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: u32) -> Self {
         Ticks16((val & 0xffff) as u16)
     }
@@ -859,13 +871,19 @@ impl Ticks64 {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<u32> for Ticks64 {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: u32) -> Self {
         Ticks64(val as u64)
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<u64> for Ticks64 {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(val: u64) -> Self {
         Ticks64(val)
     }

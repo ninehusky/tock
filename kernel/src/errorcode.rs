@@ -43,7 +43,10 @@ pub enum ErrorCode {
     NOACK = 13,
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]  
 impl From<ErrorCode> for usize {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(err: ErrorCode) -> usize {
         err as usize
     }
@@ -72,7 +75,10 @@ impl TryFrom<Result<(), ErrorCode>> for ErrorCode {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<ErrorCode> for Result<(), ErrorCode> {
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     fn from(ec: ErrorCode) -> Self {
         match ec {
             ErrorCode::FAIL => Err(ErrorCode::FAIL),
