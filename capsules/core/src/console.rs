@@ -313,7 +313,8 @@ impl SyscallDriver for Console<'_> {
                     _ => Err(ErrorCode::NOSUPPORT),
                 }
             })
-            .map_err(ErrorCode::from);
+            // .map_err(ErrorCode::from);
+            .map_err(|e| ErrorCode::from(e));
         match res {
             Ok(Ok(())) => CommandReturn::success(),
             Ok(Err(e)) => CommandReturn::failure(e),
