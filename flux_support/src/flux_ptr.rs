@@ -32,8 +32,10 @@ pub struct FluxPtr {
     inner: *mut u8,
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::trusted(reason = "flux wrappers")]
 impl From<usize> for FluxPtr {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     #[flux_rs::sig(fn (value: usize) -> FluxPtr[value])]
     #[flux_rs::trusted(reason = "flux wrappers")]
     fn from(value: usize) -> Self {
@@ -43,8 +45,11 @@ impl From<usize> for FluxPtr {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::trusted(reason = "flux wrappers")]
 impl From<*const u8> for FluxPtr {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
+    #[flux_rs::sig(fn (_) -> _)]
     #[flux_rs::trusted(reason = "flux wrappers")]
     fn from(value: *const u8) -> Self {
         FluxPtr {
@@ -53,7 +58,9 @@ impl From<*const u8> for FluxPtr {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<NonNull<u8>> for FluxPtr {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     #[flux_rs::sig(fn (value: NonNull<u8>) -> FluxPtr[value])]
     #[flux_rs::trusted(reason = "flux wrappers")]
     fn from(value: NonNull<u8>) -> Self {
@@ -63,8 +70,12 @@ impl From<NonNull<u8>> for FluxPtr {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::trusted(reason = "flux wrappers")]
 impl From<*mut u8> for FluxPtr {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::trusted(reason = "flux wrappers")]
     fn from(value: *mut u8) -> Self {
         FluxPtr {
             inner: value as *mut u8,
@@ -72,29 +83,43 @@ impl From<*mut u8> for FluxPtr {
     }
 }
 
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::trusted(reason = "flux wrappers")]
 impl From<FluxPtr> for NonNull<u8> {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::trusted(reason = "flux wrappers")]
     fn from(value: FluxPtr) -> NonNull<u8> {
         unsafe { NonNull::new_unchecked(value.inner) }
     }
 }
 
 // Support cast from FluxPtr to u32
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<FluxPtr> for u32 {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::trusted(reason = "flux wrappers")]
     fn from(ptr: FluxPtr) -> u32 {
         ptr.as_u32()
     }
 }
 
 // convert FluxPtr to *const u8
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 #[flux_rs::trusted(reason = "flux wrappers")]
 impl From<FluxPtr> for u8 {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
+    #[flux_rs::sig(fn (_) -> _)]
+    #[flux_rs::trusted(reason = "flux wrappers")]
     fn from(ptr: FluxPtr) -> u8 {
         ptr.inner as u8
     }
 }
 // FluxPtr to usize
+#[flux_rs::assoc(fn from_no_panic() -> bool { true })]
 impl From<FluxPtr> for usize {
+    #[flux_rs::no_panic_if(Self::from_no_panic())]
     #[flux_rs::sig(fn (ptr: FluxPtr) -> usize[ptr])]
     fn from(ptr: FluxPtr) -> usize {
         ptr.as_usize()
