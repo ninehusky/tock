@@ -419,7 +419,8 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
         <A::Ticks as Ticks>::width_no_panic() &&
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
-        <A as kernel::hil::time::Time>::now_no_panic()
+        <A as kernel::hil::time::Time>::now_no_panic() &&
+        <kernel::process::Error as Into<ErrorCode>>::into_no_panic()
     )]
     fn command(
         &self,
