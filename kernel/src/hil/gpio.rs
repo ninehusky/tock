@@ -220,6 +220,8 @@ pub trait Input {
     }
 }
 
+#[flux_rs::assoc(fn enable_interrupts_no_panic() -> bool)]
+#[flux_rs::assoc(fn disable_interrupts_no_panic() -> bool)]
 pub trait Interrupt<'a>: Input {
     /// Set the client for interrupt events.
     fn set_client(&self, client: &'a dyn Client);
@@ -227,9 +229,13 @@ pub trait Interrupt<'a>: Input {
     /// Enable an interrupt on the GPIO pin. This does not
     /// configure the pin except to enable an interrupt: it
     /// should be separately configured as an input, etc.
+    #[flux_rs::no_panic_if(Self::enable_interrupts_no_panic())]
+    #[flux_rs::sig(fn(_, _) -> _)]
     fn enable_interrupts(&self, mode: InterruptEdge);
 
     /// Disable interrupts for the GPIO pin.
+    #[flux_rs::no_panic_if(Self::disable_interrupts_no_panic())]
+    #[flux_rs::sig(fn(_) -> _)]
     fn disable_interrupts(&self);
 
     /// Return whether this interrupt is pending
@@ -251,6 +257,8 @@ pub trait Client {
 /// interrupts call the same callback function and it needs to
 /// distinguish which one is calling it by giving each one a unique
 /// value.
+#[flux_rs::assoc(fn enable_interrupts_no_panic() -> bool)]
+#[flux_rs::assoc(fn disable_interrupts_no_panic() -> bool)]
 pub trait InterruptWithValue<'a>: Input {
     /// Set the client for interrupt events.
     fn set_client(&self, client: &'a dyn ClientWithValue);
@@ -263,9 +271,13 @@ pub trait InterruptWithValue<'a>: Input {
     ///    FAIL    - the interrupt was not set up properly; this is due to
     ///              not having an underlying interrupt source yet, i.e.
     ///              the struct is not yet fully initialized.
+    #[flux_rs::sig(fn(&Self, InterruptEdge) -> Result<(), ErrorCode>)]
+    #[flux_rs::no_panic_if(Self::enable_interrupts_no_panic())]
     fn enable_interrupts(&self, mode: InterruptEdge) -> Result<(), ErrorCode>;
 
     /// Disable interrupts for the GPIO pin.
+    #[flux_rs::no_panic_if(Self::disable_interrupts_no_panic())]
+    #[flux_rs::sig(fn(_) -> _)]
     fn disable_interrupts(&self);
 
     /// Return whether this interrupt is pending
@@ -311,6 +323,8 @@ impl<'a, IP: InterruptPin<'a>> InterruptValueWrapper<'a, IP> {
     }
 }
 
+#[flux_rs::assoc(fn enable_interrupts_no_panic() -> bool { IP::enable_interrupts_no_panic() })]
+#[flux_rs::assoc(fn disable_interrupts_no_panic() -> bool { IP::disable_interrupts_no_panic() })]
 impl<'a, IP: InterruptPin<'a>> InterruptWithValue<'a> for InterruptValueWrapper<'a, IP> {
     fn set_value(&self, value: u32) {
         self.value.set(value);
@@ -328,11 +342,15 @@ impl<'a, IP: InterruptPin<'a>> InterruptWithValue<'a> for InterruptValueWrapper<
         self.source.is_pending()
     }
 
+    #[flux_rs::sig(fn(_, _) -> _)]
+    #[flux_rs::no_panic_if(Self::enable_interrupts_no_panic())]
     fn enable_interrupts(&self, edge: InterruptEdge) -> Result<(), ErrorCode> {
         self.source.enable_interrupts(edge);
         Ok(())
     }
 
+    #[flux_rs::sig(fn(_) -> _)]
+    #[flux_rs::no_panic_if(Self::disable_interrupts_no_panic())]
     fn disable_interrupts(&self) {
         self.source.disable_interrupts();
     }
