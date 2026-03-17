@@ -1226,6 +1226,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
 
     /// Return the [`ProcessId`] of the process this [`ProcessGrant`] is
     /// associated with.
+    #[flux_rs::no_panic]
     pub fn processid(&self) -> ProcessId {
         self.process.processid()
     }

@@ -342,6 +342,8 @@ impl Ord for BinaryVersion {
 /// schedule.
 pub trait Process {
     /// Returns the process's identifier.
+    // Andrew: potentially unsound if we have some malicious `impl Process` whose `processid()` is just `panic!()`,
+    // but this is the only way for now that we can specify that a processgrant's `&'a dyn Process` can be used to get the processid without any risk of panicking.
     #[flux_rs::no_panic]
     fn processid(&self) -> ProcessId;
 

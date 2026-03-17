@@ -37,6 +37,22 @@ struct FilterMap<I, F>;
 #[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
 impl<B, I: Iterator, F: FnMut(I::Item) -> Option<B>> Iterator for FilterMap<I, F> {}
 
+#[flux_rs::extern_spec(core::slice)]
+#[flux_rs::assoc(fn next_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+impl<'a, T> Iterator for Iter<'a, T> {}
+
+#[flux_rs::extern_spec(core::slice)]
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {}
+
+#[flux_rs::extern_spec(core::iter)]
+struct Rev<T>;
+
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+impl<I: DoubleEndedIterator> Iterator for Rev<I> {}
+
 #[flux_rs::extern_spec(core::iter)]
 struct Enumerate<I>;
 
@@ -168,4 +184,19 @@ impl<I: Iterator> Iterator for Enumerate<I> {}
 //     None
 // }
 
-// TODO: implement IntoIter so I can use these with `for` loops
+// IntoIterator extern spec - resolves `for` loop desugaring
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn into_iter_no_panic() -> bool)]
+trait IntoIterator {
+    #[flux_rs::sig(fn(Self) -> Self::IntoIter)]
+    #[flux_rs::no_panic_if(Self::into_iter_no_panic())]
+    fn into_iter(self) -> Self::IntoIter
+    where
+        Self: Sized;
+}
+
+// Blanket impl: any Iterator is also IntoIterator via `fn into_iter(self) -> Self { self }`,
+// which is trivially no-panic.
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn into_iter_no_panic() -> bool { true })]
+impl<I: Iterator> IntoIterator for I {}

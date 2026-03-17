@@ -530,6 +530,7 @@ impl ReadWriteProcessBuffer {
 impl ReadableProcessBuffer for ReadWriteProcessBuffer {
     /// Return the length of the buffer in bytes.
     #[flux_rs::sig(fn (&Self[@p]) -> usize{len: valid_size(p.ptr + len)})]
+    #[flux_rs::no_panic] // Andrew: we shouldn't need this annotation here, yet the no_panic inference doesn't seem to be able to verify this without it?
     fn len(&self) -> usize {
         self.process_id
             .map_or(0, |pid| pid.kernel.process_map_or(0, pid, |_| self.len))
