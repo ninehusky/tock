@@ -10,6 +10,8 @@ use kernel::hil::time::{self, Alarm, Ticks};
 use kernel::syscall::{CommandReturn, SyscallDriver};
 use kernel::{ErrorCode, ProcessId};
 
+use kernel::hil::time::{Frequency, Time};
+
 /// Syscall driver number.
 use crate::driver;
 pub const DRIVER_NUM: usize = driver::NUM::Alarm as usize;
@@ -82,13 +84,13 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
             now: A::Ticks,
             expirations: I,
         ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
-        requires F::no_panic()
     )]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::within_range_no_panic() &&
         I::next_no_panic() &&
-        F::no_panic()
+        F::no_panic() &&
+        <I as IntoIterator>::into_iter_no_panic()
     )]
     fn earliest_alarm<UD, R, F, I>(
         now: A::Ticks,
@@ -96,7 +98,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
     where
         F: FnOnce(Expiration<A::Ticks>, &UD) -> Option<R>,
-        I: Iterator<Item = (Expiration<A::Ticks>, UD, F)>,
+        I: Iterator<Item = (Expiration<A::Ticks>, UD, F)>
+            + IntoIterator<Item = (Expiration<A::Ticks>, UD, F)>,
     {
         let mut earliest: Option<(Expiration<A::Ticks>, UD)> = None;
 
@@ -167,7 +170,9 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// - invoke upcalls for all expired app alarms, resetting them afterwards,
     /// - re-arming the alarm for the next earliest [`Expiration`], or
     /// - disarming the alarm if no unexpired [`Expiration`] is found.
-    #[flux_rs::sig(fn(&Self) -> () requires
+    #[flux_rs::sig(fn(&Self) -> ())]
+    #[flux_rs::no_panic_if(
+        <A::Ticks as Ticks>::within_range_no_panic() &&
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
         <A::Ticks as Ticks>::into_u32_no_panic() &&
@@ -417,7 +422,14 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
         <A as kernel::hil::time::Time>::now_no_panic() &&
-        <kernel::process::Error as Into<ErrorCode>>::into_no_panic()
+        <kernel::process::Error as Into<ErrorCode>>::into_no_panic() &&
+        <(A::Ticks) as From<u32>>::from_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_scale_freq_no_panic() &&
+        <<A as Time>::Frequency as Frequency>::frequency_no_panic() &&
+        <A::Ticks as Ticks>::within_range_no_panic() &&
+        <A::Ticks as Ticks>::into_usize_no_panic() &&
+        A::disarm_no_panic() &&
+        A::set_alarm_no_panic()
     )]
     fn command(
         &self,
@@ -568,9 +580,16 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
 impl<'a, A: Alarm<'a>> time::AlarmClient for AlarmDriver<'a, A> {
     #[flux_rs::sig(fn(&Self) -> ())]
     #[flux_rs::no_panic_if(
+        <A::Ticks as Ticks>::within_range_no_panic() &&
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
-        <A as kernel::hil::time::Time>::now_no_panic()
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
+        <A as kernel::hil::time::Time>::now_no_panic() &&
+        <A::Ticks as Ticks>::into_usize_no_panic() &&
+        A::disarm_no_panic() &&
+        A::set_alarm_no_panic()
     )]
     fn alarm(&self) {
         self.process_rearm_or_callback();

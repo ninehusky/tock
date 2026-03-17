@@ -30,6 +30,7 @@ use core::fmt;
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool)]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool)]
 #[flux_rs::assoc(fn within_range_no_panic() -> bool)]
+#[flux_rs::assoc(fn into_u32_left_justified_scale_freq_no_panic() -> bool)]
 pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// Width of the actual underlying timer in bits.
     ///
@@ -125,6 +126,8 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
     /// Convert the generic [`Frequency`] argument into a frequency
     /// (Hertz) describing a left-justified ticks value as returned by
     /// [`Ticks::into_u32_left_justified`].
+    #[flux_rs::sig(fn() -> u32)]
+    #[flux_rs::no_panic_if(Self::into_u32_left_justified_scale_freq_no_panic() && Self::width_no_panic() && Self::u32_padding_no_panic() && F::frequency_no_panic())]
     fn u32_left_justified_scale_freq<F: Frequency>() -> u32 {
         F::frequency() << Self::u32_padding()
     }
@@ -168,9 +171,11 @@ pub trait Ticks: Clone + Copy + From<u32> + fmt::Debug + Ord + PartialOrd + Eq {
 /// Represents a clock's frequency in Hz, allowing code to transform
 /// between computer time units and wall clock time. It is typically
 /// an associated type for an implementation of the `Time` trait.
+#[flux_rs::assoc(fn frequency_no_panic() -> bool)]
 pub trait Frequency {
     /// Returns frequency in Hz.
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32;
 }
 
@@ -439,8 +444,11 @@ pub trait Timer<'a>: Time {
 /// 100MHz `Frequency`
 #[derive(Debug)]
 pub enum Freq100MHz {}
+
+#[flux_rs::assoc(fn frequency_no_panic() -> bool { true })]
 impl Frequency for Freq100MHz {
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32 {
         100_000_000
     }
@@ -449,8 +457,11 @@ impl Frequency for Freq100MHz {
 /// 16MHz `Frequency`
 #[derive(Debug)]
 pub enum Freq16MHz {}
+
+#[flux_rs::assoc(fn frequency_no_panic() -> bool { true })]
 impl Frequency for Freq16MHz {
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32 {
         16_000_000
     }
@@ -458,8 +469,11 @@ impl Frequency for Freq16MHz {
 
 /// 10MHz `Frequency`
 pub enum Freq10MHz {}
+
+#[flux_rs::assoc(fn frequency_no_panic() -> bool { true })]
 impl Frequency for Freq10MHz {
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32 {
         10_000_000
     }
@@ -468,8 +482,10 @@ impl Frequency for Freq10MHz {
 /// 1MHz `Frequency`
 #[derive(Debug)]
 pub enum Freq1MHz {}
+#[flux_rs::assoc(fn frequency_no_panic() -> bool { true })]
 impl Frequency for Freq1MHz {
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32 {
         1_000_000
     }
@@ -478,8 +494,10 @@ impl Frequency for Freq1MHz {
 /// 32.768KHz `Frequency`
 #[derive(Debug)]
 pub enum Freq32KHz {}
+#[flux_rs::assoc(fn frequency_no_panic() -> bool { true })]
 impl Frequency for Freq32KHz {
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32 {
         32_768
     }
@@ -488,8 +506,10 @@ impl Frequency for Freq32KHz {
 /// 16KHz `Frequency`
 #[derive(Debug)]
 pub enum Freq16KHz {}
+#[flux_rs::assoc(fn frequency_no_panic() -> bool { true })]
 impl Frequency for Freq16KHz {
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32 {
         16_000
     }
@@ -498,8 +518,10 @@ impl Frequency for Freq16KHz {
 /// 1KHz `Frequency`
 #[derive(Debug)]
 pub enum Freq1KHz {}
+#[flux_rs::assoc(fn frequency_no_panic() -> bool { true })]
 impl Frequency for Freq1KHz {
     #[flux_rs::sig(fn() -> u32{r: r > 0})]
+    #[flux_rs::no_panic_if(Self::frequency_no_panic())]
     fn frequency() -> u32 {
         1_000
     }
@@ -527,6 +549,7 @@ impl From<u32> for Ticks32 {
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
+#[flux_rs::assoc(fn into_u32_left_justified_scale_freq_no_panic() -> bool { true })]
 impl Ticks for Ticks32 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
@@ -642,6 +665,7 @@ impl From<u32> for Ticks24 {
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
+#[flux_rs::assoc(fn into_u32_left_justified_scale_freq_no_panic() -> bool { true })]
 impl Ticks for Ticks24 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
@@ -772,6 +796,7 @@ impl Ticks16 {
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
+#[flux_rs::assoc(fn into_u32_left_justified_scale_freq_no_panic() -> bool { true })]
 impl Ticks for Ticks16 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
@@ -898,6 +923,7 @@ impl From<u64> for Ticks64 {
 #[flux_rs::assoc(fn u32_padding_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn into_usize_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn within_range_no_panic() -> bool { Self::wrapping_sub_no_panic() })]
+#[flux_rs::assoc(fn into_u32_left_justified_scale_freq_no_panic() -> bool { true })]
 impl Ticks for Ticks64 {
     #[flux_rs::sig(fn() -> u32)]
     #[flux_rs::no_panic_if(Self::width_no_panic())]
