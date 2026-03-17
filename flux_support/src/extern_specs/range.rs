@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use core::ops::Bound;
-use core::ops::{Range, RangeBounds};
+use core::ops::{Range, RangeBounds, RangeFrom, RangeTo};
 
 #[flux_rs::extern_spec]
 #[flux_rs::refined_by(included: bool, unbounded: bool)]
@@ -25,6 +25,20 @@ struct Range<Idx> {
     start: Idx,
     #[field(Idx[end])]
     end: Idx,
+}
+
+#[flux_rs::extern_spec(core::ops)]
+#[flux_rs::refined_by(end: Idx)]
+struct RangeTo<Idx> {
+    #[field(Idx[end])]
+    end: Idx,
+}
+
+#[flux_rs::extern_spec(core::ops)]
+#[flux_rs::refined_by(start: Idx)]
+struct RangeFrom<Idx> {
+    #[field(Idx[start])]
+    start: Idx,
 }
 
 #[flux_rs::extern_spec(core::ops)]

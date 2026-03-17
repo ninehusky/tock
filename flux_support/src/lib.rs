@@ -6,6 +6,7 @@
 #![feature(const_trait_impl)]
 #![feature(const_option_ops)]
 #![feature(import_trait_associated_functions)]
+#![feature(slice_index_methods)]
 
 mod extern_specs;
 mod flux_arr;
