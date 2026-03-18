@@ -31,6 +31,7 @@ pub struct ListIterator<'a, T: 'a + ?Sized + ListNode<'a, T>> {
 
 #[flux_rs::assoc(fn next_no_panic() -> bool { T::next_no_panic() })]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
 impl<'a, T: ?Sized + ListNode<'a, T>> Iterator for ListIterator<'a, T> {
     type Item = &'a T;
 

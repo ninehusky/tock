@@ -9,6 +9,7 @@ struct Iter<'a, T>;
 #[flux_rs::extern_spec(core::iter)]
 #[flux_rs::assoc(fn next_no_panic() -> bool)]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool)]
+#[flux_rs::assoc(fn zip_no_panic() -> bool)]
 trait Iterator {
     #[flux_rs::sig(fn(&mut Self) -> _)]
     #[flux_rs::no_panic_if(Self::next_no_panic())]
@@ -27,6 +28,12 @@ trait Iterator {
         Self: Sized,
         F: FnMut(B, Self::Item) -> R,
         R: Try<Output = B>;
+
+    #[flux_rs::sig(fn(Self, U) -> Zip<Self, U::IntoIter>)]
+    #[flux_rs::no_panic_if(Self::zip_no_panic() && <U as IntoIterator>::into_iter_no_panic())]
+    fn zip<U: IntoIterator>(self, other: U) -> Zip<Self, U::IntoIter>
+    where
+        Self: Sized;
 }
 
 #[flux_rs::extern_spec(core::iter)]
@@ -35,11 +42,13 @@ struct FilterMap<I, F>;
 #[flux_rs::extern_spec(core::iter)]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
 impl<B, I: Iterator, F: FnMut(I::Item) -> Option<B>> Iterator for FilterMap<I, F> {}
 
 #[flux_rs::extern_spec(core::slice)]
 #[flux_rs::assoc(fn next_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
 impl<'a, T> Iterator for Iter<'a, T> {
     #[flux_rs::sig(fn(&mut Self) -> _)]
     #[flux_rs::no_panic_if(<Self as Iterator>::next_no_panic())]
@@ -60,6 +69,7 @@ struct Rev<T>;
 #[flux_rs::extern_spec(core::iter)]
 #[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
 impl<I: DoubleEndedIterator> Iterator for Rev<I> {}
 
 #[flux_rs::extern_spec(core::iter)]
@@ -68,6 +78,7 @@ struct Enumerate<I>;
 #[flux_rs::extern_spec(core::iter)]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
 impl<I: Iterator> Iterator for Enumerate<I> {
     #[flux_rs::sig(fn(&mut Self) -> _)]
     #[flux_rs::no_panic_if(<I as Iterator>::next_no_panic())]
@@ -196,6 +207,32 @@ impl<I: Iterator> Iterator for Enumerate<I> {
 //     }
 //     None
 // }
+
+#[flux_rs::extern_spec(core::iter)]
+struct Zip<A, B>;
+
+#[flux_rs::extern_spec(core::iter)]
+struct Take<I>;
+
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
+impl<I: Iterator> Iterator for Take<I> {
+    #[flux_rs::sig(fn(&mut Self) -> _)]
+    #[flux_rs::no_panic_if(<I as Iterator>::next_no_panic())]
+    fn next(&mut self) -> Option<I::Item>;
+}
+
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn next_no_panic() -> bool { <A as Iterator>::next_no_panic() && <B as Iterator>::next_no_panic() })]
+#[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
+impl<A: Iterator, B: Iterator> Iterator for Zip<A, B> {
+    #[flux_rs::sig(fn(&mut Self) -> _)]
+    #[flux_rs::no_panic_if(<A as Iterator>::next_no_panic() && <B as Iterator>::next_no_panic())]
+    fn next(&mut self) -> Option<(A::Item, B::Item)>;
+}
 
 // IntoIterator extern spec - resolves `for` loop desugaring
 #[flux_rs::extern_spec(core::iter)]

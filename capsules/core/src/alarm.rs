@@ -90,7 +90,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         <A::Ticks as Ticks>::within_range_no_panic() &&
         I::next_no_panic() &&
         F::no_panic() &&
-        <I as IntoIterator>::into_iter_no_panic()
+        <I as IntoIterator>::into_iter_no_panic() &&
+        <<I as IntoIterator>::IntoIter as Iterator>::next_no_panic()
     )]
     fn earliest_alarm<UD, R, F, I>(
         now: A::Ticks,
@@ -103,7 +104,9 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     {
         let mut earliest: Option<(Expiration<A::Ticks>, UD)> = None;
 
-        for (exp, ud, expired_handler) in expirations {
+        let mut iter = expirations.into_iter();
+        while let Some((exp, ud, expired_handler)) = iter.next() {
+            // for (exp, ud, expired_handler) in expirations {
             let Expiration {
                 reference: exp_ref,
                 dt: exp_dt,
