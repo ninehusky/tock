@@ -1811,7 +1811,7 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
     #[flux_rs::trusted(reason = "ICE: assertion `left == right` failed `infer.rs:869`")]
-    #[flux_rs::no_panic]
+    #[flux_rs::no_panic] // Andrew: this is super duper unsound. why did i do this??
     #[flux_rs::sig(fn (_) -> _)]
     pub fn iter(&self) -> Iter<'_, T, Upcalls, AllowROs, AllowRWs> {
         Iter {
@@ -1841,6 +1841,7 @@ pub struct Iter<
 
 #[flux_rs::assoc(fn next_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
+#[flux_rs::assoc(fn zip_no_panic() -> bool { true })]
 impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize> Iterator
     for Iter<'a, T, Upcalls, AllowROs, AllowRWs>
 {
