@@ -40,9 +40,18 @@ impl<B, I: Iterator, F: FnMut(I::Item) -> Option<B>> Iterator for FilterMap<I, F
 #[flux_rs::extern_spec(core::slice)]
 #[flux_rs::assoc(fn next_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
-impl<'a, T> Iterator for Iter<'a, T> {}
+impl<'a, T> Iterator for Iter<'a, T> {
+    #[flux_rs::sig(fn(&mut Self) -> _)]
+    #[flux_rs::no_panic_if(<Self as Iterator>::next_no_panic())]
+    fn next(&mut self) -> Option<&'a T>;
+}
+
+#[flux_rs::extern_spec(core::iter)]
+#[flux_rs::assoc(fn next_no_panic() -> bool)]
+trait DoubleEndedIterator {}
 
 #[flux_rs::extern_spec(core::slice)]
+#[flux_rs::assoc(fn next_no_panic() -> bool { true })]
 impl<'a, T> DoubleEndedIterator for Iter<'a, T> {}
 
 #[flux_rs::extern_spec(core::iter)]
@@ -59,7 +68,11 @@ struct Enumerate<I>;
 #[flux_rs::extern_spec(core::iter)]
 #[flux_rs::assoc(fn find_map_no_panic() -> bool { true })]
 #[flux_rs::assoc(fn next_no_panic() -> bool { <I as Iterator>::next_no_panic() })]
-impl<I: Iterator> Iterator for Enumerate<I> {}
+impl<I: Iterator> Iterator for Enumerate<I> {
+    #[flux_rs::sig(fn(&mut Self) -> _)]
+    #[flux_rs::no_panic_if(<I as Iterator>::next_no_panic())]
+    fn next(&mut self) -> Option<(usize, <I as Iterator>::Item)>;
+}
 
 // #[flux_rs::extern_spec(std::iter)]
 // #[flux_rs::refined_by(idx: int, inner: I)]
