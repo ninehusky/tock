@@ -4,35 +4,11 @@
 
 //! Tock specific `MapCell` type for sharing references.
 
-use core::cell::{Cell, UnsafeCell};
+use core::cell::UnsafeCell;
 use core::mem::MaybeUninit;
 use core::ptr::drop_in_place;
 
-#[flux_rs::assoc(fn not_borrowed (s: Self) -> bool)]
-pub trait IsMapCellLike {}
-
-#[derive(Clone, Copy, PartialEq)]
-#[flux_rs::refined_by(state_num: int)]
-enum MapCellState {
-    #[flux_rs::variant(MapCellState[0])]
-    Uninit,
-    #[flux_rs::variant(MapCellState[1])]
-    Init,
-    #[flux_rs::variant(MapCellState[2])]
-    Borrowed,
-}
-
-#[flux_rs::assoc(fn not_borrowed(s: Self) -> bool { s.state_num != 2})]
-impl IsMapCellLike for MapCellState {}
-
-#[flux_rs::trusted_impl(reason = "I'm just out here swimming right now")]
-#[flux_rs::extern_spec(core::cell)]
-// Cells are refined by the stuff that lives inside of them.
-#[flux_rs::refined_by(state_num: int)]
-impl<T: IsMapCellLike + Copy> Cell<T> {
-    #[flux_rs::sig(fn(s: &Self[@state_num], val: T[@new_num]) -> () ensures s : Self { s : s.state_num == new_num })]
-    fn set(&self, val: T);
-}
+use flux_support::{FluxCell, MapCellState};
 
 #[inline(never)]
 #[cold]
@@ -77,6 +53,7 @@ macro_rules! debug_assert_not_borrowed {
 /// });
 /// assert_eq!(cell.replace(60), Some(30));
 /// ```
+#[flux_rs::refined_by(state_num: int)]
 pub struct MapCell<T> {
     // Since val is potentially uninitialized memory, we must be sure to check
     // `.occupied` before calling `.val.get()` or `.val.assume_init()`. See
@@ -87,7 +64,8 @@ pub struct MapCell<T> {
     // - The contents of `val` must be initialized if this is `Init` or `InsideMap`.
     // - It must be sound to mutate `val` behind a shared reference if this is `Uninit` or `Init`.
     //   No outside mutation can occur while a `&mut` to the contents of `val` exist.
-    occupied: Cell<MapCellState>,
+    #[flux_rs::field(FluxCell[state_num])]
+    occupied: FluxCell,
 }
 
 // #[flux_rs::trusted_impl(reason = "blahblah")]
@@ -150,7 +128,7 @@ impl<T> MapCell<T> {
     pub const fn empty() -> MapCell<T> {
         MapCell {
             val: UnsafeCell::new(MaybeUninit::uninit()),
-            occupied: Cell::new(MapCellState::Uninit),
+            occupied: FluxCell::new(MapCellState::Uninit),
         }
     }
 
@@ -158,7 +136,7 @@ impl<T> MapCell<T> {
     pub const fn new(value: T) -> MapCell<T> {
         MapCell {
             val: UnsafeCell::new(MaybeUninit::new(value)),
-            occupied: Cell::new(MapCellState::Init),
+            occupied: FluxCell::new(MapCellState::Init),
         }
     }
 
@@ -222,7 +200,11 @@ impl<T> MapCell<T> {
             //         behind a shared reference. `result` is therefore initialized.
             unsafe {
                 let result: MaybeUninit<T> = self.val.get().replace(MaybeUninit::uninit());
-                self.occupied.set(MapCellState::Uninit);
+                // SAFETY: FluxCell wraps Cell<UnsafeCell>; no aliased &mut exists here.
+                (&self.occupied as *const FluxCell as *mut FluxCell)
+                    .as_mut()
+                    .unwrap()
+                    .set(MapCellState::Uninit);
                 result.assume_init()
             }
         })
@@ -254,7 +236,13 @@ impl<T> MapCell<T> {
         if occupied == MapCellState::Borrowed {
             return None;
         }
-        self.occupied.set(MapCellState::Init);
+        // SAFETY: FluxCell wraps Cell<UnsafeCell>; no aliased &mut exists here.
+        unsafe {
+            (&self.occupied as *const FluxCell as *mut FluxCell)
+                .as_mut()
+                .unwrap()
+                .set(MapCellState::Init)
+        };
 
         // SAFETY:
         // - Since `occupied` is `Init` or `Uninit`, no `&mut` to the `val` exists, meaning it
@@ -297,20 +285,33 @@ impl<T> MapCell<T> {
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
     #[inline(always)]
+    #[flux_rs::sig(fn(self: &Self[@state_num], closure: F) -> Option<R> requires state_num != 3)]
     pub fn map<F, R>(&self, closure: F) -> Option<R>
     where
         F: FnOnce(&mut T) -> R,
     {
         debug_assert_not_borrowed!(self);
         (self.occupied.get() == MapCellState::Init).then(move || {
-            self.occupied.set(MapCellState::Borrowed);
+            // SAFETY: FluxCell wraps Cell<UnsafeCell>; no aliased &mut exists here.
+            unsafe {
+                (&self.occupied as *const FluxCell as *mut FluxCell)
+                    .as_mut()
+                    .unwrap()
+                    .set(MapCellState::Borrowed)
+            };
             // `occupied` is reset to initialized at the end of scope,
             // even if a panic occurs in `closure`.
-            struct ResetToInit<'a>(&'a Cell<MapCellState>);
+            struct ResetToInit<'a>(&'a FluxCell);
             impl Drop for ResetToInit<'_> {
                 #[inline(always)]
                 fn drop(&mut self) {
-                    self.0.set(MapCellState::Init);
+                    // SAFETY: FluxCell wraps Cell<UnsafeCell>; no aliased &mut exists here.
+                    unsafe {
+                        (self.0 as *const FluxCell as *mut FluxCell)
+                            .as_mut()
+                            .unwrap()
+                            .set(MapCellState::Init)
+                    };
                 }
             }
             let _reset_to_init = ResetToInit(&self.occupied);
