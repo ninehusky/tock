@@ -1202,6 +1202,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// Return a [`ProcessGrant`] for a grant in a process if the process is
     /// valid and that process grant has already been allocated, or `None`
     /// otherwise.
+    #[flux_rs::no_panic]
     fn new_if_allocated(
         grant: &Grant<T, Upcalls, AllowROs, AllowRWs>,
         process: &'a dyn Process,

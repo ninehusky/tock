@@ -727,6 +727,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             .map_or(Err(()), |am| unsafe { Ok(am.set_byte(addr, value)) })
     }
 
+    #[flux_rs::no_panic]
     fn grant_is_allocated(&self, grant_num: usize) -> Option<bool> {
         // Do not modify an inactive process.
         if !self.is_running() {

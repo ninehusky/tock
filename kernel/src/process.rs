@@ -721,6 +721,7 @@ pub trait Process {
     ///
     /// Returns `None` if the process is not active. Otherwise, returns `true`
     /// if the grant has been allocated, `false` otherwise.
+    #[flux_rs::no_panic]
     fn grant_is_allocated(&self, grant_num: usize) -> Option<bool>;
 
     /// Allocate memory from the grant region that is `size` bytes long and

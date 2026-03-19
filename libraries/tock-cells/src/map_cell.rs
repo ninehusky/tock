@@ -8,11 +8,30 @@ use core::cell::{Cell, UnsafeCell};
 use core::mem::MaybeUninit;
 use core::ptr::drop_in_place;
 
+#[flux_rs::assoc(fn not_borrowed (s: Self) -> bool)]
+pub trait IsMapCellLike {}
+
 #[derive(Clone, Copy, PartialEq)]
+#[flux_rs::refined_by(state_num: int)]
 enum MapCellState {
+    #[flux_rs::variant(MapCellState[0])]
     Uninit,
+    #[flux_rs::variant(MapCellState[1])]
     Init,
+    #[flux_rs::variant(MapCellState[2])]
     Borrowed,
+}
+
+#[flux_rs::assoc(fn not_borrowed(s: Self) -> bool { s.state_num != 2})]
+impl IsMapCellLike for MapCellState {}
+
+#[flux_rs::trusted_impl(reason = "I'm just out here swimming right now")]
+#[flux_rs::extern_spec(core::cell)]
+// Cells are refined by the stuff that lives inside of them.
+#[flux_rs::refined_by(state_num: int)]
+impl<T: IsMapCellLike + Copy> Cell<T> {
+    #[flux_rs::sig(fn(s: &Self[@state_num], val: T[@new_num]) -> () ensures s : Self { s : s.state_num == new_num })]
+    fn set(&self, val: T);
 }
 
 #[inline(never)]
@@ -70,6 +89,13 @@ pub struct MapCell<T> {
     //   No outside mutation can occur while a `&mut` to the contents of `val` exist.
     occupied: Cell<MapCellState>,
 }
+
+// #[flux_rs::trusted_impl(reason = "blahblah")]
+// #[flux_rs::extern_spec(core::cell)]
+// #[flux_rs::refined_by(blah: MapCellState)]
+// impl Cell<MapCellState> {
+//     fn get(&self) -> MapCellState;
+// }
 
 impl<T> Drop for MapCell<T> {
     fn drop(&mut self) {
