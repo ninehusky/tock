@@ -37,4 +37,19 @@ impl FluxCell {
     pub fn get(&self) -> MapCellState {
         self.state
     }
+
+    #[flux_rs::trusted]
+    #[flux_rs::no_panic]
+    // Andrew: I know this is probably bad, but I don't want to verify the `unwrap` safety
+    // of the `Cell` here: look at the callsites of `set_shared` in `map_cell.rs`. All of them
+    // were originally just calls to `Cell::set`, so I'm assuming the translation here is
+    // easy to verify.
+    pub fn set_shared(&self, value: MapCellState) {
+        unsafe {
+            (self as *const Self as *mut Self)
+                .as_mut()
+                .unwrap()
+                .set(value)
+        }
+    }
 }

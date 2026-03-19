@@ -1,3 +1,4 @@
+mod bool;
 mod cell;
 mod cmp;
 mod convert;

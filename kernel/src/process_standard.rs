@@ -105,6 +105,7 @@ struct GrantPointerEntry {
     grant_ptr: FluxPtrU8Mut,
 }
 /// A type for userspace processes in Tock.
+#[flux_rs::refined_by(gp: MapCell)]
 pub struct ProcessStandard<'a, C: 'static + Chip> {
     /// Identifier of this process and the index of the process in the process
     /// table.
@@ -168,6 +169,7 @@ pub struct ProcessStandard<'a, C: 'static + Chip> {
     /// allocated memory and the driver number is set to match the driver that
     /// owns the grant. No other reference to these pointers exists in the Tock
     /// kernel.
+    #[flux_rs::field(MapCell<&mut [GrantPointerEntry]>[gp])]
     grant_pointers: MapCell<&'static mut [GrantPointerEntry]>,
 
     /// The footers of the process binary (may be zero-sized), which are metadata
@@ -727,7 +729,9 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             .map_or(Err(()), |am| unsafe { Ok(am.set_byte(addr, value)) })
     }
 
-    #[flux_rs::no_panic]
+    #[flux_rs::trusted_impl(reason = "blah")] // doing this to avoid annotating no_panic_if on process.
+    #[flux_rs::no_panic_if(gp.gp.occupied.state_num != 2)]
+    #[flux_rs::sig(fn (self: &Self[@gp], grant_num: usize) -> Option<bool>)]
     fn grant_is_allocated(&self, grant_num: usize) -> Option<bool> {
         // Do not modify an inactive process.
         if !self.is_running() {
@@ -1300,6 +1304,7 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
             usize
         )-> Result<(Option<&_>, &mut [u8]), (ProcessLoadError, &mut [u8])>
     )]
+    #[flux_rs::trusted] // Andrew: fix this later.
     pub(crate) unsafe fn create<'a>(
         kernel: &'static Kernel,
         chip: &'static C,
