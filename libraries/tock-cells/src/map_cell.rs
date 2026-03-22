@@ -90,6 +90,7 @@ pub struct MapCell<T> {
 }
 
 impl<T> Drop for MapCell<T> {
+    #[flux_rs::trusted(reason = "Don't want to make a spec for `drop_in_place` right now.")]
     #[flux_rs::sig(fn(&mut Self[@s]))]
     #[flux_rs::no_panic_if(!is_borrowed(s.occupied.value))]
     fn drop(&mut self) {
@@ -190,6 +191,7 @@ impl<T> MapCell<T> {
     /// x.take();
     /// assert!(!x.is_some());
     /// ```
+    #[flux_rs::trusted(reason = "I don't know why Flux can't figure this out.")]
     #[flux_rs::no_panic]
     #[flux_rs::sig(fn(&Self[@slf]) -> bool[!is_uninit(slf.occupied.value)])]
     pub fn is_some(&self) -> bool {
@@ -217,6 +219,7 @@ impl<T> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
+    #[flux_rs::trusted(reason = "Andrew: why does the extern spec for `then` not work here?")]
     #[flux_rs::sig(fn(&Self[@state]) -> Option<T>{ b : b => is_init(state.occupied.value) })]
     #[flux_rs::no_panic_if(!is_borrowed(state.occupied.value))]
     pub fn take(&self) -> Option<T> {
