@@ -105,7 +105,7 @@ struct GrantPointerEntry {
     grant_ptr: FluxPtrU8Mut,
 }
 /// A type for userspace processes in Tock.
-#[flux_rs::refined_by(gp: MapCell)]
+#[flux_rs::refined_by(gp: int)]
 pub struct ProcessStandard<'a, C: 'static + Chip> {
     /// Identifier of this process and the index of the process in the process
     /// table.
@@ -730,7 +730,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
     }
 
     #[flux_rs::trusted_impl(reason = "blah")] // doing this to avoid annotating no_panic_if on process.
-    #[flux_rs::no_panic_if(gp.gp.occupied.state_num != 2)]
+    #[flux_rs::no_panic_if(gp != 2)]
     #[flux_rs::sig(fn (self: &Self[@gp], grant_num: usize) -> Option<bool>)]
     fn grant_is_allocated(&self, grant_num: usize) -> Option<bool> {
         // Do not modify an inactive process.

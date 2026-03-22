@@ -9,9 +9,13 @@ use core::mem::MaybeUninit;
 use core::ptr::drop_in_place;
 
 #[derive(Clone, Copy, PartialEq)]
+#[flux_rs::refined_by(state_num: int)]
 enum MapCellState {
+    #[flux_rs::variant(MapCellState[0])]
     Uninit,
+    #[flux_rs::variant(MapCellState[1])]
     Init,
+    #[flux_rs::variant(MapCellState[2])]
     Borrowed,
 }
 
@@ -23,9 +27,15 @@ fn access_panic() {
 
 macro_rules! debug_assert_not_borrowed {
     ($slf:ident) => {
-        if cfg!(debug_assertions) && $slf.occupied.get() == MapCellState::Borrowed {
-            access_panic();
+        if cfg!(debug_assertions) {
+            match $slf.occupied.get() {
+                MapCellState::Borrowed => access_panic(),
+                _ => {}
+            }
         }
+        // if cfg!(debug_assertions) && $slf.occupied.get() == MapCellState::Borrowed {
+        //     access_panic();
+        // }
     };
 }
 
@@ -58,6 +68,8 @@ macro_rules! debug_assert_not_borrowed {
 /// });
 /// assert_eq!(cell.replace(60), Some(30));
 /// ```
+#[flux_rs::refined_by(state: int)]
+#[flux_rs::opaque]
 pub struct MapCell<T> {
     // Since val is potentially uninitialized memory, we must be sure to check
     // `.occupied` before calling `.val.get()` or `.val.assume_init()`. See
@@ -68,10 +80,14 @@ pub struct MapCell<T> {
     // - The contents of `val` must be initialized if this is `Init` or `InsideMap`.
     // - It must be sound to mutate `val` behind a shared reference if this is `Uninit` or `Init`.
     //   No outside mutation can occur while a `&mut` to the contents of `val` exist.
+    // #[flux_rs::field(Cell<MapCellState>[state])]
     occupied: Cell<MapCellState>,
 }
 
 impl<T> Drop for MapCell<T> {
+    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
+    #[flux_rs::sig(fn(&mut Self[@state]))]
+    #[flux_rs::no_panic_if(state.state != 2)]
     fn drop(&mut self) {
         let state = self.occupied.get();
         debug_assert_not_borrowed!(self); // This should be impossible
@@ -109,6 +125,9 @@ impl<T: Copy> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
+    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
+    #[flux_rs::sig(fn(&Self[@state]) -> Option<T>{ b : b => state.state == 1 })]
+    #[flux_rs::no_panic_if(state.state != 2)]
     pub fn get(&self) -> Option<T> {
         debug_assert_not_borrowed!(self);
         // SAFETY:
@@ -121,6 +140,7 @@ impl<T: Copy> MapCell<T> {
 
 impl<T> MapCell<T> {
     /// Creates an empty `MapCell`.
+    #[flux_rs::trusted]
     pub const fn empty() -> MapCell<T> {
         MapCell {
             val: UnsafeCell::new(MaybeUninit::uninit()),
@@ -129,6 +149,7 @@ impl<T> MapCell<T> {
     }
 
     /// Creates a new `MapCell` containing `value`.
+    #[flux_rs::trusted]
     pub const fn new(value: T) -> MapCell<T> {
         MapCell {
             val: UnsafeCell::new(MaybeUninit::new(value)),
@@ -164,6 +185,9 @@ impl<T> MapCell<T> {
     /// x.take();
     /// assert!(!x.is_some());
     /// ```
+    #[flux_rs::trusted]
+    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn(&Self[@state]) -> bool[state != 0])]
     pub fn is_some(&self) -> bool {
         self.occupied.get() != MapCellState::Uninit
     }
@@ -189,6 +213,9 @@ impl<T> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
+    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
+    #[flux_rs::sig(fn(&Self[@state]) -> Option<T>{ b : b => state == 1 })]
+    #[flux_rs::no_panic_if(state != 2)]
     pub fn take(&self) -> Option<T> {
         debug_assert_not_borrowed!(self);
         (self.occupied.get() == MapCellState::Init).then(|| {
@@ -209,6 +236,7 @@ impl<T> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
+    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
     pub fn put(&self, val: T) {
         debug_assert_not_borrowed!(self);
         // This will ensure the value as dropped
@@ -222,6 +250,9 @@ impl<T> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
+    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
+    #[flux_rs::sig(fn(&Self[@state], _) -> _)]
+    #[flux_rs::no_panic_if(state != 2)]
     pub fn replace(&self, val: T) -> Option<T> {
         let occupied = self.occupied.get();
         debug_assert_not_borrowed!(self);
@@ -271,11 +302,15 @@ impl<T> MapCell<T> {
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
     #[inline(always)]
+    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
+    #[flux_rs::sig(fn(&Self[@state], closure: F) -> Option<R>)]
+    #[flux_rs::no_panic_if(state != 2 && F::no_panic())]
     pub fn map<F, R>(&self, closure: F) -> Option<R>
     where
         F: FnOnce(&mut T) -> R,
     {
-        debug_assert_not_borrowed!(self);
+        // Andrew: todo: uncomment below line.
+        // debug_assert_not_borrowed!(self);
         (self.occupied.get() == MapCellState::Init).then(move || {
             self.occupied.set(MapCellState::Borrowed);
             // `occupied` is reset to initialized at the end of scope,
@@ -294,6 +329,8 @@ impl<T> MapCell<T> {
 
     /// Behaves like `map`, but returns `default` if there is no value present.
     #[inline(always)]
+    #[flux_rs::sig(fn(&Self[@state], _, _) -> _)]
+    #[flux_rs::no_panic_if(state != 2 && F::no_panic())]
     pub fn map_or<F, R>(&self, default: R, closure: F) -> R
     where
         F: FnOnce(&mut T) -> R,

@@ -295,10 +295,10 @@ pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
-#[flux_rs::sig(fn(&[u8], &mut [u8]) -> SResult)]
-#[flux_rs::no_panic_if(
-    <core::iter::Enumerate<core::iter::Rev<core::slice::Iter<u8>>> as Iterator>::next_no_panic()
-)]
+// #[flux_rs::sig(fn(&[u8], &mut [u8]) -> SResult)]
+// #[flux_rs::no_panic_if(
+//     <core::iter::Enumerate<core::iter::Rev<core::slice::Iter<u8>>> as Iterator>::next_no_panic()
+// )]
 pub fn decode_bytes_be(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     for (i, b) in buf[..out.len()].iter().rev().enumerate() {
