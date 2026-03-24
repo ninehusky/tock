@@ -338,6 +338,7 @@ impl Ord for BinaryVersion {
     }
 }
 
+#[flux_rs::assoc(fn is_running(this: Self) -> bool)]
 /// This trait represents a generic process that the Tock scheduler can
 /// schedule.
 pub trait Process {
@@ -432,6 +433,7 @@ pub trait Process {
     /// ## Returns
     ///
     /// `true` if the process is running and `false` otherwise.
+    #[flux_rs::sig(fn(&Self[@s]) -> bool[Self::is_running(s)])]
     fn is_running(&self) -> bool;
 
     /// Move this process from the running state to the yielded state.
@@ -979,22 +981,26 @@ impl From<Error> for ErrorCode {
 /// must first transition to the `Terminated` state, which means that all of its
 /// state has been cleaned up.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[flux_rs::refined_by(process_state_num: int)]
 pub enum State {
     /// Process expects to be running code. The process may not be currently
     /// scheduled by the scheduler, but the process has work to do if it is
     /// scheduled.
+    #[flux_rs::variant(State[0])]
     Running,
 
     /// Process stopped executing and returned to the kernel because it called
     /// the `yield` syscall. This likely means it is waiting for some event to
     /// occur, but it could also mean it has finished and doesn't need to be
     /// scheduled again.
+    #[flux_rs::variant(State[1])]
     Yielded,
 
     /// Process stopped executing and returned to the kernel because it called
     /// the `WaitFor` variant of the `yield` syscall. The process should not be
     /// scheduled until the specified driver attempts to execute the specified
     /// upcall.
+    #[flux_rs::variant({UpcallId} -> State[2])]
     YieldedFor(UpcallId),
 
     /// The process is stopped and the previous state the process was in when it
@@ -1002,16 +1008,19 @@ pub enum State {
     /// state indicates to the kernel not to schedule the process, but if the
     /// process is to be resumed later it should be put back in its previous
     /// state so it will execute correctly.
+    #[flux_rs::variant({StoppedState} -> State[3])]
     Stopped(StoppedState),
 
     /// The process ran, faulted while running, and is no longer runnable. For a
     /// faulted process to be made runnable, it must first be terminated (to
     /// clean up its state).
+    #[flux_rs::variant(State[4])]
     Faulted,
 
     /// The process is not running: it exited with the `exit-terminate` system
     /// call or was terminated for some other reason (e.g., by the process
     /// console). Processes in the `Terminated` state can be run again.
+    #[flux_rs::variant(State[5])]
     Terminated,
 }
 
