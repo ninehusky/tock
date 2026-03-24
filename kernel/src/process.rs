@@ -339,6 +339,7 @@ impl Ord for BinaryVersion {
 }
 
 #[flux_rs::assoc(fn is_running(this: Self) -> bool)]
+#[flux_rs::assoc(fn enter_grant_returns_ok(this: Self) -> bool)]
 /// This trait represents a generic process that the Tock scheduler can
 /// schedule.
 pub trait Process {
@@ -749,6 +750,7 @@ pub trait Process {
     /// is invalid, if the grant has not been allocated, or if the grant is
     /// already entered. If this returns `Ok()` then the pointer points to the
     /// previously allocated memory for this grant.
+    #[flux_rs::sig(fn (&Self[@s], grant_num: usize) -> Result<NonNull<u8>, Error>[Self::enter_grant_returns_ok(s)])]
     fn enter_grant(&self, grant_num: usize) -> Result<NonNull<u8>, Error>;
 
     /// Enter a custom grant based on the `identifier`.

@@ -232,9 +232,15 @@ flux_rs::defs! {
     fn process_is_running(p_state_num: int) -> bool {
         p_state_num == 0 || p_state_num == 1 || p_state_num == 2 || p_state_num == 3
     }
+    // See map_cell.rs for the definition of MapCellState.
+    fn process_grant_pointers_uninit(gp_state_num: int) -> bool {
+        gp_state_num == 0
+    }
 }
 
 #[flux_rs::assoc(fn is_running(this: Self) -> bool { process_is_running(this.state.value.process_state_num) })]
+// Andrew: this is not complete for now, because I don't want to actually prove what this means right now.
+#[flux_rs::assoc(fn enter_grant_returns_ok(this: Self) -> bool { false })]
 impl<C: Chip> Process for ProcessStandard<'_, C> {
     #[flux_rs::no_panic]
     fn processid(&self) -> ProcessId {
@@ -851,6 +857,12 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
     #[flux_rs::trusted_impl(
         reason = "Don't want to annotate no_panic_if spec on Process::enter_grant"
     )]
+    // #[flux_rs::sig(fn (&Self[@slf], grant_num: usize) -> Result<NonNull<u8>, Error>[
+    //                                                                    // This returns an `Ok()` if...
+    //     Self::is_running(slf) &&                                       // the process is running, and
+    //     Self::grant_not_entered(slf, grant_num) &&                     // the grant at `grant_num` has not already been entered, and
+    //     slf.grant_pointers.occupied.value.state_num == 1               // the `grant_pointers` field is Initialized.
+    // ])]
     fn enter_grant(&self, grant_num: usize) -> Result<NonNull<u8>, Error> {
         // Do not try to access the grant region of an inactive process.
         if !self.is_running() {

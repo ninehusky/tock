@@ -981,6 +981,12 @@ fn update_saved_allow_rw(
 ///
 /// This is created from a [`Grant`] when that grant is entered for a specific
 /// process.
+
+// Ghost refinement tracking whether `Process::enter_grant` will return `Ok`.
+// This is a copy, more or less, of `Process::enter_grant_returns_ok`
+// The reason we can't just reference something like `self.process.enter_grant...`
+// is that `process` is a `&dyn Process`, which we can't attach to the `ProcessGrant`.
+#[flux_rs::refined_by(enter_grant_returns_ok: bool)]
 pub struct ProcessGrant<
     'a,
     T: 'a,
@@ -1004,6 +1010,10 @@ pub struct ProcessGrant<
 
     /// Used to store Rust types for grant.
     _phantom: PhantomData<(T, Upcalls, AllowROs, AllowRWs)>,
+
+    /// Andrew: I added this as a dummy field.
+    #[flux_rs::field(bool[enter_grant_returns_ok])]
+    _enter_grant_returns_ok: bool,
 }
 
 impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize>
@@ -1021,6 +1031,10 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// is valid, this returns `Ok(ProcessGrant)`. Otherwise it returns a
     /// relevant error.
     #[flux_rs::sig(fn (_, _) -> _)]
+    // TODO: andrew, get rid of this block
+    #[flux_rs::no_panic]
+    #[flux_rs::trusted]
+    // TODO: andrew, get rid of this block
     fn new(
         grant: &Grant<T, Upcalls, AllowROs, AllowRWs>,
         processid: ProcessId,
@@ -1196,6 +1210,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
             process,
             driver_num: grant.driver_num,
             grant_num: grant.grant_num,
+            _enter_grant_returns_ok: true,
             _phantom: PhantomData,
         })
     }
@@ -1214,6 +1229,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                     process,
                     driver_num: grant.driver_num,
                     grant_num: grant.grant_num,
+                    _enter_grant_returns_ok: false,
                     _phantom: PhantomData,
                 })
             } else {
@@ -1243,7 +1259,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// Note, a grant can only be entered once at a time. Attempting to call
     /// `.enter()` on a grant while it is already entered will result in a
     /// `panic!()`. See the comment in `access_grant()` for more information.
-    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn(s: Self[@slf], fun: F) -> R)]
+    #[flux_rs::no_panic_if(slf.enter_grant_returns_ok)]
     pub fn enter<F, R>(self, fun: F) -> R
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
@@ -1346,7 +1363,6 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// already currently entered. If `panic_on_reenter` is `false`, this will
     /// return `None` if the grant region is entered and do nothing.
     #[flux_rs::sig(fn(s: Self, fun: F, panic_on_reenter: bool[@can_panic]) -> _)]
-    #[flux_rs::no_panic_if(!can_panic)]
     fn access_grant<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
@@ -1363,6 +1379,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// If `panic_on_reenter` is `true`, this will panic if the grant region is
     /// already currently entered. If `panic_on_reenter` is `false`, this will
     /// return `None` if the grant region is entered and do nothing.
+    #[flux_rs::sig(fn(s: Self[@slf], fun: F, panic_on_reenter: bool[@can_panic]) -> _)]
     fn access_grant_with_allocator<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData, &mut GrantRegionAllocator) -> R,
