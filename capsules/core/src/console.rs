@@ -328,6 +328,7 @@ impl SyscallDriver for Console<'_> {
 }
 
 impl uart::TransmitClient for Console<'_> {
+    #[flux_rs::no_panic]
     fn transmitted_buffer(
         &self,
         buffer: &'static mut [u8],
