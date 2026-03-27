@@ -82,12 +82,14 @@ pub struct App {
 
 /// Manages the list of GPIO pins that are connected to buttons and which apps
 /// are listening for interrupts from which buttons.
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct Button<'a, P: gpio::InterruptPin<'a>> {
     pins: &'a [(
         &'a gpio::InterruptValueWrapper<'a, P>,
         gpio::ActivationMode,
         gpio::FloatingState,
     )],
+    #[flux_rs::field(Grant<_, _, _, _>[all_enterable])]
     apps: Grant<App, UpcallCount<1>, AllowRoCount<0>, AllowRwCount<0>>,
 }
 
@@ -145,8 +147,8 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
     /// - `2`: Disable interrupts for a button. No affect or reliance on
     ///   registered callback.
     /// - `3`: Read the current state of the button.
-    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
-    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::enable_interrupts_no_panic() && P::disable_interrupts_no_panic())]
+    #[flux_rs::sig(fn(&Self[@slf], usize, usize, usize, ProcessId) -> CommandReturn)]
+    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::enable_interrupts_no_panic() && P::disable_interrupts_no_panic() && slf.all_enterable)]
     fn command(
         &self,
         command_num: usize,

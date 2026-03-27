@@ -99,8 +99,10 @@ pub struct App {
     read_len: usize,
 }
 
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct Console<'a> {
     uart: &'a dyn uart::UartData<'a>,
+    #[flux_rs::field(Grant<_, _, _, _>[all_enterable])]
     apps: Grant<
         App,
         UpcallCount<{ upcall::COUNT }>,
@@ -328,7 +330,8 @@ impl SyscallDriver for Console<'_> {
 }
 
 impl uart::TransmitClient for Console<'_> {
-    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn(self: &Self[@slf], _, _, _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn transmitted_buffer(
         &self,
         buffer: &'static mut [u8],

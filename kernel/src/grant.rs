@@ -618,6 +618,8 @@ impl<'a> GrantKernelData<'a> {
     /// identified by the `subscribe_num`, which must match the subscribe number
     /// used when the upcall was originally subscribed by a process.
     /// `subscribe_num`s are indexed starting at zero.
+    #[flux_rs::trusted(reason = "slice::get uses SliceIndex::get which Flux cannot resolve")]
+    #[flux_rs::no_panic]
     pub fn schedule_upcall(
         &self,
         subscribe_num: usize,
@@ -1239,7 +1241,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                     process,
                     driver_num: grant.driver_num,
                     grant_num: grant.grant_num,
-                    _enter_grant_returns_ok: false,
+                    _enter_grant_returns_ok: true,
                     _phantom: PhantomData,
                 })
             } else {
@@ -1750,6 +1752,11 @@ impl GrantRegionAllocator {
 /// type is used to get access to [`ProcessGrant`]s, which are tied to a
 /// specific process and provide access to the memory object allocated for that
 /// process.
+// Ghost refinement tracking whether all `ProcessGrant`s yielded by iterating
+// this `Grant` are safe to enter (i.e., none are currently entered).
+// `all_enterable = true` is the precondition required by `iter()`, matching
+// the documented contract: calling `iter()` while a grant is entered panics.
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct Grant<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize> {
     /// Hold a reference to the core kernel so we can iterate processes.
     pub(crate) kernel: &'static Kernel,
@@ -1766,6 +1773,10 @@ pub struct Grant<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRW
 
     /// Used to store the Rust types for grant.
     ptr: PhantomData<(T, Upcalls, AllowROs, AllowRWs)>,
+
+    /// Ghost field: no grants from this `Grant` are currently entered.
+    #[flux_rs::field(bool[all_enterable])]
+    _all_enterable: bool,
 }
 
 impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize>
@@ -1782,6 +1793,7 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
             driver_num,
             grant_num: grant_index,
             ptr: PhantomData,
+            _all_enterable: true,
         }
     }
 
@@ -1791,7 +1803,7 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// for a specific process. Then, that [`ProcessGrant`] is entered and the
     /// provided closure is run with access to the memory in the grant region.
     #[flux_rs::sig(fn (&Self[@slf], _, _) -> _)]
-    #[flux_rs::no_panic_if(F::no_panic())]
+    #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic())]
     pub fn enter<F, R>(&self, processid: ProcessId, fun: F) -> Result<R, Error>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
@@ -1842,6 +1854,8 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     ///
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
+    #[flux_rs::trusted(reason = "cannot thread ProcessGrant refinement through Option")]
+    #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic())]
     pub fn each<F>(&self, mut fun: F)
     where
         F: FnMut(ProcessId, &mut GrantData<T>, &GrantKernelData),
@@ -1861,17 +1875,20 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
     #[flux_rs::trusted(reason = "ICE: assertion `left == right` failed `infer.rs:869`")]
-    #[flux_rs::no_panic] // Andrew: this is super duper unsound. why did i do this??
-    #[flux_rs::sig(fn (_) -> _)]
+    // reason: this method is already marked trusted, so I'm gonna assume the body of this doesn't need to be checked for no_panic?
+    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn (self: &Self[@slf]) -> Iter<_, _, _, _>[slf.all_enterable])]
     pub fn iter(&self) -> Iter<'_, T, Upcalls, AllowROs, AllowRWs> {
         Iter {
             grant: self,
             subiter: self.kernel.get_process_iter(),
+            _all_enterable: self._all_enterable,
         }
     }
 }
 
 /// Type to iterate [`ProcessGrant`]s across processes.
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct Iter<
     'a,
     T: 'a + Default,
@@ -1887,6 +1904,9 @@ pub struct Iter<
         core::slice::Iter<'a, Option<&'static dyn Process>>,
         fn(&Option<&'static dyn Process>) -> Option<&'static dyn Process>,
     >,
+
+    #[flux_rs::field(bool[all_enterable])]
+    _all_enterable: bool,
 }
 
 #[flux_rs::assoc(fn next_no_panic() -> bool { true })]
