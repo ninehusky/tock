@@ -618,7 +618,7 @@ impl<'a> GrantKernelData<'a> {
     /// identified by the `subscribe_num`, which must match the subscribe number
     /// used when the upcall was originally subscribed by a process.
     /// `subscribe_num`s are indexed starting at zero.
-    #[flux_rs::trusted(reason = "slice::get uses SliceIndex::get which Flux cannot resolve")]
+    #[flux_rs::trusted(reason = "TEMPORARY: slice::get uses SliceIndex::get which Flux cannot resolve; needs extern_spec for SliceIndex")]
     #[flux_rs::no_panic]
     pub fn schedule_upcall(
         &self,

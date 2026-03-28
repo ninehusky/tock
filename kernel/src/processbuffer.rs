@@ -51,6 +51,9 @@ use flux_support::*;
 ///
 /// It is sound for multiple overlapping [`ReadableProcessSlice`]s or
 /// [`WriteableProcessSlice`]s to be in scope at the same time.
+#[flux_rs::trusted(reason = "calls from_raw_parts/transmute which have no Flux specs; panic-free given valid unsafe preconditions (non-null aligned ptr, valid len) upheld by callers")]
+#[flux_rs::sig(fn (FluxPtrU8Mut, usize) -> _)]
+#[flux_rs::no_panic]
 unsafe fn raw_processbuf_to_roprocessslice<'a>(
     ptr: FluxPtrU8Mut,
     len: usize,
@@ -111,6 +114,9 @@ unsafe fn raw_processbuf_to_roprocessslice<'a>(
 /// However, it is sound for multiple overlapping
 /// [`ReadableProcessSlice`]s or [`WriteableProcessSlice`]s to be in
 /// scope at the same time.
+#[flux_rs::trusted(reason = "calls from_raw_parts/transmute which have no Flux specs; panic-free given valid unsafe preconditions (non-null aligned ptr, valid len) upheld by callers")]
+#[flux_rs::sig(fn (FluxPtrU8Mut, usize) -> _)]
+#[flux_rs::no_panic]
 unsafe fn raw_processbuf_to_rwprocessslice<'a>(
     ptr: FluxPtrU8Mut,
     len: usize,
@@ -330,6 +336,8 @@ impl ReadableProcessBuffer for ReadOnlyProcessBuffer {
     ///
     /// This verifies the process is still valid before accessing the underlying
     /// memory.
+    #[flux_rs::sig(fn (&Self, _) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn enter<F, R>(&self, fun: F) -> Result<R, process::Error>
     where
         F: FnOnce(&ReadableProcessSlice) -> R,
@@ -584,6 +592,8 @@ impl ReadableProcessBuffer for ReadWriteProcessBuffer {
 }
 
 impl WriteableProcessBuffer for ReadWriteProcessBuffer {
+    #[flux_rs::sig(fn (&Self, _) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn mut_enter<F, R>(&self, fun: F) -> Result<R, process::Error>
     where
         F: FnOnce(&WriteableProcessSlice) -> R,
