@@ -10,6 +10,7 @@ mod num;
 mod option;
 mod ord;
 mod partial_cmp;
+mod partial_ord;
 mod range;
 mod result;
 mod slice;

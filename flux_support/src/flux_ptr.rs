@@ -282,6 +282,7 @@ impl PartialOrd for FluxPtr {
     // Provided methods
     #[flux_rs::trusted(reason = "flux wrappers")]
     #[sig(fn(self: &Self[@lhs], other: &Self[@rhs]) -> bool[lhs < rhs])]
+    #[flux_rs::no_panic]
     fn lt(&self, other: &Self) -> bool {
         self.inner.lt(&other.inner)
     }
