@@ -36,8 +36,10 @@ impl<T: Ticks> Default for AlarmData<T> {
     }
 }
 
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct AlarmDriver<'a, A: Alarm<'a>> {
     alarm: &'a A,
+    #[flux_rs::field(Grant<_, _, _, _>[all_enterable])]
     app_alarms:
         Grant<AlarmData<A::Ticks>, UpcallCount<NUM_UPCALLS>, AllowRoCount<0>, AllowRwCount<0>>,
 }
@@ -575,6 +577,8 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
             )
     }
 
+    #[flux_rs::sig(fn(self: &Self[@slf], _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn allocate_grant(&self, processid: ProcessId) -> Result<(), kernel::process::Error> {
         self.app_alarms.enter(processid, |_, _| {})
     }

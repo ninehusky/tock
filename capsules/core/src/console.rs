@@ -285,6 +285,8 @@ impl SyscallDriver for Console<'_> {
     ///        passed in `arg1`
     /// - `3`: Cancel any in progress receives and return (via callback)
     ///        what has been received so far.
+    #[flux_rs::sig(fn(&Self[@slf], usize, usize, usize, ProcessId) -> CommandReturn)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn command(
         &self,
         cmd_num: usize,
@@ -324,6 +326,8 @@ impl SyscallDriver for Console<'_> {
         }
     }
 
+    #[flux_rs::sig(fn(self: &Self[@slf], _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn allocate_grant(&self, processid: ProcessId) -> Result<(), kernel::process::Error> {
         self.apps.enter(processid, |_, _| {})
     }

@@ -48,12 +48,14 @@ pub struct PeripheralApp {
     index: usize,
 }
 
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct SpiPeripheral<'a, S: SpiSlaveDevice<'a>> {
     spi_slave: &'a S,
     busy: Cell<bool>,
     kernel_read: TakeCell<'static, [u8]>,
     kernel_write: TakeCell<'static, [u8]>,
     kernel_len: Cell<usize>,
+    #[flux_rs::field(Grant<_, _, _, _>[all_enterable])]
     grants: Grant<
         PeripheralApp,
         UpcallCount<2>,
@@ -165,7 +167,7 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
     ///   - does nothing if lock not held
     ///   - not implemented or currently supported
     #[flux_rs::sig(fn (
-        &Self,
+        self: &Self[@slf],
         usize,
         usize,
         usize,
@@ -176,7 +178,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
         S::set_phase_no_panic() &&
         S::get_polarity_no_panic() &&
         S::set_polarity_no_panic() &&
-        S::read_write_bytes_no_panic()
+        S::read_write_bytes_no_panic() &&
+        slf.all_enterable
     )]
     fn command(
         &self,
@@ -274,6 +277,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
         }
     }
 
+    #[flux_rs::sig(fn(self: &Self[@slf], _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn allocate_grant(&self, processid: ProcessId) -> Result<(), kernel::process::Error> {
         self.grants.enter(processid, |_, _| {})
     }
@@ -346,6 +351,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
     }
 
     // Simple callback for when chip has been selected
+    #[flux_rs::sig(fn(self: &Self[@slf]) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn chip_selected(&self) {
         self.current_process.map(|process_id| {
             let _ = self.grants.enter(process_id, move |app, kernel_data| {
