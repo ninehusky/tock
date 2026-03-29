@@ -21,6 +21,13 @@ use kernel::{ErrorCode, ProcessId};
 use crate::driver;
 pub const DRIVER_NUM: usize = driver::NUM::SpiPeripheral as usize;
 
+#[flux_rs::trusted(reason = "cmp::min for usize returns a value <= both inputs; Flux cannot express this via the generic extern spec")]
+#[flux_rs::sig(fn (usize[@a], usize[@b]) -> usize{v: v <= a && v <= b})]
+#[flux_rs::no_panic]
+fn usize_min(a: usize, b: usize) -> usize {
+    cmp::min(a, b)
+}
+
 /// Ids for read-only allow buffers
 mod ro_allow {
     pub const WRITE: usize = 0;
@@ -317,12 +324,12 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
                                 // -pal 12/9/20
                                 let end = index;
                                 let start = index - length;
-                                let end = cmp::min(end, cmp::min(src.len(), dest.len()));
+                                let end = usize_min(end, usize_min(src.len(), dest.len()));
 
                                 // If the new endpoint is earlier than our expected
                                 // startpoint, we set the startpoint to be the same;
                                 // This results in a zero-length operation. -pal 12/9/20
-                                let start = cmp::min(start, end);
+                                let start = usize_min(start, end);
 
                                 let dest_area = &dest[start..end];
                                 let real_len = end - start;
