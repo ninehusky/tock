@@ -385,6 +385,8 @@ impl uart::TransmitClient for Console<'_> {
 }
 
 impl uart::ReceiveClient for Console<'_> {
+    #[flux_rs::sig(fn(self: &Self[@slf], _, _, _, _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn received_buffer(
         &self,
         buffer: &'static mut [u8],
