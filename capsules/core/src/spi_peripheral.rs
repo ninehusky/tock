@@ -21,7 +21,9 @@ use kernel::{ErrorCode, ProcessId};
 use crate::driver;
 pub const DRIVER_NUM: usize = driver::NUM::SpiPeripheral as usize;
 
-#[flux_rs::trusted(reason = "cmp::min for usize returns a value <= both inputs; Flux cannot express this via the generic extern spec")]
+#[flux_rs::trusted(
+    reason = "cmp::min for usize returns a value <= both inputs; Flux cannot express this via the generic extern spec"
+)]
 #[flux_rs::sig(fn (usize[@a], usize[@b]) -> usize{v: v <= a && v <= b})]
 #[flux_rs::no_panic]
 fn usize_min(a: usize, b: usize) -> usize {
@@ -293,13 +295,13 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
 
 impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
     #[flux_rs::sig(fn (
-        &Self[@r],
+        &Self[@slf],
         Option<&mut [u8]>,
         Option<&mut [u8]>,
         usize,
         Result<(), ErrorCode>
     ) -> ())]
-    #[flux_rs::no_panic_if(S::read_write_bytes_no_panic())]
+    #[flux_rs::no_panic_if(S::read_write_bytes_no_panic() && slf.all_enterable)]
     fn read_write_done(
         &self,
         writebuf: Option<&'static mut [u8]>,

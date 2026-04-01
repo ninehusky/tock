@@ -587,7 +587,7 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
 }
 
 impl<'a, A: Alarm<'a>> time::AlarmClient for AlarmDriver<'a, A> {
-    #[flux_rs::sig(fn(&Self) -> ())]
+    #[flux_rs::sig(fn(&Self[@slf]) -> ())]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::within_range_no_panic() &&
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
@@ -598,7 +598,8 @@ impl<'a, A: Alarm<'a>> time::AlarmClient for AlarmDriver<'a, A> {
         <A as kernel::hil::time::Time>::now_no_panic() &&
         <A::Ticks as Ticks>::into_usize_no_panic() &&
         A::disarm_no_panic() &&
-        A::set_alarm_no_panic()
+        A::set_alarm_no_panic() &&
+        slf.all_enterable
     )]
     fn alarm(&self) {
         self.process_rearm_or_callback();
