@@ -175,7 +175,7 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// - invoke upcalls for all expired app alarms, resetting them afterwards,
     /// - re-arming the alarm for the next earliest [`Expiration`], or
     /// - disarming the alarm if no unexpired [`Expiration`] is found.
-    #[flux_rs::sig(fn(&Self) -> ())]
+    #[flux_rs::sig(fn(&Self[@slf]) -> ())]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::within_range_no_panic() &&
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
@@ -186,7 +186,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         <A as kernel::hil::time::Time>::now_no_panic() &&
         <A::Ticks as Ticks>::into_usize_no_panic() &&
         A::disarm_no_panic() &&
-        A::set_alarm_no_panic()
+        A::set_alarm_no_panic() &&
+        slf.all_enterable
     )]
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
@@ -417,7 +418,7 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
     /// - `5`: Set an alarm to fire at a given clock value `time` relative to `now`
     /// - `6`: Set an alarm to fire at a given clock value `time` relative to a provided
     ///        reference point.
-    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
+    #[flux_rs::sig(fn(&Self[@slf], usize, usize, usize, ProcessId) -> CommandReturn)]
     #[flux_rs::no_panic_if(
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
@@ -434,7 +435,8 @@ impl<'a, A: Alarm<'a>> SyscallDriver for AlarmDriver<'a, A> {
         <A::Ticks as Ticks>::within_range_no_panic() &&
         <A::Ticks as Ticks>::into_usize_no_panic() &&
         A::disarm_no_panic() &&
-        A::set_alarm_no_panic()
+        A::set_alarm_no_panic() &&
+        slf.all_enterable
     )]
     fn command(
         &self,
