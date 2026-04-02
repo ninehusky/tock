@@ -49,4 +49,10 @@ impl<T> [T] {
     fn get<I>(&self, index: I) -> Option<&I::Output>
     where
         I: SliceIndex<[T]>;
+
+    #[flux_rs::sig(fn(self: &mut [T][@n], src: &[T][@m]) requires m == n)]
+    #[flux_rs::no_panic]
+    fn copy_from_slice(&mut self, src: &[T])
+    where
+        T: Copy;
 }
