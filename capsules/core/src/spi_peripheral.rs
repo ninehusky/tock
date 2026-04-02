@@ -113,9 +113,9 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
                 .get_readonly_processbuffer(ro_allow::WRITE)
                 .and_then(|write| {
                     write.enter(|src| {
-                        let len = cmp::min(app.len - start, self.kernel_len.get());
-                        let end = cmp::min(start + len, src.len());
-                        start = cmp::min(start, end);
+                        let len = usize_min(app.len - start, self.kernel_len.get());
+                        let end = usize_min(start + len, src.len());
+                        start = usize_min(start, end);
 
                         for (i, c) in src[start..end].iter().enumerate() {
                             kwbuf[i] = c.get();
