@@ -618,7 +618,9 @@ impl<'a> GrantKernelData<'a> {
     /// identified by the `subscribe_num`, which must match the subscribe number
     /// used when the upcall was originally subscribed by a process.
     /// `subscribe_num`s are indexed starting at zero.
-    #[flux_rs::trusted(reason = "TEMPORARY: slice::get uses SliceIndex::get which Flux cannot resolve; needs extern_spec for SliceIndex")]
+    #[flux_rs::trusted(
+        reason = "TEMPORARY: slice::get uses SliceIndex::get which Flux cannot resolve; needs extern_spec for SliceIndex"
+    )]
     #[flux_rs::no_panic]
     pub fn schedule_upcall(
         &self,
@@ -1861,7 +1863,10 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
         F: FnMut(ProcessId, &mut GrantData<T>, &GrantKernelData),
     {
         // Create a the iterator across `ProcessGrant`s for each process.
-        for pg in self.iter() {
+        // Note: use `while let` instead of `for` to avoid `IntoIterator::into_iter`,
+        // which Flux cannot resolve for the grant `Iter` type during no_panic inference.
+        let mut iter = self.iter();
+        while let Some(pg) = iter.next() {
             let processid = pg.processid();
             // Since we iterating, there is no return value we need to worry
             // about.
@@ -1905,6 +1910,21 @@ pub struct Iter<
         fn(&Option<&'static dyn Process>) -> Option<&'static dyn Process>,
     >,
 
+    // TODO: we need to come back to this refinement.
+    // One end of ensuring no-reentrance is that you can't call `iter()` while a grant is entered.
+    // ```
+    // // assume we have an enterable grant
+    // self.apps.enter(|_, _| { self.apps.iter() }) // bad!
+    // ```
+    // But what about the other way around?
+    // ```
+    // // assume we have an enterable grant
+    // let iter = grant.iter();
+    // let pg1 = iter.next().unwrap();
+    // pg1.enter(|_, _| {
+    //      let pg2 = iter.next().unwrap(); // OK? or bad?
+    // })
+    // ```
     #[flux_rs::field(bool[all_enterable])]
     _all_enterable: bool,
 }
