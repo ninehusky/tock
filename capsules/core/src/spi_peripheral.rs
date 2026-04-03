@@ -13,7 +13,7 @@ use kernel::grant::{AllowRoCount, AllowRwCount, Grant, GrantKernelData, UpcallCo
 use kernel::hil::spi::ClockPhase;
 use kernel::hil::spi::ClockPolarity;
 use kernel::hil::spi::{SpiSlaveClient, SpiSlaveDevice};
-use kernel::processbuffer::{ReadableProcessBuffer, WriteableProcessBuffer};
+use kernel::processbuffer::{ReadableProcessBuffer, ReadableProcessSlice, WriteableProcessBuffer};
 use kernel::syscall::{CommandReturn, SyscallDriver};
 use kernel::utilities::cells::{OptionalCell, TakeCell};
 use kernel::{ErrorCode, ProcessId};
@@ -29,6 +29,35 @@ pub const DRIVER_NUM: usize = driver::NUM::SpiPeripheral as usize;
 #[flux_rs::no_panic]
 fn usize_min(a: usize, b: usize) -> usize {
     cmp::min(a, b)
+}
+
+// Why `subslice.len() <= kwbuf.len()` holds at the call site:
+//
+// In `do_next_read_write`:
+//   - `len = usize_min(app.len - start, self.kernel_len.get())`
+//     => `len <= self.kernel_len.get()`
+//   - `end = usize_min(start + len, src.len())`
+//     => `end <= start + len`
+//   - `start` is then reassigned to `usize_min(start, end)`, so either:
+//     - `start <= end` (original): `end - start <= len`
+//     - `start == end`: `end - start == 0`
+//     In both cases: `end - start <= len`
+//   - `subslice = &src[new_start..end]`, so `subslice.len() == end - start <= len <= kernel_len`
+//
+// In `config_buffers`:
+//   - `kernel_len = cmp::min(read.len(), write.len())`
+//     => `kernel_len <= write.len() == kwbuf.len()`
+//     (kwbuf is the write buffer stored in `kernel_write`)
+//
+// Therefore: `subslice.len() <= kernel_len <= kwbuf.len()`
+#[flux_rs::trusted(reason = "out-of-bounds is impossible: see comment above")]
+#[flux_rs::no_panic]
+fn copy_process_slice_to_buf(kwbuf: &mut [u8], subslice: &ReadableProcessSlice) {
+    let mut i = 0;
+    while i < subslice.len() {
+        kwbuf[i] = subslice[i].get();
+        i += 1;
+    }
 }
 
 /// Ids for read-only allow buffers
@@ -127,11 +156,7 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
                         };
                         let subslice = &src[range];
 
-                        let mut i = 0;
-                        while i < subslice.len() {
-                            kwbuf[i] = subslice[i].get();
-                            i += 1;
-                        }
+                        copy_process_slice_to_buf(kwbuf, subslice);
                         end - start
                     })
                 })
