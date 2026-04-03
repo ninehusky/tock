@@ -237,7 +237,7 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
     #[flux_rs::trusted_impl(reason = "The requires clause is just a lil' different.")]
     #[flux_rs::sig(fn(&Self[@slf], pin_num: u32) -> () requires pin_num < slf.pin_len)]
-    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::disable_interrupts_no_panic())]
+    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::disable_interrupts_no_panic() && slf.all_enterable)]
     fn fired(&self, pin_num: u32) {
         // Read the value of the pin and get the button state.
         let button_state = self.get_button_state(pin_num);

@@ -1233,6 +1233,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// valid and that process grant has already been allocated, or `None`
     /// otherwise.
     #[flux_rs::no_panic]
+    #[flux_rs::sig(fn (_, _) -> Option<Self[true]>)]
     fn new_if_allocated(
         grant: &Grant<T, Upcalls, AllowROs, AllowRWs>,
         process: &'a dyn Process,
@@ -1857,6 +1858,7 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
     #[flux_rs::trusted(reason = "cannot thread ProcessGrant refinement through Option")]
+    #[flux_rs::sig(fn (&Self[@slf], fun: F))]
     #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic())]
     pub fn each<F>(&self, mut fun: F)
     where
@@ -1917,13 +1919,18 @@ pub struct Iter<
     // self.apps.enter(|_, _| { self.apps.iter() }) // bad!
     // ```
     // But what about the other way around?
+    // edit: this should be OK, I think once `iter` is done, the danger is gone. see this from `console.rs`:
     // ```
-    // // assume we have an enterable grant
-    // let iter = grant.iter();
-    // let pg1 = iter.next().unwrap();
-    // pg1.enter(|_, _| {
-    //      let pg2 = iter.next().unwrap(); // OK? or bad?
-    // })
+    // for cntr in self.apps.iter() {
+    //     let processid = cntr.processid();
+    //     let started_tx = cntr.enter(|app, kernel_data| {
+    //         if app.pending_write {
+    //             app.pending_write = false;
+    //             self.send_continue(processid, app, kernel_data)
+    //         } else {
+    //             false
+    //         }
+    //     });
     // ```
     #[flux_rs::field(bool[all_enterable])]
     _all_enterable: bool,
@@ -1937,7 +1944,10 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
 {
     type Item = ProcessGrant<'a, T, Upcalls, AllowROs, AllowRWs>;
 
-    #[flux_rs::sig(fn (&mut Self) -> _)]
+    #[flux_rs::trusted(
+        reason = "So `slf.all_enterable` is true as a result of `new_if_allocated`, but `find_map` may not be smart enough to figure out that refinement."
+    )]
+    #[flux_rs::sig(fn (&mut Self[@slf]) -> Option<Self::Item[slf.all_enterable]>)]
     #[flux_rs::no_panic_if(Self::next_no_panic())]
     fn next(&mut self) -> Option<Self::Item> {
         let grant = self.grant;

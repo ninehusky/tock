@@ -366,7 +366,9 @@ impl uart::TransmitClient for Console<'_> {
         // If we are not printing more from the current AppSlice,
         // see if any other applications have pending messages.
         if self.tx_in_progress.is_none() {
-            for cntr in self.apps.iter() {
+            // for cntr in self.apps.iter() {
+            let mut iter = self.apps.iter();
+            while let Some(cntr) = iter.next() {
                 let processid = cntr.processid();
                 let started_tx = cntr.enter(|app, kernel_data| {
                     if app.pending_write {
