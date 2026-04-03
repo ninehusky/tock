@@ -13,7 +13,9 @@ use kernel::grant::{AllowRoCount, AllowRwCount, Grant, GrantKernelData, UpcallCo
 use kernel::hil::spi::ClockPhase;
 use kernel::hil::spi::ClockPolarity;
 use kernel::hil::spi::{SpiSlaveClient, SpiSlaveDevice};
-use kernel::processbuffer::{ReadableProcessBuffer, ReadableProcessSlice, WriteableProcessBuffer};
+use kernel::processbuffer::{
+    ReadableProcessBuffer, ReadableProcessSlice, WriteableProcessBuffer, WriteableProcessSlice,
+};
 use kernel::syscall::{CommandReturn, SyscallDriver};
 use kernel::utilities::cells::{OptionalCell, TakeCell};
 use kernel::{ErrorCode, ProcessId};
@@ -29,6 +31,19 @@ pub const DRIVER_NUM: usize = driver::NUM::SpiPeripheral as usize;
 #[flux_rs::no_panic]
 fn usize_min(a: usize, b: usize) -> usize {
     cmp::min(a, b)
+}
+
+// Why `i < dest_area.len()` holds in `copy_buf_to_process_slice`:
+//   - `dest_area = &dest[start..end]`, so `dest_area.len() == end - start == real_len`
+//   - `src` passed in is `&src_buf[0..real_len]`, so `src.len() == real_len`
+//   - `enumerate()` on `src.iter()` yields `i` in `0..real_len`, so `i < real_len == dest_area.len()`
+//   Flux cannot track `i` through `enumerate()`, so this is trusted.
+#[flux_rs::trusted(reason = "out-of-bounds is impossible: see comment above")]
+#[flux_rs::no_panic]
+fn copy_buf_to_process_slice(src: &[u8], dest_area: &WriteableProcessSlice) {
+    for (i, c) in src.iter().enumerate() {
+        dest_area[i].set(*c);
+    }
 }
 
 // Why `subslice.len() <= kwbuf.len()` holds at the call site:
@@ -373,9 +388,7 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
                                 let dest_area = &dest[start..end];
                                 let real_len = end - start;
 
-                                for (i, c) in src[0..real_len].iter().enumerate() {
-                                    dest_area[i].set(*c);
-                                }
+                                copy_buf_to_process_slice(&src[0..real_len], dest_area);
                             })
                         });
                 });
