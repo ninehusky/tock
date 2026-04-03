@@ -7,6 +7,7 @@
 
 use core::cell::Cell;
 use core::cmp;
+use core::ops::Range;
 
 use kernel::grant::{AllowRoCount, AllowRwCount, Grant, GrantKernelData, UpcallCount};
 use kernel::hil::spi::ClockPhase;
@@ -24,7 +25,7 @@ pub const DRIVER_NUM: usize = driver::NUM::SpiPeripheral as usize;
 #[flux_rs::trusted(
     reason = "cmp::min for usize returns a value <= both inputs; Flux cannot express this via the generic extern spec"
 )]
-#[flux_rs::sig(fn (usize[@a], usize[@b]) -> usize{v: v <= a && v <= b})]
+#[flux_rs::sig(fn (usize[@a], usize[@b]) -> usize[if a <= b { a } else { b }])]
 #[flux_rs::no_panic]
 fn usize_min(a: usize, b: usize) -> usize {
     cmp::min(a, b)
@@ -117,8 +118,19 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
                         let end = usize_min(start + len, src.len());
                         start = usize_min(start, end);
 
-                        for (i, c) in src[start..end].iter().enumerate() {
-                            kwbuf[i] = c.get();
+                        // for Flux
+                        let new_start = usize_min(start, end);
+
+                        let range = Range {
+                            start: new_start,
+                            end,
+                        };
+                        let subslice = &src[range];
+
+                        let mut i = 0;
+                        while i < subslice.len() {
+                            kwbuf[i] = subslice[i].get();
+                            i += 1;
                         }
                         end - start
                     })
