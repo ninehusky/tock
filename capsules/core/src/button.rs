@@ -82,8 +82,9 @@ pub struct App {
 
 /// Manages the list of GPIO pins that are connected to buttons and which apps
 /// are listening for interrupts from which buttons.
-#[flux_rs::refined_by(all_enterable: bool)]
+#[flux_rs::refined_by(all_enterable: bool, pin_len: int)]
 pub struct Button<'a, P: gpio::InterruptPin<'a>> {
+    #[flux_rs::field(&[_][pin_len])]
     pins: &'a [(
         &'a gpio::InterruptValueWrapper<'a, P>,
         gpio::ActivationMode,
@@ -113,7 +114,7 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
         Self { pins, apps: grant }
     }
 
-    #[flux_rs::sig(fn(&Self, u32) -> gpio::ActivationState)]
+    #[flux_rs::sig(fn(&Self[@slf], pin_num: u32) -> gpio::ActivationState requires pin_num < slf.pin_len)]
     #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic())]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
         let pin = &self.pins[pin_num as usize];
@@ -234,7 +235,8 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 }
 
 impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
-    #[flux_rs::sig(fn(&Self, u32) -> ())]
+    #[flux_rs::trusted_impl(reason = "The requires clause is just a lil' different.")]
+    #[flux_rs::sig(fn(&Self[@slf], pin_num: u32) -> () requires pin_num < slf.pin_len)]
     #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::disable_interrupts_no_panic())]
     fn fired(&self, pin_num: u32) {
         // Read the value of the pin and get the button state.
