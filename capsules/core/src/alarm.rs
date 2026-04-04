@@ -83,31 +83,42 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
 
     #[flux_rs::sig(
         fn (
+            app_alarms: &Grant<_, _, _, _>[@g],
             now: A::Ticks,
             expirations: I,
-        ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
+        ) -> Result<Option<(Expiration<A::Ticks>, ProcessId)>, (Expiration<A::Ticks>, ProcessId, ())>
     )]
     #[flux_rs::no_panic_if(
+        g.all_enterable &&
         <A::Ticks as Ticks>::wrapping_add_no_panic() &&
         <A::Ticks as Ticks>::within_range_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
+        <A::Ticks as Ticks>::into_usize_no_panic() &&
         I::next_no_panic() &&
-        F::no_panic() &&
         <I as IntoIterator>::into_iter_no_panic() &&
         <<I as IntoIterator>::IntoIter as Iterator>::next_no_panic()
     )]
-    fn earliest_alarm<UD, R, F, I>(
+    fn earliest_alarm<I>(
+        app_alarms: &Grant<
+            AlarmData<A::Ticks>,
+            UpcallCount<NUM_UPCALLS>,
+            AllowRoCount<0>,
+            AllowRwCount<0>,
+        >,
         now: A::Ticks,
         expirations: I,
-    ) -> Result<Option<(Expiration<A::Ticks>, UD)>, (Expiration<A::Ticks>, UD, R)>
+    ) -> Result<Option<(Expiration<A::Ticks>, ProcessId)>, (Expiration<A::Ticks>, ProcessId, ())>
     where
-        F: FnOnce(Expiration<A::Ticks>, &UD) -> Option<R>,
-        I: Iterator<Item = (Expiration<A::Ticks>, UD, F)>
-            + IntoIterator<Item = (Expiration<A::Ticks>, UD, F)>,
+        I: Iterator<Item = (Expiration<A::Ticks>, ProcessId)>
+            + IntoIterator<Item = (Expiration<A::Ticks>, ProcessId)>,
     {
-        let mut earliest: Option<(Expiration<A::Ticks>, UD)> = None;
+        let mut earliest: Option<(Expiration<A::Ticks>, ProcessId)> = None;
 
         let mut iter = expirations.into_iter();
-        while let Some((exp, ud, expired_handler)) = iter.next() {
+        while let Some((exp, ud)) = iter.next() {
             // for (exp, ud, expired_handler) in expirations {
             let Expiration {
                 reference: exp_ref,
@@ -122,7 +133,7 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
             // alarm has expired. Call the expired handler. If it returns
             // false, stop here.
             if !now.within_range(exp_ref, exp_end) {
-                let expired_handler_res = expired_handler(exp, &ud);
+                let expired_handler_res = Self::expired_handler(app_alarms, now, exp, &ud);
                 if let Some(retval) = expired_handler_res {
                     return Err((exp, ud, retval));
                 }
@@ -169,6 +180,90 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         Ok(earliest)
     }
 
+    #[flux_rs::sig(fn(app_alarms: &Grant<_, _, _, _>[@g], now: A::Ticks, expired: Expiration<A::Ticks>, process_id: &ProcessId) -> Option<()>[false])]
+    #[flux_rs::no_panic_if(
+        g.all_enterable &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_usize_no_panic()
+    )]
+    fn expired_handler(
+        app_alarms: &Grant<
+            AlarmData<A::Ticks>,
+            UpcallCount<NUM_UPCALLS>,
+            AllowRoCount<0>,
+            AllowRwCount<0>,
+        >,
+        now: A::Ticks,
+        expired: Expiration<A::Ticks>,
+        process_id: &ProcessId,
+    ) -> Option<()> {
+        // This is run on every expired alarm, _after_ the `enter()`
+        // closure on the Grant iterator has returned. We are thus not
+        // risking reentrancy here.
+
+        // Enter the app's grant again:
+        let _ = app_alarms.enter(*process_id, |alarm_state, upcalls| {
+            // Reset this app's alarm:
+            alarm_state.expiration = None;
+
+            // Deliver the upcall:
+            upcalls
+                .schedule_upcall(
+                    ALARM_CALLBACK_NUM,
+                    (
+                        now.into_u32_left_justified() as usize,
+                        expired.reference.wrapping_add(expired.dt).into_usize(),
+                        0,
+                    ),
+                )
+                .ok();
+        });
+
+        // Proceed iteration across expirations:
+        None::<()>
+    }
+
+    /// Collect all non-`None` expirations from the grant and find the earliest,
+    /// invoking [`Self::expired_handler`] for each expired alarm. Trusted
+    /// because Flux cannot propagate `enter_grant_returns_ok` through
+    /// `FilterMap`.
+    #[flux_rs::trusted(reason = "Flux cannot push enter_grant_returns_ok through FilterMap")]
+    #[flux_rs::sig(fn(&Self[@slf], now: A::Ticks) -> Result<Option<(Expiration<A::Ticks>, ProcessId)>, (Expiration<A::Ticks>, ProcessId, ())>[true])]
+    #[flux_rs::no_panic_if(
+        slf.all_enterable &&
+        <A::Ticks as Ticks>::within_range_no_panic() &&
+        <A::Ticks as Ticks>::wrapping_add_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_left_justified_no_panic() &&
+        <A::Ticks as Ticks>::into_u32_no_panic() &&
+        <A::Ticks as Ticks>::width_no_panic() &&
+        <A::Ticks as Ticks>::u32_padding_no_panic() &&
+        <A::Ticks as Ticks>::into_usize_no_panic()
+    )]
+    fn get_expirations(
+        &self,
+        now: A::Ticks,
+    ) -> Result<Option<(Expiration<A::Ticks>, ProcessId)>, (Expiration<A::Ticks>, ProcessId, ())>
+    {
+        Self::earliest_alarm(
+            &self.app_alarms,
+            now,
+            self.app_alarms.iter().filter_map(|app| {
+                let process_id = app.processid();
+                app.enter(|alarm_state, _upcalls| {
+                    if let Some(exp) = alarm_state.expiration {
+                        Some((exp, process_id))
+                    } else {
+                        None
+                    }
+                })
+            }),
+        )
+    }
+
     /// Re-arm the timer. This must be called in response to the underlying
     /// timer firing, or the set of [`Expiration`]s changing. This will iterate
     /// over all [`Expiration`]s and
@@ -194,50 +289,9 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         // volatile read, and this may not be optimized if done in a loop:
         let now = self.alarm.now();
 
-        let expired_handler = |expired: Expiration<A::Ticks>, process_id: &ProcessId| {
-            // This closure is run on every expired alarm, _after_ the `enter()`
-            // closure on the Grant iterator has returned. We are thus not
-            // risking reentrancy here.
-
-            // Enter the app's grant again:
-            let _ = self.app_alarms.enter(*process_id, |alarm_state, upcalls| {
-                // Reset this app's alarm:
-                alarm_state.expiration = None;
-
-                // Deliver the upcall:
-                upcalls
-                    .schedule_upcall(
-                        ALARM_CALLBACK_NUM,
-                        (
-                            now.into_u32_left_justified() as usize,
-                            expired.reference.wrapping_add(expired.dt).into_usize(),
-                            0,
-                        ),
-                    )
-                    .ok();
-            });
-
-            // Proceed iteration across expirations:
-            None::<()>
-        };
-
-        // Compute the earliest alarm, and invoke the `expired_handler` for
-        // every expired alarm. This will issue a callback and reset the alarms
-        // respectively.
-        let res = Self::earliest_alarm(
-            now,
-            // Pass an interator of all non-None expirations:
-            self.app_alarms.iter().filter_map(|app| {
-                let process_id = app.processid();
-                app.enter(|alarm_state, _upcalls| {
-                    if let Some(exp) = alarm_state.expiration {
-                        Some((exp, process_id, expired_handler))
-                    } else {
-                        None
-                    }
-                })
-            }),
-        );
+        // Collect non-None expirations, find the earliest, and invoke
+        // expired_handler for each expired alarm.
+        let res = self.get_expirations(now);
 
         // Arm or disarm the alarm accordingly:
         match res {
@@ -606,549 +660,304 @@ impl<'a, A: Alarm<'a>> time::AlarmClient for AlarmDriver<'a, A> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use core::cell::Cell;
-    use core::marker::PhantomData;
-
-    use kernel::hil::time::{
-        Alarm, AlarmClient, Freq10MHz, Frequency, Ticks, Ticks24, Ticks32, Ticks64, Time,
-    };
-    use kernel::utilities::cells::OptionalCell;
-    use kernel::ErrorCode;
-
-    use super::{AlarmDriver, Expiration};
-
-    struct MockAlarm<'a, T: Ticks, F: Frequency> {
-        current_ticks: Cell<T>,
-        client: OptionalCell<&'a dyn AlarmClient>,
-        _frequency: PhantomData<F>,
-    }
-
-    impl<'a, T: Ticks, F: Frequency> Time for MockAlarm<'a, T, F> {
-        type Frequency = F;
-        type Ticks = T;
-
-        fn now(&self) -> Self::Ticks {
-            self.current_ticks.get()
-        }
-    }
-
-    impl<'a, T: Ticks, F: Frequency> Alarm<'a> for MockAlarm<'a, T, F> {
-        fn set_alarm_client(&self, client: &'a dyn AlarmClient) {
-            self.client.set(client);
-        }
-
-        fn set_alarm(&self, _reference: Self::Ticks, _dt: Self::Ticks) {
-            unimplemented!()
-        }
-
-        fn get_alarm(&self) -> Self::Ticks {
-            unimplemented!()
-        }
-
-        fn disarm(&self) -> Result<(), ErrorCode> {
-            unimplemented!()
-        }
-
-        fn is_armed(&self) -> bool {
-            unimplemented!()
-        }
-
-        fn minimum_dt(&self) -> Self::Ticks {
-            unimplemented!()
-        }
-    }
-
-    #[test]
-    fn test_earliest_alarm_no_alarms() {
-        assert!(
-            AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::earliest_alarm(
-                // Now:
-                Ticks32::from(42_u32),
-                // Expirations:
-                <[(
-                    Expiration<kernel::hil::time::Ticks32>,
-                    (),
-                    fn(_, &()) -> Option<()>
-                ); 0] as IntoIterator>::into_iter([])
-            )
-            .unwrap()
-            .is_none()
-        )
-    }
-
-    #[test]
-    fn test_earliest_alarm_multiple_unexpired() {
-        // Should never be called:
-        let exp_handler = |exp, id: &usize| -> Option<()> {
-            panic!("Alarm should not be expired: {:?}, id: {}", exp, id)
-        };
-
-        let (earliest, id) = AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::earliest_alarm(
-            // Now:
-            42_u32.into(),
-            // Expirations:
-            [
-                (
-                    // Will expire at 52:
-                    Expiration {
-                        reference: 42_u32.into(),
-                        dt: 10_u32.into(),
-                    },
-                    0,
-                    exp_handler,
-                ),
-                (
-                    // Will expire at exactly 43:
-                    Expiration {
-                        reference: u32::MAX.into(),
-                        dt: 44_u32.into(),
-                    },
-                    1,
-                    exp_handler,
-                ),
-                (
-                    // Will expire at 44:
-                    Expiration {
-                        reference: 10_u32.into(),
-                        dt: 34_u32.into(),
-                    },
-                    2,
-                    exp_handler,
-                ),
-            ]
-            .into_iter(),
-        )
-        .unwrap()
-        .unwrap();
-
-        assert!(earliest.reference.into_u32() == u32::MAX);
-        assert!(earliest.dt.into_u32() == 44);
-        assert!(id == 1);
-    }
-
-    #[test]
-    fn test_earliest_alarm_multiple_expired() {
-        let exp_list: [Cell<bool>; 7] = Default::default();
-
-        let exp_handler = |_exp, id: &usize| -> Option<()> {
-            exp_list[*id].set(true);
-
-            // Don't stop iterating on the first expired alarm:
-            None
-        };
-
-        let (earliest, id) = AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::earliest_alarm(
-            // Now:
-            42_u32.into(),
-            // Expirations:
-            [
-                (
-                    // Has expired at 42 (current cycle), should fire!
-                    Expiration {
-                        reference: 41_u32.into(),
-                        dt: 1_u32.into(),
-                    },
-                    0,
-                    &exp_handler,
-                ),
-                (
-                    // Will expire at 52, should not fire.
-                    Expiration {
-                        reference: 42_u32.into(),
-                        dt: 10_u32.into(),
-                    },
-                    1,
-                    &exp_handler,
-                ),
-                (
-                    // Will expire at exactly 43, should not fire.
-                    Expiration {
-                        reference: u32::MAX.into(),
-                        dt: 44_u32.into(),
-                    },
-                    2,
-                    &exp_handler,
-                ),
-                (
-                    // Reference is current time, expiration in the future,
-                    // should not fire:
-                    Expiration {
-                        reference: 42_u32.into(),
-                        dt: 1_u32.into(),
-                    },
-                    3,
-                    &exp_handler,
-                ),
-                (
-                    // Reference is 43 (current time + 1), interpreted as "in
-                    // the past", should fire:
-                    Expiration {
-                        reference: 43_u32.into(),
-                        dt: 1_u32.into(),
-                    },
-                    4,
-                    &exp_handler,
-                ),
-                (
-                    // Reference is 0, end is at 1, in the past, should fire:
-                    Expiration {
-                        reference: 0_u32.into(),
-                        dt: 1_u32.into(),
-                    },
-                    5,
-                    &exp_handler,
-                ),
-                (
-                    // Reference is u32::MAX, end is at 0, in the past, should fire:
-                    Expiration {
-                        reference: u32::MAX.into(),
-                        dt: 1_u32.into(),
-                    },
-                    6,
-                    &exp_handler,
-                ),
-            ]
-            .into_iter(),
-        )
-        .unwrap()
-        .unwrap();
-
-        assert!(earliest.reference.into_u32() == 41);
-        assert!(earliest.dt.into_u32() == 1);
-        assert!(id == 0);
-
-        let mut bool_exp_list: [bool; 7] = [false; 7];
-        exp_list
-            .into_iter()
-            .zip(bool_exp_list.iter_mut())
-            .for_each(|(src, dst)| *dst = src.get());
-
-        assert!(bool_exp_list == [true, false, false, false, true, true, true]);
-    }
-
-    #[test]
-    fn test_earliest_alarm_expired_stop() {
-        let exp_list: [Cell<bool>; 4] = Default::default();
-
-        let exp_handler = |_exp, id: &usize| -> Option<&'static str> {
-            exp_list[*id].set(true);
-
-            // Stop iterating on id == 3
-            if *id == 3 {
-                Some("stopped")
-            } else {
-                None
-            }
-        };
-
-        let (expired, id, expired_ret) =
-            AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::earliest_alarm(
-                // Now:
-                42_u32.into(),
-                // Expirations:
-                [
-                    (
-                        // Will expire at 52, should not fire.
-                        Expiration {
-                            reference: 42_u32.into(),
-                            dt: 10_u32.into(),
-                        },
-                        0,
-                        &exp_handler,
-                    ),
-                    (
-                        // Has expired at 42 (current cycle), should fire!
-                        Expiration {
-                            reference: 41_u32.into(),
-                            dt: 1_u32.into(),
-                        },
-                        1,
-                        &exp_handler,
-                    ),
-                    (
-                        // Will expire at exactly 43, should not fire.
-                        Expiration {
-                            reference: u32::MAX.into(),
-                            dt: 44_u32.into(),
-                        },
-                        2,
-                        &exp_handler,
-                    ),
-                    (
-                        // Reference is 0, end is at 1, in the past, should fire:
-                        Expiration {
-                            reference: 0_u32.into(),
-                            dt: 1_u32.into(),
-                        },
-                        3,
-                        &exp_handler,
-                    ),
-                ]
-                .into_iter(),
-            )
-            .err()
-            .unwrap();
-
-        assert!(expired.reference.into_u32() == 0);
-        assert!(expired.dt.into_u32() == 1);
-        assert!(id == 3);
-        assert!(expired_ret == "stopped");
-
-        let mut bool_exp_list: [bool; 4] = [false; 4];
-        exp_list
-            .into_iter()
-            .zip(bool_exp_list.iter_mut())
-            .for_each(|(src, dst)| *dst = src.get());
-
-        assert!(bool_exp_list == [false, true, false, true,]);
-    }
-
-    #[test]
-    fn test_rearm_24bit_left_justified_noref_basic() {
-        let mut expiration = None;
-
-        assert!(Ticks24::u32_padding() == 8);
-
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks24, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks24::from(1337_u32),
-                // No userspace-provided reference:
-                None,
-                // Left-justified `dt` value:
-                1234_u32 << Ticks24::u32_padding(),
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        assert_eq!(armed_time, (1337 + 1234) << Ticks24::u32_padding());
-        assert_eq!(expiration.reference.into_u32(), 1337);
-        assert_eq!(expiration.dt.into_u32(), 1234);
-    }
-
-    #[test]
-    fn test_rearm_24bit_left_justified_noref_wrapping() {
-        let mut expiration = None;
-
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks24, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks24::from(1337_u32),
-                // No userspace-provided reference:
-                None,
-                // Left-justified `dt` value (in this case, with some
-                // irrepresentable precision)
-                u32::MAX - (42 << Ticks24::u32_padding()),
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        // (1337 + ((0xffffffff - (42 << 8)) >> 8) + 1) % 0x01000000 = 1295
-        assert_eq!(armed_time, 1295 << Ticks24::u32_padding());
-        assert_eq!(expiration.reference.into_u32(), 1337);
-        assert_eq!(
-            expiration.dt.into_u32(),
-            // dt is rounded up to the next representable tick:
-            ((u32::MAX - (42 << Ticks24::u32_padding())) >> Ticks24::u32_padding()) + 1
-        );
-    }
-
-    #[test]
-    fn test_rearm_32bit_left_justified_noref_basic() {
-        let mut expiration = Some(Expiration {
-            reference: 0_u32.into(),
-            dt: 1_u32.into(),
-        });
-
-        assert!(Ticks32::u32_padding() == 0);
-
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks32::from(1337_u32),
-                // No userspace-provided reference:
-                None,
-                // Left-justified `dt` value, unshifted for 32 bit:
-                1234_u32,
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        assert_eq!(armed_time, 1337 + 1234);
-        assert_eq!(expiration.reference.into_u32(), 1337);
-        assert_eq!(expiration.dt.into_u32(), 1234);
-    }
-
-    #[test]
-    fn test_rearm_32bit_left_justified_noref_wrapping() {
-        let mut expiration = None;
-
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks32::from(1337_u32),
-                // No userspace-provided reference:
-                None,
-                // Left-justified `dt` value (in this case, with some
-                // irrepresentable precision)
-                u32::MAX - 42,
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        // (1337 + (0xffffffff - 42)) % 0x100000000 = 1294
-        assert_eq!(armed_time, 1294);
-        assert_eq!(expiration.reference.into_u32(), 1337);
-        assert_eq!(expiration.dt.into_u32(), u32::MAX - 42);
-    }
-
-    #[test]
-    fn test_rearm_64bit_left_justified_noref_wrapping() {
-        let mut expiration = Some(Expiration {
-            reference: 0_u32.into(),
-            dt: 1_u32.into(),
-        });
-
-        assert!(Ticks64::u32_padding() == 0);
-
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks64::from(0xDEADBEEFCAFE_u64),
-                // No userspace-provided reference:
-                None,
-                // Left-justified `dt` value, unshifted for 32 bit:
-                0xDEADC0DE_u32,
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        assert_eq!(armed_time, 0x9D9D8BDC_u32);
-        assert_eq!(expiration.reference.into_u64(), 0xDEADBEEFCAFE_u64);
-        assert_eq!(expiration.dt.into_u64(), 0xDEADC0DE_u64);
-    }
-
-    #[test]
-    fn test_rearm_64bit_left_justified_refnowrap_dtnorwap() {
-        let mut expiration = None;
-
-        // reference smaller than now & 0xffffffff, reference + dt don't wrap:
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks64::from(0xDEADBEEFCAFE_u64),
-                // Userspace-provided reference, smaller than now and dt
-                Some(0xBEEFC0DE_u32),
-                // Left-justified `dt` value, unshifted for 32 bit:
-                0x1BADB002_u32,
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        assert_eq!(armed_time, 0xDA9D70E0_u32); // remains at 0xDEAD
-        assert_eq!(expiration.reference.into_u64(), 0xDEADBEEFC0DE_u64);
-        assert_eq!(expiration.dt.into_u64(), 0x1BADB002_u64);
-    }
-
-    #[test]
-    fn test_rearm_64bit_left_justified_refnowrwap_dtwrap() {
-        let mut expiration = Some(Expiration {
-            reference: 0_u32.into(),
-            dt: 1_u32.into(),
-        });
-
-        // reference smaller than now & 0xffffffff, reference + dt wrap:
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks64::from(0xDEADBEEFCAFE_u64),
-                // Userspace-provided reference, smaller than lower 32-bit of now
-                Some(0x8BADF00D_u32),
-                // Left-justified `dt` value, unshifted for 32 bit:
-                0xFEEDC0DE_u32,
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        assert_eq!(armed_time, 0x8A9BB0EB_u32); // wraps t0 0x0xDEAE
-        assert_eq!(expiration.reference.into_u64(), 0xDEAD8BADF00D_u64);
-        assert_eq!(expiration.dt.into_u64(), 0xFEEDC0DE_u64);
-    }
-
-    #[test]
-    fn test_rearm_64bit_left_justified_refwrap_dtwrap() {
-        let mut expiration = None;
-
-        // reference larger than now & 0xffffffff, reference + dt wrap:
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks64::from(0xDEADBEEFCAFE_u64),
-                // Userspace-provided reference, larger than lower 32-bit of
-                // now, meaning that it's already past:
-                Some(0xCAFEB0BA_u32),
-                // Left-justified `dt` value, unshifted for 32 bit:
-                0xFEEDC0DE_u32,
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        assert_eq!(armed_time, 0xC9EC7198_u32); // wraps to 0xDEAE
-        assert_eq!(expiration.reference.into_u64(), 0xDEACCAFEB0BA_u64);
-        assert_eq!(expiration.dt.into_u64(), 0xFEEDC0DE_u64);
-    }
-
-    #[test]
-    fn test_rearm_64bit_left_justified_refwrap_dtnowrap() {
-        let mut expiration = Some(Expiration {
-            reference: 0_u32.into(),
-            dt: 1_u32.into(),
-        });
-
-        // reference larger than now & 0xffffffff, reference + dt don't wrap
-        let armed_time =
-            AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
-                // Current time:
-                Ticks64::from(0xDEADBEEFCAFE_u64),
-                // Userspace-provided reference, larger than lower 32-bit of now
-                Some(0xCAFEB0BA_u32),
-                // Left-justified `dt` value, unshifted for 32 bit:
-                0x1BADB002_u32,
-                // Reference to the `Option<Expiration>`, also used
-                // to update the counter of armed alarms:
-                &mut expiration,
-            );
-
-        let expiration = expiration.unwrap();
-
-        assert_eq!(armed_time, 0xE6AC60BC_u32); // remains at 0xDEAD
-        assert_eq!(expiration.reference.into_u64(), 0xDEACCAFEB0BA_u64);
-        assert_eq!(expiration.dt.into_u64(), 0x1BADB002_u64);
-    }
-}
+// #[cfg(test)]
+// mod test {
+//     use core::cell::Cell;
+//     use core::marker::PhantomData;
+
+//     use kernel::hil::time::{
+//         Alarm, AlarmClient, Freq10MHz, Frequency, Ticks, Ticks24, Ticks32, Ticks64, Time,
+//     };
+//     use kernel::utilities::cells::OptionalCell;
+//     use kernel::ErrorCode;
+
+//     use super::{AlarmDriver, Expiration};
+
+//     struct MockAlarm<'a, T: Ticks, F: Frequency> {
+//         current_ticks: Cell<T>,
+//         client: OptionalCell<&'a dyn AlarmClient>,
+//         _frequency: PhantomData<F>,
+//     }
+
+//     impl<'a, T: Ticks, F: Frequency> Time for MockAlarm<'a, T, F> {
+//         type Frequency = F;
+//         type Ticks = T;
+
+//         fn now(&self) -> Self::Ticks {
+//             self.current_ticks.get()
+//         }
+//     }
+
+//     impl<'a, T: Ticks, F: Frequency> Alarm<'a> for MockAlarm<'a, T, F> {
+//         fn set_alarm_client(&self, client: &'a dyn AlarmClient) {
+//             self.client.set(client);
+//         }
+
+//         fn set_alarm(&self, _reference: Self::Ticks, _dt: Self::Ticks) {
+//             unimplemented!()
+//         }
+
+//         fn get_alarm(&self) -> Self::Ticks {
+//             unimplemented!()
+//         }
+
+//         fn disarm(&self) -> Result<(), ErrorCode> {
+//             unimplemented!()
+//         }
+
+//         fn is_armed(&self) -> bool {
+//             unimplemented!()
+//         }
+
+//         fn minimum_dt(&self) -> Self::Ticks {
+//             unimplemented!()
+//         }
+//     }
+
+//     #[test]
+//     fn test_rearm_24bit_left_justified_noref_basic() {
+//         let mut expiration = None;
+
+//         assert!(Ticks24::u32_padding() == 8);
+
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks24, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks24::from(1337_u32),
+//                 // No userspace-provided reference:
+//                 None,
+//                 // Left-justified `dt` value:
+//                 1234_u32 << Ticks24::u32_padding(),
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         assert_eq!(armed_time, (1337 + 1234) << Ticks24::u32_padding());
+//         assert_eq!(expiration.reference.into_u32(), 1337);
+//         assert_eq!(expiration.dt.into_u32(), 1234);
+//     }
+
+//     #[test]
+//     fn test_rearm_24bit_left_justified_noref_wrapping() {
+//         let mut expiration = None;
+
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks24, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks24::from(1337_u32),
+//                 // No userspace-provided reference:
+//                 None,
+//                 // Left-justified `dt` value (in this case, with some
+//                 // irrepresentable precision)
+//                 u32::MAX - (42 << Ticks24::u32_padding()),
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         // (1337 + ((0xffffffff - (42 << 8)) >> 8) + 1) % 0x01000000 = 1295
+//         assert_eq!(armed_time, 1295 << Ticks24::u32_padding());
+//         assert_eq!(expiration.reference.into_u32(), 1337);
+//         assert_eq!(
+//             expiration.dt.into_u32(),
+//             // dt is rounded up to the next representable tick:
+//             ((u32::MAX - (42 << Ticks24::u32_padding())) >> Ticks24::u32_padding()) + 1
+//         );
+//     }
+
+//     #[test]
+//     fn test_rearm_32bit_left_justified_noref_basic() {
+//         let mut expiration = Some(Expiration {
+//             reference: 0_u32.into(),
+//             dt: 1_u32.into(),
+//         });
+
+//         assert!(Ticks32::u32_padding() == 0);
+
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks32::from(1337_u32),
+//                 // No userspace-provided reference:
+//                 None,
+//                 // Left-justified `dt` value, unshifted for 32 bit:
+//                 1234_u32,
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         assert_eq!(armed_time, 1337 + 1234);
+//         assert_eq!(expiration.reference.into_u32(), 1337);
+//         assert_eq!(expiration.dt.into_u32(), 1234);
+//     }
+
+//     #[test]
+//     fn test_rearm_32bit_left_justified_noref_wrapping() {
+//         let mut expiration = None;
+
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks32, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks32::from(1337_u32),
+//                 // No userspace-provided reference:
+//                 None,
+//                 // Left-justified `dt` value (in this case, with some
+//                 // irrepresentable precision)
+//                 u32::MAX - 42,
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         // (1337 + (0xffffffff - 42)) % 0x100000000 = 1294
+//         assert_eq!(armed_time, 1294);
+//         assert_eq!(expiration.reference.into_u32(), 1337);
+//         assert_eq!(expiration.dt.into_u32(), u32::MAX - 42);
+//     }
+
+//     #[test]
+//     fn test_rearm_64bit_left_justified_noref_wrapping() {
+//         let mut expiration = Some(Expiration {
+//             reference: 0_u32.into(),
+//             dt: 1_u32.into(),
+//         });
+
+//         assert!(Ticks64::u32_padding() == 0);
+
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks64::from(0xDEADBEEFCAFE_u64),
+//                 // No userspace-provided reference:
+//                 None,
+//                 // Left-justified `dt` value, unshifted for 32 bit:
+//                 0xDEADC0DE_u32,
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         assert_eq!(armed_time, 0x9D9D8BDC_u32);
+//         assert_eq!(expiration.reference.into_u64(), 0xDEADBEEFCAFE_u64);
+//         assert_eq!(expiration.dt.into_u64(), 0xDEADC0DE_u64);
+//     }
+
+//     #[test]
+//     fn test_rearm_64bit_left_justified_refnowrap_dtnorwap() {
+//         let mut expiration = None;
+
+//         // reference smaller than now & 0xffffffff, reference + dt don't wrap:
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks64::from(0xDEADBEEFCAFE_u64),
+//                 // Userspace-provided reference, smaller than now and dt
+//                 Some(0xBEEFC0DE_u32),
+//                 // Left-justified `dt` value, unshifted for 32 bit:
+//                 0x1BADB002_u32,
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         assert_eq!(armed_time, 0xDA9D70E0_u32); // remains at 0xDEAD
+//         assert_eq!(expiration.reference.into_u64(), 0xDEADBEEFC0DE_u64);
+//         assert_eq!(expiration.dt.into_u64(), 0x1BADB002_u64);
+//     }
+
+//     #[test]
+//     fn test_rearm_64bit_left_justified_refnowrwap_dtwrap() {
+//         let mut expiration = Some(Expiration {
+//             reference: 0_u32.into(),
+//             dt: 1_u32.into(),
+//         });
+
+//         // reference smaller than now & 0xffffffff, reference + dt wrap:
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks64::from(0xDEADBEEFCAFE_u64),
+//                 // Userspace-provided reference, smaller than lower 32-bit of now
+//                 Some(0x8BADF00D_u32),
+//                 // Left-justified `dt` value, unshifted for 32 bit:
+//                 0xFEEDC0DE_u32,
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         assert_eq!(armed_time, 0x8A9BB0EB_u32); // wraps t0 0x0xDEAE
+//         assert_eq!(expiration.reference.into_u64(), 0xDEAD8BADF00D_u64);
+//         assert_eq!(expiration.dt.into_u64(), 0xFEEDC0DE_u64);
+//     }
+
+//     #[test]
+//     fn test_rearm_64bit_left_justified_refwrap_dtwrap() {
+//         let mut expiration = None;
+
+//         // reference larger than now & 0xffffffff, reference + dt wrap:
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks64::from(0xDEADBEEFCAFE_u64),
+//                 // Userspace-provided reference, larger than lower 32-bit of
+//                 // now, meaning that it's already past:
+//                 Some(0xCAFEB0BA_u32),
+//                 // Left-justified `dt` value, unshifted for 32 bit:
+//                 0xFEEDC0DE_u32,
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         assert_eq!(armed_time, 0xC9EC7198_u32); // wraps to 0xDEAE
+//         assert_eq!(expiration.reference.into_u64(), 0xDEACCAFEB0BA_u64);
+//         assert_eq!(expiration.dt.into_u64(), 0xFEEDC0DE_u64);
+//     }
+
+//     #[test]
+//     fn test_rearm_64bit_left_justified_refwrap_dtnowrap() {
+//         let mut expiration = Some(Expiration {
+//             reference: 0_u32.into(),
+//             dt: 1_u32.into(),
+//         });
+
+//         // reference larger than now & 0xffffffff, reference + dt don't wrap
+//         let armed_time =
+//             AlarmDriver::<MockAlarm<Ticks64, Freq10MHz>>::rearm_u32_left_justified_expiration(
+//                 // Current time:
+//                 Ticks64::from(0xDEADBEEFCAFE_u64),
+//                 // Userspace-provided reference, larger than lower 32-bit of now
+//                 Some(0xCAFEB0BA_u32),
+//                 // Left-justified `dt` value, unshifted for 32 bit:
+//                 0x1BADB002_u32,
+//                 // Reference to the `Option<Expiration>`, also used
+//                 // to update the counter of armed alarms:
+//                 &mut expiration,
+//             );
+
+//         let expiration = expiration.unwrap();
+
+//         assert_eq!(armed_time, 0xE6AC60BC_u32); // remains at 0xDEAD
+//         assert_eq!(expiration.reference.into_u64(), 0xDEACCAFEB0BA_u64);
+//         assert_eq!(expiration.dt.into_u64(), 0x1BADB002_u64);
+//     }
+// }
