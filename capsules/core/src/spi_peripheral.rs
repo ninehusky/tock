@@ -24,13 +24,10 @@ use kernel::{ErrorCode, ProcessId};
 use crate::driver;
 pub const DRIVER_NUM: usize = driver::NUM::SpiPeripheral as usize;
 
-#[flux_rs::trusted(
-    reason = "cmp::min for usize returns a value <= both inputs; Flux cannot express this via the generic extern spec"
-)]
 #[flux_rs::sig(fn (usize[@a], usize[@b]) -> usize[if a <= b { a } else { b }])]
 #[flux_rs::no_panic]
 fn usize_min(a: usize, b: usize) -> usize {
-    cmp::min(a, b)
+    if a <= b { a } else { b }
 }
 
 // Why `i < dest_area.len()` holds in `copy_buf_to_process_slice`:
