@@ -220,20 +220,37 @@ impl<T> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
-    #[flux_rs::trusted(reason = "Andrew: why does the extern spec for `then` not work here?")]
     #[flux_rs::sig(fn(&Self[@state]) -> Option<T>{ b : b => is_init(state.occupied.value) })]
     #[flux_rs::no_panic_if(!is_borrowed(state.occupied.value))]
     pub fn take(&self) -> Option<T> {
         debug_assert_not_borrowed!(self);
-        (self.occupied.get() == MapCellState::Init).then(|| {
-            // SAFETY: Since `occupied` is `Init`, `val` is initialized and can be mutated
-            //         behind a shared reference. `result` is therefore initialized.
-            unsafe {
-                let result: MaybeUninit<T> = self.val.get().replace(MaybeUninit::uninit());
+        match self.occupied.get() {
+            MapCellState::Init => unsafe {
+                let result: MaybeUninit<T> = self.maybe_uninit_replace(MaybeUninit::uninit());
                 self.occupied.set(MapCellState::Uninit);
-                result.assume_init()
-            }
-        })
+                Some(result.assume_init())
+            },
+            MapCellState::Uninit | MapCellState::Borrowed => None,
+        }
+        // (self.occupied.get() == MapCellState::Init).then(|| {
+        //     // SAFETY: Since `occupied` is `Init`, `val` is initialized and can be mutated
+        //     //         behind a shared reference. `result` is therefore initialized.
+        //     unsafe {
+        //         let result: MaybeUninit<T> = self.val.get().replace(MaybeUninit::uninit());
+        //         self.occupied.set(MapCellState::Uninit);
+        //         result.assume_init()
+        //     }
+        // })
+    }
+
+    // Trusted for pointer arithmetic reasons:
+    // Initial implementation with UB bounds check is at: https://doc.rust-lang.org/src/core/ptr/mod.rs.html#1547
+    #[flux_rs::trusted(
+        reason = "`replace` requires that the pointer argument is aligned and non-null"
+    )]
+    #[flux_rs::no_panic]
+    fn maybe_uninit_replace(&self, val: MaybeUninit<T>) -> MaybeUninit<T> {
+        unsafe { self.val.get().replace(val) }
     }
 
     /// Puts a value into the `MapCell` without returning the old value.
@@ -243,7 +260,8 @@ impl<T> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
-    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
+    #[flux_rs::sig(fn(&Self[@state], _) -> _)]
+    #[flux_rs::no_panic_if(!is_borrowed(state.occupied.value))]
     pub fn put(&self, val: T) {
         debug_assert_not_borrowed!(self);
         // This will ensure the value as dropped
