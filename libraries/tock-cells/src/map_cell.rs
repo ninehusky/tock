@@ -90,21 +90,38 @@ pub struct MapCell<T> {
 }
 
 impl<T> Drop for MapCell<T> {
-    #[flux_rs::trusted(reason = "Don't want to make a spec for `drop_in_place` right now.")]
     #[flux_rs::sig(fn(&mut Self[@s]))]
     #[flux_rs::no_panic_if(!is_borrowed(s.occupied.value))]
     fn drop(&mut self) {
         let state = self.occupied.get();
         debug_assert_not_borrowed!(self); // This should be impossible
         if state == MapCellState::Init {
-            unsafe {
-                // SAFETY:
-                // - `occupied` is `Init`; `val` is initialized as an invariant.
-                // - Even though this violates the `occupied` invariant, by causing `val`
-                //   to be no longer valid, `self` is immediately dropped.
-                drop_in_place(self.val.get_mut().as_mut_ptr())
-            }
+            self.do_drop_in_place();
+            // unsafe {
+            //     // SAFETY:
+            //     // - `occupied` is `Init`; `val` is initialized as an invariant.
+            //     // - Even though this violates the `occupied` invariant, by causing `val`
+            //     //   to be no longer valid, `self` is immediately dropped.
+            //     drop_in_place(self.val.get_mut().as_mut_ptr())
+            // }
         }
+    }
+}
+
+impl<T> MapCell<T> {
+    // Andrew note: the implementation for `drop_in_place` is here:
+    // https://doc.rust-lang.org/src/core/ptr/mod.rs.html#805
+    // This stackoverflow post: https://stackoverflow.com/questions/62917242/rust-global-dealloc-vs-ptrdrop-in-place-vs-manuallydrop
+    // suggests that `drop_in_place` just calls `Drop::drop` on the value, so the no_panic spec
+    // of this _should_ be `<T as Drop>::drop_no_panic`. However:
+    // 1. We can't write an extern spec for Drop due to Rust restritions?
+    // 2. Even if we could, it seems that the no_panic_if condition here would be
+    // conditional on if T implements Drop, which I don't think we can express with the tools we have now.
+    #[flux_rs::trusted(reason = "The panic condition is conditional on T implementing Drop.")]
+    #[flux_rs::sig(fn(&mut Self[@s]))]
+    #[flux_rs::no_panic]
+    fn do_drop_in_place(&mut self) {
+        unsafe { drop_in_place(self.val.get_mut().as_mut_ptr()) }
     }
 }
 
@@ -275,7 +292,6 @@ impl<T> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
-    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
     #[flux_rs::sig(fn(&Self[@state], _) -> _)]
     #[flux_rs::no_panic_if(!is_borrowed(state.occupied.value))]
     pub fn replace(&self, val: T) -> Option<T> {
@@ -290,7 +306,8 @@ impl<T> MapCell<T> {
         // - Since `occupied` is `Init` or `Uninit`, no `&mut` to the `val` exists, meaning it
         //   is safe to mutate the `get` pointer.
         // - If occupied is `Init`, `maybe_uninit_val` must be initialized.
-        let maybe_uninit_val = unsafe { self.val.get().replace(MaybeUninit::new(val)) };
+        // let maybe_uninit_val = unsafe { self.val.get().replace(MaybeUninit::new(val)) };
+        let maybe_uninit_val = unsafe { self.maybe_uninit_replace(MaybeUninit::new(val)) };
         (occupied == MapCellState::Init).then(|| unsafe { maybe_uninit_val.assume_init() })
     }
 
