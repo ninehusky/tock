@@ -84,7 +84,7 @@ impl CommandReturn {
 impl From<Result<(), ErrorCode>> for CommandReturn {
     #[flux_rs::sig(fn (_) -> _)]
     #[flux_rs::no_panic_if(Self::from_no_panic())]
-    #[flux_rs::trusted(reason = "temporary")]
+    #[flux_rs::trusted(reason = "unwrap() on ErrorCode::try_from(rc) is safe in the Err arm, but Flux cannot refine TryFrom associated return types to prove Result is Ok")]
     fn from(rc: Result<(), ErrorCode>) -> Self {
         match rc {
             Ok(()) => CommandReturn::success(),

@@ -105,7 +105,7 @@ struct GrantPointerEntry {
     grant_ptr: FluxPtrU8Mut,
 }
 /// A type for userspace processes in Tock.
-#[flux_rs::refined_by(grant_pointers: MapCell, state: Cell<State>)]
+#[flux_rs::refined_by(grant_pointers: MapCell, state: Cell<State>, tasks: MapCell)]
 pub struct ProcessStandard<'a, C: 'static + Chip> {
     /// Identifier of this process and the index of the process in the process
     /// table.
@@ -206,6 +206,7 @@ pub struct ProcessStandard<'a, C: 'static + Chip> {
 
     /// Essentially a list of upcalls that want to call functions in the
     /// process.
+    #[flux_rs::field(MapCell<RingBuffer<Task>>[tasks])]
     tasks: MapCell<RingBuffer<'a, Task>>,
 
     /// Count of how many times this process has entered the fault condition and
@@ -239,7 +240,8 @@ flux_rs::defs! {
 }
 
 #[flux_rs::assoc(fn is_running(this: Self) -> bool { process_is_running(this.state.value.process_state_num) })]
-// Andrew: this is not complete for now, because I don't want to actually prove what this means right now.
+// Right now, we're not proving the "enter grantness" of a `ProcessStandard` because
+// the actual drivers don't ever use this concrete instantiation of `Process`.
 #[flux_rs::assoc(fn enter_grant_returns_ok(this: Self) -> bool { false })]
 impl<C: Chip> Process for ProcessStandard<'_, C> {
     #[flux_rs::no_panic]
@@ -263,6 +265,8 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         self.credential
     }
 
+    #[flux_rs::trusted(reason = "MapCell::map panic analysis blocked by DerefMut extern spec limitation")]
+    #[flux_rs::no_panic]
     fn enqueue_task(&self, task: Task) -> Result<(), ErrorCode> {
         // If this app is in a `Fault` state then we shouldn't schedule
         // any work for it.

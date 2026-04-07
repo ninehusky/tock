@@ -388,6 +388,7 @@ pub trait Process {
     ///   there is insufficient space in the internal task queue.
     ///
     /// Other return values must be treated as kernel-internal errors.
+    #[flux_rs::no_panic]
     fn enqueue_task(&self, task: Task) -> Result<(), ErrorCode>;
 
     /// Remove the scheduled operation from the front of the queue and return it

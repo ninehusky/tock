@@ -17,6 +17,12 @@ impl<T, E> Result<T, E> {
     #[sig(fn(&Result<T,E>[@b]) -> bool[!b])]
     const fn is_err(&self) -> bool;
 
+    #[sig(fn(Result<T,E>[@b]) -> T)]
+    #[flux_rs::no_panic_if(b)]
+    fn unwrap(self) -> T
+    where
+        E: core::fmt::Debug;
+
     #[sig(fn(Self) -> T)]
     #[flux_rs::no_panic_if(T::default_no_panic())]
     fn unwrap_or_default(self) -> T

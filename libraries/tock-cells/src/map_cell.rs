@@ -146,7 +146,6 @@ impl<T: Copy> MapCell<T> {
 
 impl<T> MapCell<T> {
     /// Creates an empty `MapCell`.
-    #[flux_rs::trusted]
     pub const fn empty() -> MapCell<T> {
         MapCell {
             val: UnsafeCell::new(MaybeUninit::uninit()),
@@ -155,7 +154,6 @@ impl<T> MapCell<T> {
     }
 
     /// Creates a new `MapCell` containing `value`.
-    #[flux_rs::trusted]
     pub const fn new(value: T) -> MapCell<T> {
         MapCell {
             val: UnsafeCell::new(MaybeUninit::new(value)),
@@ -191,11 +189,14 @@ impl<T> MapCell<T> {
     /// x.take();
     /// assert!(!x.is_some());
     /// ```
-    #[flux_rs::trusted(reason = "I don't know why Flux can't figure this out.")]
     #[flux_rs::no_panic]
     #[flux_rs::sig(fn(&Self[@slf]) -> bool[!is_uninit(slf.occupied.value)])]
     pub fn is_some(&self) -> bool {
-        self.occupied.get() != MapCellState::Uninit
+        match self.occupied.get() {
+            MapCellState::Uninit => false,
+            MapCellState::Init | MapCellState::Borrowed => true,
+        }
+        // self.occupied.get() != MapCellState::Uninit
     }
 
     /// Takes the value out of the `MapCell`, leaving it empty.

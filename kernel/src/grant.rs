@@ -558,6 +558,7 @@ impl<'a, T: 'a + ?Sized> Deref for GrantData<'a, T> {
 }
 
 impl<'a, T: 'a + ?Sized> DerefMut for GrantData<'a, T> {
+    #[flux_rs::no_panic]
     fn deref_mut(&mut self) -> &mut T {
         self.data
     }
@@ -618,9 +619,6 @@ impl<'a> GrantKernelData<'a> {
     /// identified by the `subscribe_num`, which must match the subscribe number
     /// used when the upcall was originally subscribed by a process.
     /// `subscribe_num`s are indexed starting at zero.
-    #[flux_rs::trusted(
-        reason = "TEMPORARY: slice::get uses SliceIndex::get which Flux cannot resolve; needs extern_spec for SliceIndex"
-    )]
     #[flux_rs::no_panic]
     pub fn schedule_upcall(
         &self,
@@ -1044,11 +1042,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// If the grant is already allocated or could be allocated, and the process
     /// is valid, this returns `Ok(ProcessGrant)`. Otherwise it returns a
     /// relevant error.
-    #[flux_rs::sig(fn (_, _) -> Result<Self[true], Error>)]
-    // TODO: andrew, get rid of this block
-    #[flux_rs::no_panic]
-    #[flux_rs::trusted]
-    // TODO: andrew, get rid of this block
+    #[flux_rs::no_panic_if(<T as Default>::default_no_panic())]
+    #[flux_rs::sig(fn (&Grant<_, _, _, _>[@g], _) -> Result<Self[true], Error>)]
     fn new(
         grant: &Grant<T, Upcalls, AllowROs, AllowRWs>,
         processid: ProcessId,
@@ -1059,7 +1054,11 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // thus 50+ copies of this function). The returned Option indicates if
         // the returned pointer still needs to be initialized (in the case where
         // the grant was only just allocated).
+        #[flux_rs::trusted(
+            reason = "returns Result on all error paths; blockers: bswap intrinsic has no Flux spec, dyn Process method calls unresolvable, from_residual unresolved"
+        )]
         #[flux_rs::sig(fn(_,_,_,GrantDataAlign{dalign: dalign > 0},_,_,_,_) -> _)]
+        #[flux_rs::no_panic]
         fn new_inner<'a>(
             grant_num: usize,
             driver_num: usize,
@@ -1180,7 +1179,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         }
 
         // Handle the bulk of the work in a function which is not templated.
-        let (opt_raw_grant_ptr_nn, process) = new_inner(
+        let (opt_raw_grant_ptr_nn, process) = match new_inner(
             grant.grant_num,
             grant.driver_num,
             GrantDataSize(size_of::<T>()),
@@ -1189,7 +1188,10 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
             AllowRoItems(AllowROs::COUNT),
             AllowRwItems(AllowRWs::COUNT),
             processid,
-        )?;
+        ) {
+            Ok(val) => val,
+            Err(e) => return Err(e),
+        };
 
         // We can now do the initialization of T object if necessary.
         if let Some(allocated_ptr) = opt_raw_grant_ptr_nn {
@@ -1806,7 +1808,7 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// for a specific process. Then, that [`ProcessGrant`] is entered and the
     /// provided closure is run with access to the memory in the grant region.
     #[flux_rs::sig(fn (&Self[@slf], _, _) -> _)]
-    #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic())]
+    #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic() && <T as Default>::default_no_panic())]
     pub fn enter<F, R>(&self, processid: ProcessId, fun: F) -> Result<R, Error>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,

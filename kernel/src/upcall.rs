@@ -95,6 +95,7 @@ pub(crate) struct Upcall {
 }
 
 impl Upcall {
+    #[flux_rs::no_panic]
     pub(crate) fn new(
         process_id: ProcessId,
         upcall_id: UpcallId,
@@ -124,6 +125,7 @@ impl Upcall {
     /// parameter so we take advantage of it. If in the future that is not the
     /// case we could have `process` be an Option and just do the search with
     /// the stored [`ProcessId`].
+    #[flux_rs::no_panic]
     pub(crate) fn schedule(
         &self,
         process: &dyn process::Process,
@@ -171,6 +173,14 @@ impl Upcall {
             }
         };
 
+        self.do_println(r0, r1, r2, res);
+
+        res
+    }
+
+    #[flux_rs::trusted(reason = "Trusting that debug! won't panic")]
+    #[flux_rs::no_panic]
+    fn do_println(&self, r0: usize, r1: usize, r2: usize, res: Result<(), UpcallError>) {
         if config::CONFIG.trace_syscalls {
             debug!(
                 "[{:?}] schedule[{:#x}:{}] @{:#x}({:#x}, {:#x}, {:#x}, {:#x}) = {:?}",
@@ -186,7 +196,6 @@ impl Upcall {
                 res
             );
         }
-        res
     }
 
     /// Create a successful syscall return type suitable for returning to
