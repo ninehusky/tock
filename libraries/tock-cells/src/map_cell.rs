@@ -147,8 +147,6 @@ impl<T: Copy> MapCell<T> {
     ///
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
-    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
-    // #[flux_rs::sig(fn(&Self[@state]) -> Option<T>{ b : b => state.state == 1 })]
     #[flux_rs::sig(fn(&Self[@slf]) -> Option<T>{ b : b => is_init(slf.occupied.value) })]
     #[flux_rs::no_panic_if(!is_borrowed(slf.occupied.value))]
     pub fn get(&self) -> Option<T> {
@@ -156,8 +154,12 @@ impl<T: Copy> MapCell<T> {
         // SAFETY:
         // - `Init` means that `val` is initialized and can be read
         // - `T: Copy` so there is no drop glue
-        (self.occupied.get() == MapCellState::Init)
-            .then(|| unsafe { self.val.get().read().assume_init() })
+        // (self.occupied.get() == MapCellState::Init)
+        //     .then(|| unsafe { self.val.get().read().assume_init() })
+        match self.occupied.get() {
+            MapCellState::Init => unsafe { Some(self.val.get().read().assume_init()) },
+            MapCellState::Uninit | MapCellState::Borrowed => None,
+        }
     }
 }
 
@@ -344,7 +346,6 @@ impl<T> MapCell<T> {
     /// # Panics
     /// If debug assertions are enabled, this panics if the `MapCell`'s contents are already borrowed.
     #[inline(always)]
-    #[flux_rs::trusted(reason = "Andrew will deal with this later.")]
     #[flux_rs::sig(fn(&Self[@state], closure: F) -> Option<R>)]
     #[flux_rs::no_panic_if(!is_borrowed(state.occupied.value) && F::no_panic())]
     pub fn map<F, R>(&self, closure: F) -> Option<R>
