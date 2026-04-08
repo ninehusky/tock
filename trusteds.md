@@ -26,7 +26,7 @@
 - [**L15**](https://github.com/ninehusky/tock/blob/ninehusky-non-trivial-verif/kernel/src/utilities/math.rs#L15) `closest_power_of_two` — bitwise arithmetic; supplementary Z3 proof pending
 - [**L28**](https://github.com/ninehusky/tock/blob/ninehusky-non-trivial-verif/kernel/src/utilities/math.rs#L28) `closest_power_of_two_usize` — bitwise arithmetic; same as above
 
-# Type 2: annotations representing Flux limitations (8 / 45)
+# Type 2: annotations representing Flux limitations (11 / 45)
 ## pointer arithmetic:
 ### `kernel/src/grant.rs`
 - **L418** `get_counter_offset` — `self.counters_ptr.read()` on `*mut usize`; no extern spec for `*mut T::read`
@@ -39,13 +39,16 @@
 - **L267** `maybe_uninit_replace` — `replace` requires aligned non-null pointer; no sound `no_panic` extern spec; pointer arithmetic UB check fires in debug builds
 - **L120** `do_drop_in_place` — panic condition is conditional on `T: Drop`; can't express this in Flux today
 
+## `kernel/src/process_standard.rs`
+- **L268** `enqueue_task` — `MapCell::map` panic analysis blocked by `DerefMut` extern spec limitation
+
 ## `dyn` calls:
 ### `kernel/src/process_standard.rs`
 - **L1398** `get_processid` — `&dyn Process` call; `CannotResolve` on dynamic dispatch
 - **L1407** `get_grant_ptr` — `&dyn Process` call; `CannotResolve` on dynamic dispatch
 - **L1057** `ProcessGrant::new` (inner block) — blockers: `bswap` intrinsic, unresolvable `dyn Process` method calls, `from_residual` unresolved
 
-# Type 3: missing preconditions
+# Type 3: missing preconditions (8 / 45)
 ## `capsules/core/src/stream.rs`
 - **L259** `encode_bytes` — `Index<RangeTo>` loses slice length refinement through `Index` trait
 - **L267** `encode_bytes_be` — `enumerate()` index not tracked as `i < buf.len()`
@@ -62,7 +65,7 @@
 ## `kernel/src/process_standard.rs`
 - **L1337** `create` — constructor; unsafe block
 
-# Type 4: stuff we're likely OK trusting
+# Type 4: stuff we're likely OK trusting (11 / 45)
 ## `kernel/src/debug.rs`
 - **L427** `try_get_debug_writer` — `as_deref_mut` on static mut; `DerefMut::deref_mut` unresolvable (same as upcall)
 - **L433** `get_debug_writer` — `unwrap()` on result of above; valid by board-init invariant
@@ -79,7 +82,6 @@
 - **L1142, 1153, 1164** `Index` impls on `WriteableProcessSlice` — same as above
 
 ## `kernel/src/process_standard.rs`
-- **L268** `enqueue_task` — `MapCell::map` panic analysis blocked by `DerefMut` extern spec limitation
 - **L753** `grant_is_allocated` — `trusted_impl`; don't want to annotate `no_panic_if` on `Process` trait
 - **L861** `get_grant_memory_if_allocated` — `trusted_impl`; don't want to annotate `no_panic_if` on `Process::enter_grant`
 
