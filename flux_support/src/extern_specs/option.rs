@@ -1,4 +1,5 @@
 use core::marker::Destruct;
+use core::ops::DerefMut;
 
 #[flux_rs::extern_spec]
 #[flux_rs::refined_by(b: bool)]
@@ -16,6 +17,10 @@ impl<T> Option<T> {
 
     #[sig(fn(&Option<T>[@b]) -> bool[!b])]
     const fn is_none(&self) -> bool;
+
+    #[sig(fn(Option<T>[@b]) -> T)]
+    #[flux_rs::no_panic_if(b)]
+    fn unwrap(self) -> T;
 
     #[sig(fn(Self) -> T)]
     #[flux_rs::no_panic_if(T::default_no_panic())]
@@ -37,10 +42,22 @@ impl<T> Option<T> {
         F: [const] FnOnce(T) -> U + [const] Destruct,
         U: [const] Destruct;
 
+    #[sig(fn(Self, D, F) -> _)]
+    #[flux_rs::no_panic_if(D::no_panic() && F::no_panic())]
+    const fn map_or_else<U, D, F>(self, default: D, f: F) -> U
+    where
+        D: [const] FnOnce() -> U + [const] Destruct,
+        F: [const] FnOnce(T) -> U + [const] Destruct;
+
     #[sig(fn(Self, F) -> Self)]
     #[flux_rs::no_panic_if(F::no_panic())]
     const fn inspect<F>(self, f: F) -> Self
     where
         F: [const] FnOnce(&T) + [const] Destruct;
+
+    #[flux_rs::no_panic]
+    const fn as_deref_mut(&mut self) -> Option<&mut T::Target>
+    where
+        T: [const] DerefMut;
 
 }

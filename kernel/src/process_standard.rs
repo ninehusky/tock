@@ -105,6 +105,7 @@ struct GrantPointerEntry {
     grant_ptr: FluxPtrU8Mut,
 }
 /// A type for userspace processes in Tock.
+#[flux_rs::refined_by(grant_pointers: MapCell, state: Cell<State>, tasks: MapCell)]
 pub struct ProcessStandard<'a, C: 'static + Chip> {
     /// Identifier of this process and the index of the process in the process
     /// table.
@@ -168,6 +169,7 @@ pub struct ProcessStandard<'a, C: 'static + Chip> {
     /// allocated memory and the driver number is set to match the driver that
     /// owns the grant. No other reference to these pointers exists in the Tock
     /// kernel.
+    #[flux_rs::field(MapCell<&mut [GrantPointerEntry]>[grant_pointers])]
     grant_pointers: MapCell<&'static mut [GrantPointerEntry]>,
 
     /// The footers of the process binary (may be zero-sized), which are metadata
@@ -196,6 +198,7 @@ pub struct ProcessStandard<'a, C: 'static + Chip> {
     /// `Running` and `Yielded` states. The system can control the process by
     /// switching it to a "stopped" state to prevent the scheduler from
     /// scheduling it.
+    #[flux_rs::field(Cell<State>[state])]
     state: Cell<State>,
 
     /// How to respond if this process faults.
@@ -203,6 +206,7 @@ pub struct ProcessStandard<'a, C: 'static + Chip> {
 
     /// Essentially a list of upcalls that want to call functions in the
     /// process.
+    #[flux_rs::field(MapCell<RingBuffer<Task>>[tasks])]
     tasks: MapCell<RingBuffer<'a, Task>>,
 
     /// Count of how many times this process has entered the fault condition and
@@ -224,6 +228,21 @@ pub struct ProcessStandard<'a, C: 'static + Chip> {
     debug: MapCell<ProcessStandardDebug>,
 }
 
+flux_rs::defs! {
+    // See process.rs:983 for the definition of `state`.
+    fn process_is_running(p_state_num: int) -> bool {
+        p_state_num == 0 || p_state_num == 1 || p_state_num == 2 || p_state_num == 3
+    }
+    // See map_cell.rs for the definition of MapCellState.
+    fn process_grant_pointers_uninit(gp_state_num: int) -> bool {
+        gp_state_num == 0
+    }
+}
+
+#[flux_rs::assoc(fn is_running(this: Self) -> bool { process_is_running(this.state.value.process_state_num) })]
+// Right now, we're not proving the "enter grantness" of a `ProcessStandard` because
+// the actual drivers don't ever use this concrete instantiation of `Process`.
+#[flux_rs::assoc(fn enter_grant_returns_ok(this: Self) -> bool { false })]
 impl<C: Chip> Process for ProcessStandard<'_, C> {
     #[flux_rs::no_panic]
     fn processid(&self) -> ProcessId {
@@ -246,6 +265,8 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         self.credential
     }
 
+    #[flux_rs::trusted(reason = "MapCell::map panic analysis blocked by DerefMut extern spec limitation")]
+    #[flux_rs::no_panic]
     fn enqueue_task(&self, task: Task) -> Result<(), ErrorCode> {
         // If this app is in a `Fault` state then we shouldn't schedule
         // any work for it.
@@ -310,10 +331,12 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         });
     }
 
+    #[flux_rs::sig(fn(&Self[@s]) -> bool[Self::is_running(s)])]
     fn is_running(&self) -> bool {
         match self.state.get() {
             State::Running | State::Yielded | State::YieldedFor(_) | State::Stopped(_) => true,
-            _ => false,
+            State::Faulted | State::Terminated => false,
+            // _ => false,
         }
     }
 
@@ -727,6 +750,9 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             .map_or(Err(()), |am| unsafe { Ok(am.set_byte(addr, value)) })
     }
 
+    #[flux_rs::trusted_impl(reason = "Don't want to annotate no_panic_if on grant_is_allocated")]
+    #[flux_rs::no_panic_if(gp.grant_pointers.occupied.value.state_num != 2)]
+    #[flux_rs::sig(fn (self: &Self[@gp], grant_num: usize) -> Option<bool>)]
     fn grant_is_allocated(&self, grant_num: usize) -> Option<bool> {
         // Do not modify an inactive process.
         if !self.is_running() {
@@ -832,6 +858,15 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             .map_or(Err(()), |am| am.allocate_custom_grant(size, align))
     }
 
+    #[flux_rs::trusted_impl(
+        reason = "Don't want to annotate no_panic_if spec on Process::enter_grant"
+    )]
+    // #[flux_rs::sig(fn (&Self[@slf], grant_num: usize) -> Result<NonNull<u8>, Error>[
+    //                                                                    // This returns an `Ok()` if...
+    //     Self::is_running(slf) &&                                       // the process is running, and
+    //     Self::grant_not_entered(slf, grant_num) &&                     // the grant at `grant_num` has not already been entered, and
+    //     slf.grant_pointers.occupied.value.state_num == 1               // the `grant_pointers` field is Initialized.
+    // ])]
     fn enter_grant(&self, grant_num: usize) -> Result<NonNull<u8>, Error> {
         // Do not try to access the grant region of an inactive process.
         if !self.is_running() {
@@ -1299,6 +1334,7 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
             usize
         )-> Result<(Option<&_>, &mut [u8]), (ProcessLoadError, &mut [u8])>
     )]
+    #[flux_rs::trusted] // Andrew: fix this later.
     pub(crate) unsafe fn create<'a>(
         kernel: &'static Kernel,
         chip: &'static C,

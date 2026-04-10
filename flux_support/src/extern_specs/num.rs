@@ -1,6 +1,12 @@
+// bswap is a compiler intrinsic with no Flux spec; it does not panic.
+#[flux_rs::extern_spec(core::intrinsics)]
+#[flux_rs::no_panic]
+fn bswap<T: Copy>(x: T) -> T;
+
 // The spec we need to prove log_base_two
 #[flux_rs::extern_spec]
 impl u32 {
+
     #[sig(fn(num: u32) -> u32{r: (num == 0 => r == 32) &&
                                  (num > 0 => r <= 31) &&
                                  (num > 1 => r <= 30)

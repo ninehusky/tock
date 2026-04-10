@@ -7,6 +7,8 @@
 #![feature(const_option_ops)]
 #![feature(import_trait_associated_functions)]
 #![feature(slice_index_methods)]
+#![feature(core_intrinsics)]
+#![feature(const_convert)]
 
 mod extern_specs;
 mod flux_arr;
@@ -36,6 +38,7 @@ macro_rules! const_assume {
 pub const fn assert(_x: bool) {}
 
 #[flux_rs::sig(fn(b:bool) ensures b)]
+#[flux_rs::no_panic_if(b)]
 pub const fn assume(b: bool) {
     if !b {
         panic!("assume fails")

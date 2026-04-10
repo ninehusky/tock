@@ -99,8 +99,10 @@ pub struct App {
     read_len: usize,
 }
 
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct Console<'a> {
     uart: &'a dyn uart::UartData<'a>,
+    #[flux_rs::field(Grant<_, _, _, _>[all_enterable])]
     apps: Grant<
         App,
         UpcallCount<{ upcall::COUNT }>,
@@ -283,6 +285,8 @@ impl SyscallDriver for Console<'_> {
     ///        passed in `arg1`
     /// - `3`: Cancel any in progress receives and return (via callback)
     ///        what has been received so far.
+    #[flux_rs::sig(fn(&Self[@slf], usize, usize, usize, ProcessId) -> CommandReturn)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn command(
         &self,
         cmd_num: usize,
@@ -322,12 +326,16 @@ impl SyscallDriver for Console<'_> {
         }
     }
 
+    #[flux_rs::sig(fn(self: &Self[@slf], _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn allocate_grant(&self, processid: ProcessId) -> Result<(), kernel::process::Error> {
         self.apps.enter(processid, |_, _| {})
     }
 }
 
 impl uart::TransmitClient for Console<'_> {
+    #[flux_rs::sig(fn(self: &Self[@slf], _, _, _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn transmitted_buffer(
         &self,
         buffer: &'static mut [u8],
@@ -358,7 +366,9 @@ impl uart::TransmitClient for Console<'_> {
         // If we are not printing more from the current AppSlice,
         // see if any other applications have pending messages.
         if self.tx_in_progress.is_none() {
-            for cntr in self.apps.iter() {
+            // for cntr in self.apps.iter() {
+            let mut iter = self.apps.iter();
+            while let Some(cntr) = iter.next() {
                 let processid = cntr.processid();
                 let started_tx = cntr.enter(|app, kernel_data| {
                     if app.pending_write {
@@ -377,6 +387,8 @@ impl uart::TransmitClient for Console<'_> {
 }
 
 impl uart::ReceiveClient for Console<'_> {
+    #[flux_rs::sig(fn(self: &Self[@slf], _, _, _, _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn received_buffer(
         &self,
         buffer: &'static mut [u8],

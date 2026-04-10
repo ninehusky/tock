@@ -398,6 +398,8 @@ impl<'a> EnteredGrantKernelManagedLayout<'a> {
     /// The caller must ensure that the specified base pointer is aligned to at
     /// least the alignment of T and points to a grant that is of size
     /// grant_size bytes.
+    #[flux_rs::no_panic]
+    #[flux_rs::trusted(reason = "Let's write a spec for new_unchecked later")]
     #[flux_rs::sig(fn(NonNull<u8>, usize[@grant_sz], GrantDataSize{data_sz: data_sz <= grant_sz}) -> NonNull<u8>)]
     unsafe fn offset_of_grant_data_t(
         base_ptr: NonNull<u8>,
@@ -412,6 +414,10 @@ impl<'a> EnteredGrantKernelManagedLayout<'a> {
 
     /// Read an 8 bit value from the counter field offset by the specified
     /// number of bits. This is a helper function for reading the counter field.
+    #[flux_rs::no_panic]
+    #[flux_rs::trusted(
+        reason = "Let's write a spec for core[9ef1]::ptr::mut_ptr::{impl#0}::read later"
+    )]
     fn get_counter_offset(&self, offset_bits: usize) -> usize {
         // # Safety
         //
@@ -471,6 +477,10 @@ impl<'a> EnteredGrantKernelManagedLayout<'a> {
     /// Return slices to the kernel managed upcalls and allow buffers. This
     /// permits using upcalls and allow buffers when a capsule is accessing a
     /// grant.
+    #[flux_rs::no_panic]
+    #[flux_rs::trusted(
+        reason = "Let's write a spec for core[9ef1]::ptr::mut_ptr::{impl#0}::read later"
+    )]
     fn get_resource_slices(&self) -> (&[SavedUpcall], &[SavedAllowRo], &[SavedAllowRw]) {
         // # Safety
         //
@@ -548,6 +558,7 @@ impl<'a, T: 'a + ?Sized> Deref for GrantData<'a, T> {
 }
 
 impl<'a, T: 'a + ?Sized> DerefMut for GrantData<'a, T> {
+    #[flux_rs::no_panic]
     fn deref_mut(&mut self) -> &mut T {
         self.data
     }
@@ -608,6 +619,7 @@ impl<'a> GrantKernelData<'a> {
     /// identified by the `subscribe_num`, which must match the subscribe number
     /// used when the upcall was originally subscribed by a process.
     /// `subscribe_num`s are indexed starting at zero.
+    #[flux_rs::no_panic]
     pub fn schedule_upcall(
         &self,
         subscribe_num: usize,
@@ -981,6 +993,12 @@ fn update_saved_allow_rw(
 ///
 /// This is created from a [`Grant`] when that grant is entered for a specific
 /// process.
+
+// Ghost refinement tracking whether `Process::enter_grant` will return `Ok`.
+// This is a copy, more or less, of `Process::enter_grant_returns_ok`
+// The reason we can't just reference something like `self.process.enter_grant...`
+// is that `process` is a `&dyn Process`, which we can't attach to the `ProcessGrant`.
+#[flux_rs::refined_by(enter_grant_returns_ok: bool)]
 pub struct ProcessGrant<
     'a,
     T: 'a,
@@ -1004,6 +1022,10 @@ pub struct ProcessGrant<
 
     /// Used to store Rust types for grant.
     _phantom: PhantomData<(T, Upcalls, AllowROs, AllowRWs)>,
+
+    /// Andrew: I added this as a dummy field.
+    #[flux_rs::field(bool[enter_grant_returns_ok])]
+    _enter_grant_returns_ok: bool,
 }
 
 impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize>
@@ -1020,6 +1042,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// If the grant is already allocated or could be allocated, and the process
     /// is valid, this returns `Ok(ProcessGrant)`. Otherwise it returns a
     /// relevant error.
+    #[flux_rs::no_panic_if(<T as Default>::default_no_panic())]
+    #[flux_rs::sig(fn (&Grant<_, _, _, _>[@g], _) -> Result<Self[true], Error>)]
     fn new(
         grant: &Grant<T, Upcalls, AllowROs, AllowRWs>,
         processid: ProcessId,
@@ -1030,7 +1054,11 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // thus 50+ copies of this function). The returned Option indicates if
         // the returned pointer still needs to be initialized (in the case where
         // the grant was only just allocated).
+        #[flux_rs::trusted(
+            reason = "returns Result on all error paths; blockers: bswap intrinsic has no Flux spec, dyn Process method calls unresolvable, from_residual unresolved"
+        )]
         #[flux_rs::sig(fn(_,_,_,GrantDataAlign{dalign: dalign > 0},_,_,_,_) -> _)]
+        #[flux_rs::no_panic]
         fn new_inner<'a>(
             grant_num: usize,
             driver_num: usize,
@@ -1151,7 +1179,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         }
 
         // Handle the bulk of the work in a function which is not templated.
-        let (opt_raw_grant_ptr_nn, process) = new_inner(
+        let (opt_raw_grant_ptr_nn, process) = match new_inner(
             grant.grant_num,
             grant.driver_num,
             GrantDataSize(size_of::<T>()),
@@ -1160,7 +1188,10 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
             AllowRoItems(AllowROs::COUNT),
             AllowRwItems(AllowRWs::COUNT),
             processid,
-        )?;
+        ) {
+            Ok(val) => val,
+            Err(e) => return Err(e),
+        };
 
         // We can now do the initialization of T object if necessary.
         if let Some(allocated_ptr) = opt_raw_grant_ptr_nn {
@@ -1195,6 +1226,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
             process,
             driver_num: grant.driver_num,
             grant_num: grant.grant_num,
+            _enter_grant_returns_ok: true,
             _phantom: PhantomData,
         })
     }
@@ -1202,6 +1234,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// Return a [`ProcessGrant`] for a grant in a process if the process is
     /// valid and that process grant has already been allocated, or `None`
     /// otherwise.
+    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn (_, _) -> Option<Self[true]>)]
     fn new_if_allocated(
         grant: &Grant<T, Upcalls, AllowROs, AllowRWs>,
         process: &'a dyn Process,
@@ -1212,6 +1246,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                     process,
                     driver_num: grant.driver_num,
                     grant_num: grant.grant_num,
+                    _enter_grant_returns_ok: true,
                     _phantom: PhantomData,
                 })
             } else {
@@ -1241,6 +1276,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// Note, a grant can only be entered once at a time. Attempting to call
     /// `.enter()` on a grant while it is already entered will result in a
     /// `panic!()`. See the comment in `access_grant()` for more information.
+    #[flux_rs::sig(fn(s: Self[@slf], fun: F) -> R)]
+    #[flux_rs::no_panic_if(slf.enter_grant_returns_ok && F::no_panic())]
     pub fn enter<F, R>(self, fun: F) -> R
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
@@ -1342,6 +1379,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// If `panic_on_reenter` is `true`, this will panic if the grant region is
     /// already currently entered. If `panic_on_reenter` is `false`, this will
     /// return `None` if the grant region is entered and do nothing.
+    #[flux_rs::sig(fn(s: Self[@slf], fun: F, panic_on_reenter: bool[@can_panic]) -> Option<R>[slf.enter_grant_returns_ok])]
+    #[flux_rs::no_panic_if(slf.enter_grant_returns_ok && F::no_panic())]
     fn access_grant<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
@@ -1352,34 +1391,29 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         )
     }
 
-    /// Access the [`ProcessGrant`] memory and run a closure on the process's
-    /// grant memory.
-    ///
-    /// If `panic_on_reenter` is `true`, this will panic if the grant region is
-    /// already currently entered. If `panic_on_reenter` is `false`, this will
-    /// return `None` if the grant region is entered and do nothing.
-    fn access_grant_with_allocator<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
-    where
-        F: FnOnce(&mut GrantData<T>, &GrantKernelData, &mut GrantRegionAllocator) -> R,
-    {
-        // Access the grant that is in process memory. This can only fail if
-        // the grant is already entered.
-        let grant_ptr = self
-            .process
+    /// Wrapper around `self.process.processid()` to avoid Flux hitting
+    /// `CannotResolve(UnresolvedTraitMethod(...))` on the `&dyn Process` call.
+    /// Safe to mark no_panic because `Process::processid` is annotated `#[flux_rs::no_panic]`
+    /// on the trait definition.
+    #[flux_rs::trusted]
+    #[flux_rs::no_panic]
+    fn get_processid(&self) -> ProcessId {
+        self.process.processid()
+    }
+
+    /// Attempt to enter the grant for the process, panicking if the grant is
+    /// already entered and `panic_on_reenter` is true. Returns `None` if the
+    /// grant could not be entered and `panic_on_reenter` is false.
+    #[flux_rs::trusted]
+    #[flux_rs::no_panic_if(slf.enter_grant_returns_ok)]
+    #[flux_rs::sig(fn(s: &Self[@slf], panic_on_reenter: bool) -> Option<NonNull<u8>>[slf.enter_grant_returns_ok])]
+    fn get_grant_ptr(&self, panic_on_reenter: bool) -> Option<NonNull<u8>> {
+        self.process
             .enter_grant(self.grant_num)
             .map_err(|_err| {
-                // If we get an error it is because the grant is already
-                // entered. `process.enter_grant()` can fail for several
-                // reasons, but only the double enter case can happen once a
-                // grant has been applied. The other errors would be detected
-                // earlier (i.e. before the grant can be applied).
-
-                // If `panic_on_reenter` is false, we skip this error and do
-                // nothing with this grant.
                 if !panic_on_reenter {
                     return;
                 }
-
                 // If `enter_grant` fails, we panic!() to notify the developer
                 // that they tried to enter the same grant twice which is
                 // prohibited because it would result in two mutable references
@@ -1429,7 +1463,29 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 // grant regions.
                 panic!("Attempted to re-enter a grant region.");
             })
-            .ok()?;
+            .ok()
+    }
+
+    /// Access the [`ProcessGrant`] memory and run a closure on the process's
+    /// grant memory.
+    ///
+    /// If `panic_on_reenter` is `true`, this will panic if the grant region is
+    /// already currently entered. If `panic_on_reenter` is `false`, this will
+    /// return `None` if the grant region is entered and do nothing.
+    #[flux_rs::sig(fn(s: Self[@slf], fun: F, panic_on_reenter: bool) -> Option<R>[slf.enter_grant_returns_ok])]
+    #[flux_rs::no_panic_if(slf.enter_grant_returns_ok && F::no_panic())]
+    fn access_grant_with_allocator<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
+    where
+        F: FnOnce(&mut GrantData<T>, &GrantKernelData, &mut GrantRegionAllocator) -> R,
+    {
+        // let grant_ptr = self.get_grant_ptr(panic_on_reenter)?;
+        let grant_ptr = self.get_grant_ptr(panic_on_reenter);
+        if grant_ptr.is_none() {
+            return None;
+        }
+
+        let grant_ptr = grant_ptr.unwrap();
+
         let grant_t_align = GrantDataAlign(align_of::<T>());
         let grant_t_size = GrantDataSize(size_of::<T>());
 
@@ -1488,7 +1544,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // Setup an allocator in case the capsule needs additional memory in the
         // grant space.
         let mut allocator = GrantRegionAllocator {
-            processid: self.process.processid(),
+            processid: self.get_processid(),
         };
 
         // Call functor and pass back value.
@@ -1701,6 +1757,11 @@ impl GrantRegionAllocator {
 /// type is used to get access to [`ProcessGrant`]s, which are tied to a
 /// specific process and provide access to the memory object allocated for that
 /// process.
+// Ghost refinement tracking whether all `ProcessGrant`s yielded by iterating
+// this `Grant` are safe to enter (i.e., none are currently entered).
+// `all_enterable = true` is the precondition required by `iter()`, matching
+// the documented contract: calling `iter()` while a grant is entered panics.
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct Grant<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize> {
     /// Hold a reference to the core kernel so we can iterate processes.
     pub(crate) kernel: &'static Kernel,
@@ -1717,6 +1778,10 @@ pub struct Grant<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRW
 
     /// Used to store the Rust types for grant.
     ptr: PhantomData<(T, Upcalls, AllowROs, AllowRWs)>,
+
+    /// Ghost field: no grants from this `Grant` are currently entered.
+    #[flux_rs::field(bool[all_enterable])]
+    _all_enterable: bool,
 }
 
 impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSize>
@@ -1733,6 +1798,7 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
             driver_num,
             grant_num: grant_index,
             ptr: PhantomData,
+            _all_enterable: true,
         }
     }
 
@@ -1741,7 +1807,8 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// This creates a [`ProcessGrant`] which is a handle for a grant allocated
     /// for a specific process. Then, that [`ProcessGrant`] is entered and the
     /// provided closure is run with access to the memory in the grant region.
-    #[flux_rs::sig(fn (_, _, _) -> _)]
+    #[flux_rs::sig(fn (&Self[@slf], _, _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic() && <T as Default>::default_no_panic())]
     pub fn enter<F, R>(&self, processid: ProcessId, fun: F) -> Result<R, Error>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
@@ -1792,12 +1859,17 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     ///
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
+    #[flux_rs::sig(fn (&Self[@slf], fun: F))]
+    #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic())]
     pub fn each<F>(&self, mut fun: F)
     where
         F: FnMut(ProcessId, &mut GrantData<T>, &GrantKernelData),
     {
         // Create a the iterator across `ProcessGrant`s for each process.
-        for pg in self.iter() {
+        // Note: use `while let` instead of `for` to avoid `IntoIterator::into_iter`,
+        // which Flux cannot resolve for the grant `Iter` type during no_panic inference.
+        let mut iter = self.iter();
+        while let Some(pg) = iter.next() {
             let processid = pg.processid();
             // Since we iterating, there is no return value we need to worry
             // about.
@@ -1811,17 +1883,20 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
     #[flux_rs::trusted(reason = "ICE: assertion `left == right` failed `infer.rs:869`")]
-    #[flux_rs::no_panic] // Andrew: this is super duper unsound. why did i do this??
-    #[flux_rs::sig(fn (_) -> _)]
+    // reason: this method is already marked trusted, so I'm gonna assume the body of this doesn't need to be checked for no_panic?
+    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn (self: &Self[@slf]) -> Iter<_, _, _, _>[slf.all_enterable])]
     pub fn iter(&self) -> Iter<'_, T, Upcalls, AllowROs, AllowRWs> {
         Iter {
             grant: self,
             subiter: self.kernel.get_process_iter(),
+            _all_enterable: self._all_enterable,
         }
     }
 }
 
 /// Type to iterate [`ProcessGrant`]s across processes.
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct Iter<
     'a,
     T: 'a + Default,
@@ -1837,6 +1912,29 @@ pub struct Iter<
         core::slice::Iter<'a, Option<&'static dyn Process>>,
         fn(&Option<&'static dyn Process>) -> Option<&'static dyn Process>,
     >,
+
+    // TODO: we need to come back to this refinement.
+    // One end of ensuring no-reentrance is that you can't call `iter()` while a grant is entered.
+    // ```
+    // // assume we have an enterable grant
+    // self.apps.enter(|_, _| { self.apps.iter() }) // bad!
+    // ```
+    // But what about the other way around?
+    // edit: this should be OK, I think once `iter` is done, the danger is gone. see this from `console.rs`:
+    // ```
+    // for cntr in self.apps.iter() {
+    //     let processid = cntr.processid();
+    //     let started_tx = cntr.enter(|app, kernel_data| {
+    //         if app.pending_write {
+    //             app.pending_write = false;
+    //             self.send_continue(processid, app, kernel_data)
+    //         } else {
+    //             false
+    //         }
+    //     });
+    // ```
+    #[flux_rs::field(bool[all_enterable])]
+    _all_enterable: bool,
 }
 
 #[flux_rs::assoc(fn next_no_panic() -> bool { true })]
@@ -1847,11 +1945,11 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
 {
     type Item = ProcessGrant<'a, T, Upcalls, AllowROs, AllowRWs>;
 
-    #[flux_rs::sig(fn (&mut Self) -> _)]
+    #[flux_rs::trusted(
+        reason = "So `slf.all_enterable` is true as a result of `new_if_allocated`, but `find_map` may not be smart enough to figure out that refinement."
+    )]
+    #[flux_rs::sig(fn (&mut Self[@slf]) -> Option<Self::Item[slf.all_enterable]>)]
     #[flux_rs::no_panic_if(Self::next_no_panic())]
-    // Andrew: marking this as trusted for now to make progress on other fronts.
-    // We'll need to verify that `find_map` doesn't panic, which means verifying the re-entrance safety
-    // of MapCells.
     fn next(&mut self) -> Option<Self::Item> {
         let grant = self.grant;
         // Get the next `ProcessId` from the kernel processes array that is

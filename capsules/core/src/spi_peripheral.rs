@@ -7,12 +7,15 @@
 
 use core::cell::Cell;
 use core::cmp;
+use core::ops::Range;
 
 use kernel::grant::{AllowRoCount, AllowRwCount, Grant, GrantKernelData, UpcallCount};
 use kernel::hil::spi::ClockPhase;
 use kernel::hil::spi::ClockPolarity;
 use kernel::hil::spi::{SpiSlaveClient, SpiSlaveDevice};
-use kernel::processbuffer::{ReadableProcessBuffer, WriteableProcessBuffer};
+use kernel::processbuffer::{
+    ReadableProcessBuffer, ReadableProcessSlice, WriteableProcessBuffer, WriteableProcessSlice,
+};
 use kernel::syscall::{CommandReturn, SyscallDriver};
 use kernel::utilities::cells::{OptionalCell, TakeCell};
 use kernel::{ErrorCode, ProcessId};
@@ -20,6 +23,54 @@ use kernel::{ErrorCode, ProcessId};
 /// Syscall driver number.
 use crate::driver;
 pub const DRIVER_NUM: usize = driver::NUM::SpiPeripheral as usize;
+
+#[flux_rs::sig(fn (usize[@a], usize[@b]) -> usize[if a <= b { a } else { b }])]
+#[flux_rs::no_panic]
+fn usize_min(a: usize, b: usize) -> usize {
+    if a <= b { a } else { b }
+}
+
+// Why `i < dest_area.len()` holds in `copy_buf_to_process_slice`:
+//   - `dest_area = &dest[start..end]`, so `dest_area.len() == end - start == real_len`
+//   - `src` passed in is `&src_buf[0..real_len]`, so `src.len() == real_len`
+//   - `enumerate()` on `src.iter()` yields `i` in `0..real_len`, so `i < real_len == dest_area.len()`
+//   Flux cannot track `i` through `enumerate()`, so this is trusted.
+#[flux_rs::trusted(reason = "out-of-bounds is impossible: see comment above")]
+#[flux_rs::no_panic]
+fn copy_buf_to_process_slice(src: &[u8], dest_area: &WriteableProcessSlice) {
+    for (i, c) in src.iter().enumerate() {
+        dest_area[i].set(*c);
+    }
+}
+
+// Why `subslice.len() <= kwbuf.len()` holds at the call site:
+//
+// In `do_next_read_write`:
+//   - `len = usize_min(app.len - start, self.kernel_len.get())`
+//     => `len <= self.kernel_len.get()`
+//   - `end = usize_min(start + len, src.len())`
+//     => `end <= start + len`
+//   - `start` is then reassigned to `usize_min(start, end)`, so either:
+//     - `start <= end` (original): `end - start <= len`
+//     - `start == end`: `end - start == 0`
+//     In both cases: `end - start <= len`
+//   - `subslice = &src[new_start..end]`, so `subslice.len() == end - start <= len <= kernel_len`
+//
+// In `config_buffers`:
+//   - `kernel_len = cmp::min(read.len(), write.len())`
+//     => `kernel_len <= write.len() == kwbuf.len()`
+//     (kwbuf is the write buffer stored in `kernel_write`)
+//
+// Therefore: `subslice.len() <= kernel_len <= kwbuf.len()`
+#[flux_rs::trusted(reason = "out-of-bounds is impossible: see comment above")]
+#[flux_rs::no_panic]
+fn copy_process_slice_to_buf(kwbuf: &mut [u8], subslice: &ReadableProcessSlice) {
+    let mut i = 0;
+    while i < subslice.len() {
+        kwbuf[i] = subslice[i].get();
+        i += 1;
+    }
+}
 
 /// Ids for read-only allow buffers
 mod ro_allow {
@@ -48,12 +99,14 @@ pub struct PeripheralApp {
     index: usize,
 }
 
+#[flux_rs::refined_by(all_enterable: bool)]
 pub struct SpiPeripheral<'a, S: SpiSlaveDevice<'a>> {
     spi_slave: &'a S,
     busy: Cell<bool>,
     kernel_read: TakeCell<'static, [u8]>,
     kernel_write: TakeCell<'static, [u8]>,
     kernel_len: Cell<usize>,
+    #[flux_rs::field(Grant<_, _, _, _>[all_enterable])]
     grants: Grant<
         PeripheralApp,
         UpcallCount<2>,
@@ -102,13 +155,20 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiPeripheral<'a, S> {
                 .get_readonly_processbuffer(ro_allow::WRITE)
                 .and_then(|write| {
                     write.enter(|src| {
-                        let len = cmp::min(app.len - start, self.kernel_len.get());
-                        let end = cmp::min(start + len, src.len());
-                        start = cmp::min(start, end);
+                        let len = usize_min(app.len - start, self.kernel_len.get());
+                        let end = usize_min(start + len, src.len());
+                        start = usize_min(start, end);
 
-                        for (i, c) in src[start..end].iter().enumerate() {
-                            kwbuf[i] = c.get();
-                        }
+                        // for Flux
+                        let new_start = usize_min(start, end);
+
+                        let range = Range {
+                            start: new_start,
+                            end,
+                        };
+                        let subslice = &src[range];
+
+                        copy_process_slice_to_buf(kwbuf, subslice);
                         end - start
                     })
                 })
@@ -165,7 +225,7 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
     ///   - does nothing if lock not held
     ///   - not implemented or currently supported
     #[flux_rs::sig(fn (
-        &Self,
+        self: &Self[@slf],
         usize,
         usize,
         usize,
@@ -176,7 +236,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
         S::set_phase_no_panic() &&
         S::get_polarity_no_panic() &&
         S::set_polarity_no_panic() &&
-        S::read_write_bytes_no_panic()
+        S::read_write_bytes_no_panic() &&
+        slf.all_enterable
     )]
     fn command(
         &self,
@@ -274,6 +335,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
         }
     }
 
+    #[flux_rs::sig(fn(self: &Self[@slf], _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn allocate_grant(&self, processid: ProcessId) -> Result<(), kernel::process::Error> {
         self.grants.enter(processid, |_, _| {})
     }
@@ -281,13 +344,13 @@ impl<'a, S: SpiSlaveDevice<'a>> SyscallDriver for SpiPeripheral<'a, S> {
 
 impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
     #[flux_rs::sig(fn (
-        &Self[@r],
+        &Self[@slf],
         Option<&mut [u8]>,
         Option<&mut [u8]>,
         usize,
         Result<(), ErrorCode>
     ) -> ())]
-    #[flux_rs::no_panic_if(S::read_write_bytes_no_panic())]
+    #[flux_rs::no_panic_if(S::read_write_bytes_no_panic() && slf.all_enterable)]
     fn read_write_done(
         &self,
         writebuf: Option<&'static mut [u8]>,
@@ -312,19 +375,17 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
                                 // -pal 12/9/20
                                 let end = index;
                                 let start = index - length;
-                                let end = cmp::min(end, cmp::min(src.len(), dest.len()));
+                                let end = usize_min(end, usize_min(src.len(), dest.len()));
 
                                 // If the new endpoint is earlier than our expected
                                 // startpoint, we set the startpoint to be the same;
                                 // This results in a zero-length operation. -pal 12/9/20
-                                let start = cmp::min(start, end);
+                                let start = usize_min(start, end);
 
                                 let dest_area = &dest[start..end];
                                 let real_len = end - start;
 
-                                for (i, c) in src[0..real_len].iter().enumerate() {
-                                    dest_area[i].set(*c);
-                                }
+                                copy_buf_to_process_slice(&src[0..real_len], dest_area);
                             })
                         });
                 });
@@ -346,6 +407,8 @@ impl<'a, S: SpiSlaveDevice<'a>> SpiSlaveClient for SpiPeripheral<'a, S> {
     }
 
     // Simple callback for when chip has been selected
+    #[flux_rs::sig(fn(self: &Self[@slf]) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn chip_selected(&self) {
         self.current_process.map(|process_id| {
             let _ = self.grants.enter(process_id, move |app, kernel_data| {

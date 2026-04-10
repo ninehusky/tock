@@ -51,6 +51,11 @@ use flux_support::*;
 ///
 /// It is sound for multiple overlapping [`ReadableProcessSlice`]s or
 /// [`WriteableProcessSlice`]s to be in scope at the same time.
+#[flux_rs::trusted(
+    reason = "calls from_raw_parts/transmute which have no Flux specs; panic-free given valid unsafe preconditions (non-null aligned ptr, valid len) upheld by callers"
+)]
+#[flux_rs::sig(fn (FluxPtrU8Mut, usize) -> _)]
+#[flux_rs::no_panic]
 unsafe fn raw_processbuf_to_roprocessslice<'a>(
     ptr: FluxPtrU8Mut,
     len: usize,
@@ -111,6 +116,11 @@ unsafe fn raw_processbuf_to_roprocessslice<'a>(
 /// However, it is sound for multiple overlapping
 /// [`ReadableProcessSlice`]s or [`WriteableProcessSlice`]s to be in
 /// scope at the same time.
+#[flux_rs::trusted(
+    reason = "calls from_raw_parts/transmute which have no Flux specs; panic-free given valid unsafe preconditions (non-null aligned ptr, valid len) upheld by callers"
+)]
+#[flux_rs::sig(fn (FluxPtrU8Mut, usize) -> _)]
+#[flux_rs::no_panic]
 unsafe fn raw_processbuf_to_rwprocessslice<'a>(
     ptr: FluxPtrU8Mut,
     len: usize,
@@ -330,6 +340,8 @@ impl ReadableProcessBuffer for ReadOnlyProcessBuffer {
     ///
     /// This verifies the process is still valid before accessing the underlying
     /// memory.
+    #[flux_rs::sig(fn (&Self, _) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn enter<F, R>(&self, fun: F) -> Result<R, process::Error>
     where
         F: FnOnce(&ReadableProcessSlice) -> R,
@@ -584,6 +596,8 @@ impl ReadableProcessBuffer for ReadWriteProcessBuffer {
 }
 
 impl WriteableProcessBuffer for ReadWriteProcessBuffer {
+    #[flux_rs::sig(fn (&Self, _) -> _)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn mut_enter<F, R>(&self, fun: F) -> Result<R, process::Error>
     where
         F: FnOnce(&WriteableProcessSlice) -> R,
@@ -835,6 +849,7 @@ impl ReadableProcessSlice {
 
     /// Access a portion of the slice with bounds checking. If the access is not
     /// within the slice then `None` is returned.
+    #[flux_rs::no_panic]
     pub fn get(&self, range: Range<usize>) -> Option<&ReadableProcessSlice> {
         if let Some(slice) = self.slice.get(range) {
             Some(cast_byte_slice_to_process_slice(slice))
@@ -1066,6 +1081,7 @@ impl WriteableProcessSlice {
     }
 
     /// Return the length of the slice in bytes.
+    #[flux_rs::sig(fn(&WriteableProcessSlice[@n]) -> usize[n])]
     pub fn len(&self) -> usize {
         self.slice.len()
     }
@@ -1122,6 +1138,9 @@ impl Index<Range<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::no_panic]
+    #[flux_rs::trusted_impl(reason = "needs associated refinement on Index trait")]
+    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@len], idx: Range<usize>) -> &Self::Output requires idx.start <= idx.end && idx.end <= len)]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
         cast_cell_slice_to_process_slice(&self.slice[idx])
     }
@@ -1131,6 +1150,8 @@ impl Index<RangeTo<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::trusted_impl(reason = "needs associated refinement on Index trait")]
+    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@len], idx: RangeTo<usize>) -> &Self::Output requires idx.end <= len)]
     fn index(&self, idx: RangeTo<usize>) -> &Self::Output {
         &self[0..idx.end]
     }
@@ -1140,6 +1161,8 @@ impl Index<RangeFrom<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::trusted_impl(reason = "needs associated refinement on Index trait")]
+    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@len], idx: RangeFrom<usize>) -> &Self::Output requires idx.start <= len)]
     fn index(&self, idx: RangeFrom<usize>) -> &Self::Output {
         &self[idx.start..self.len()]
     }

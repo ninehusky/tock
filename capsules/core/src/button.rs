@@ -82,12 +82,15 @@ pub struct App {
 
 /// Manages the list of GPIO pins that are connected to buttons and which apps
 /// are listening for interrupts from which buttons.
+#[flux_rs::refined_by(all_enterable: bool, pin_len: int)]
 pub struct Button<'a, P: gpio::InterruptPin<'a>> {
+    #[flux_rs::field(&[_][pin_len])]
     pins: &'a [(
         &'a gpio::InterruptValueWrapper<'a, P>,
         gpio::ActivationMode,
         gpio::FloatingState,
     )],
+    #[flux_rs::field(Grant<_, _, _, _>[all_enterable])]
     apps: Grant<App, UpcallCount<1>, AllowRoCount<0>, AllowRwCount<0>>,
 }
 
@@ -111,7 +114,7 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
         Self { pins, apps: grant }
     }
 
-    #[flux_rs::sig(fn(&Self, u32) -> gpio::ActivationState)]
+    #[flux_rs::sig(fn(&Self[@slf], pin_num: u32) -> gpio::ActivationState requires pin_num < slf.pin_len)]
     #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic())]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
         let pin = &self.pins[pin_num as usize];
@@ -145,8 +148,8 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
     /// - `2`: Disable interrupts for a button. No affect or reliance on
     ///   registered callback.
     /// - `3`: Read the current state of the button.
-    #[flux_rs::sig(fn(&Self, usize, usize, usize, ProcessId) -> CommandReturn)]
-    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::enable_interrupts_no_panic() && P::disable_interrupts_no_panic())]
+    #[flux_rs::sig(fn(&Self[@slf], usize, usize, usize, ProcessId) -> CommandReturn)]
+    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::enable_interrupts_no_panic() && P::disable_interrupts_no_panic() && slf.all_enterable)]
     fn command(
         &self,
         command_num: usize,
@@ -224,14 +227,17 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
         }
     }
 
+    #[flux_rs::sig(fn(&Self[@slf], _) -> _)]
+    #[flux_rs::no_panic_if(slf.all_enterable)]
     fn allocate_grant(&self, processid: ProcessId) -> Result<(), kernel::process::Error> {
         self.apps.enter(processid, |_, _| {})
     }
 }
 
 impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
-    #[flux_rs::sig(fn(&Self, u32) -> ())]
-    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::disable_interrupts_no_panic())]
+    #[flux_rs::trusted_impl(reason = "This is OK, requires clause just prevents Flux error")]
+    #[flux_rs::sig(fn(&Self[@slf], pin_num: u32) -> () requires pin_num < slf.pin_len)]
+    #[flux_rs::no_panic_if(P::read_activation_no_panic() && P::read_no_panic() && P::disable_interrupts_no_panic() && slf.all_enterable)]
     fn fired(&self, pin_num: u32) {
         // Read the value of the pin and get the button state.
         let button_state = self.get_button_state(pin_num);

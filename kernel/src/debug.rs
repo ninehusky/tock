@@ -424,10 +424,14 @@ pub struct DebugWriter {
 /// needed so the debug!() macros have a reference to the object to use.
 static mut DEBUG_WRITER: Option<&'static mut DebugWriterWrapper> = None;
 
+#[flux_rs::trusted(reason = "Later")]
+#[flux_rs::no_panic]
 unsafe fn try_get_debug_writer() -> Option<&'static mut DebugWriterWrapper> {
     DEBUG_WRITER.as_deref_mut()
 }
 
+#[flux_rs::trusted(reason = "Later")]
+#[flux_rs::no_panic]
 unsafe fn get_debug_writer() -> &'static mut DebugWriterWrapper {
     try_get_debug_writer().unwrap() // Unwrap fail = Must call `set_debug_writer_wrapper` in board initialization.
 }
