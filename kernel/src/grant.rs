@@ -1859,7 +1859,6 @@ impl<T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: AllowRwSi
     ///
     /// Calling this function when an [`ProcessGrant`] for a process is
     /// currently entered will result in a panic.
-    #[flux_rs::trusted(reason = "cannot thread ProcessGrant refinement through Option")]
     #[flux_rs::sig(fn (&Self[@slf], fun: F))]
     #[flux_rs::no_panic_if(slf.all_enterable && F::no_panic())]
     pub fn each<F>(&self, mut fun: F)
