@@ -1,0 +1,19 @@
+core::panicking::panic_bounds_check
+core::panicking::panic_fmt
+core::slice::index::slice_start_index_len_fail
+core::slice::index::slice_start_index_len_fail::do_panic::runtime
+core::slice::index::slice_end_index_len_fail
+core::slice::index::slice_end_index_len_fail::do_panic::runtime
+core::panicking::panic
+core::panicking::assert_failed::<u64, u64>
+core::panicking::assert_failed_inner
+core::slice::index::slice_index_order_fail
+core::slice::index::slice_index_order_fail::do_panic::runtime
+core::panicking::panic_const::panic_const_div_by_zero
+core::option::unwrap_failed
+core::result::unwrap_failed
+core::panicking::panic_const::panic_const_rem_by_zero
+core::panicking::assert_failed::<core::option::Option<nrf52::usbd::BulkInState>, core::option::Option<nrf52::usbd::BulkInState>>
+<tock_cells::optional_cell::OptionalCell<&[tock_cells::volatile_cell::VolatileCell<u8>]>>::unwrap_or_panic
+<tock_cells::optional_cell::OptionalCell<&nrf5x::timer::TimerAlarm>>::unwrap_or_panic
+rust_begin_unwind

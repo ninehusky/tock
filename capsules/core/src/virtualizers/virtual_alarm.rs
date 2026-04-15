@@ -177,6 +177,8 @@ impl<'a, A: Alarm<'a>> Alarm<'a> for VirtualMuxAlarm<'a, A> {
         }
     }
 
+    #[flux_rs::sig(fn (&Self) -> _)]
+    #[flux_rs::no_panic_if(<Self::Ticks as Ticks>::wrapping_add_no_panic())]
     fn get_alarm(&self) -> Self::Ticks {
         let dt_reference = self.dt_reference.get();
         let extension = if dt_reference.extended {
@@ -237,6 +239,7 @@ impl<'a, A: Alarm<'a>> MuxAlarm<'a, A> {
 impl<'a, A: Alarm<'a>> time::AlarmClient for MuxAlarm<'a, A> {
     /// When the underlying alarm has fired, we have to multiplex this event back to the virtual
     /// alarms that should now fire.
+    #[flux_rs::trusted]
     fn alarm(&self) {
         // Check whether to fire each alarm. At this level, alarms are one-shot,
         // so a repeating client will set it again in the alarm() callback.

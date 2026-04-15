@@ -256,10 +256,14 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_done!(4);
 }
 
-#[flux_rs::trusted(reason = "copy_from_slice is safe: stream_len_cond! ensures buf.len() >= bs.len(), so buf[..bs.len()].len() == bs.len() == src.len(); Flux loses RangeTo slice length through Index")]
+#[flux_rs::sig(fn(&mut [u8][@n], &[u8][n]) -> SResult)]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
-    buf[..bs.len()].copy_from_slice(bs);
+    let range = ..bs.len();
+    flux_support::assert(range.end == bs.len());
+    let my_slice = &buf[range];
+    flux_support::assert(my_slice.len() == bs.len());
+    buf[range].copy_from_slice(bs);
     stream_done!(bs.len());
 }
 
