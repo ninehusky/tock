@@ -82,7 +82,9 @@ pub struct App {
 
 /// Manages the list of GPIO pins that are connected to buttons and which apps
 /// are listening for interrupts from which buttons.
+#[flux_rs::refined_by(pin_len: int)]
 pub struct Button<'a, P: gpio::InterruptPin<'a>> {
+    #[flux_rs::field(&[(_, _, _)][pin_len])]
     pins: &'a [(
         &'a gpio::InterruptValueWrapper<'a, P>,
         gpio::ActivationMode,
@@ -109,6 +111,7 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
         Self { pins, apps: grant }
     }
 
+    #[flux_rs::sig(fn(&Self[@me], pin_num: u32) -> gpio::ActivationState requires pin_num < me.pin_len)]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
         let pin = &self.pins[pin_num as usize];
         pin.0.read_activation(pin.1)
@@ -223,7 +226,10 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
     }
 }
 
+
 impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
+    #[flux_rs::trusted_impl(reason = "Can't add in_bounds as an associated refinement because dyns are used")]
+    #[flux_rs::sig(fn (&Self[@me], value: u32) requires value < me.pin_len)]
     fn fired(&self, pin_num: u32) {
         // Read the value of the pin and get the button state.
         let button_state = self.get_button_state(pin_num);
@@ -243,7 +249,12 @@ impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
         // (and didn't unregister the interrupt). Lazily disable interrupts for
         // this button if so.
         if interrupt_count.get() == 0 {
-            self.pins[pin_num as usize].0.disable_interrupts();
+            // NO_PANIC_EDIT
+            // SAFETY: flux signature forbids out-of-bounds access of pins.
+            // self.pins[pin_num as usize].0.disable_interrupts();
+            unsafe {
+                self.pins.get_unchecked(pin_num as usize).0.disable_interrupts();
+            }
         }
     }
 }

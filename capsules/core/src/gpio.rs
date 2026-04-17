@@ -67,7 +67,9 @@ use kernel::{ErrorCode, ProcessId};
 ///        The callback signature is `fn(pin_num: usize, pin_state: bool)`
 const UPCALL_NUM: usize = 0;
 
+#[flux_rs::refined_by(pin_len: int)]
 pub struct GPIO<'a, IP: gpio::InterruptPin<'a>> {
+    #[flux_rs::field(&[_][pin_len])]
     pins: &'a [Option<&'a gpio::InterruptValueWrapper<'a, IP>>],
     apps: Grant<(), UpcallCount<1>, AllowRoCount<0>, AllowRwCount<0>>,
 }
@@ -85,8 +87,11 @@ impl<'a, IP: gpio::InterruptPin<'a>> GPIO<'a, IP> {
         Self { pins, apps: grant }
     }
 
+    #[flux_rs::sig(fn(&Self[@me], pin_num: u32, _) -> _ requires pin_num < me.pin_len)]
     fn configure_input_pin(&self, pin_num: u32, config: usize) -> CommandReturn {
-        let maybe_pin = self.pins[pin_num as usize];
+        // NO_PANIC_EDIT: this is safe because of the precondition on `pin_num`
+        // SAFETY: see above.
+        let maybe_pin = unsafe { self.pins.get_unchecked(pin_num as usize) };
         if let Some(pin) = maybe_pin {
             pin.make_input();
             match config {
@@ -109,10 +114,12 @@ impl<'a, IP: gpio::InterruptPin<'a>> GPIO<'a, IP> {
         }
     }
 
+    #[flux_rs::sig(fn(&Self[@me], pin_num: u32, config: usize) -> CommandReturn requires pin_num < me.pin_len)]
     fn configure_interrupt(&self, pin_num: u32, config: usize) -> CommandReturn {
-        let pins = self.pins;
-        let index = pin_num as usize;
-        if let Some(pin) = pins[index] {
+        // NO_PANIC_EDIT: safe because of the precondition on `pin_num`
+        // SAFETY: see above.
+        let maybe_pin = unsafe { self.pins.get_unchecked(pin_num as usize) };
+        if let Some(pin) = maybe_pin {
             match config {
                 0 => {
                     let _ = pin.enable_interrupts(gpio::InterruptEdge::EitherEdge);
@@ -138,10 +145,18 @@ impl<'a, IP: gpio::InterruptPin<'a>> GPIO<'a, IP> {
 }
 
 impl<'a, IP: gpio::InterruptPin<'a>> gpio::ClientWithValue for GPIO<'a, IP> {
+    #[flux_rs::trusted_impl(reason = "Can't add in_bounds as an associated refinement because dyns are used")]
+    #[flux_rs::sig(fn (&Self[@me], value: u32) requires value < me.pin_len)]
     fn fired(&self, pin_num: u32) {
         // read the value of the pin
         let pins = self.pins;
-        if let Some(pin) = pins[pin_num as usize] {
+
+        // NO_PANIC_EDIT: this is safe because of the precondition on `value`
+        // SAFETY: see above.
+        let pin = unsafe { pins.get_unchecked(pin_num as usize) };
+
+        // if let Some(pin) = pins.get_unchecked(pin_num as usize) {
+        if let Some(pin) = pin {
             let pin_state = pin.read();
 
             // schedule callback with the pin number and value
@@ -151,6 +166,15 @@ impl<'a, IP: gpio::InterruptPin<'a>> gpio::ClientWithValue for GPIO<'a, IP> {
                     .ok();
             });
         }
+    }
+}
+
+impl<'a, IP: gpio::InterruptPin<'a>> GPIO<'a, IP> {
+    #[flux_rs::sig(fn(&Self[@me], pin_index: usize) -> Option<_> requires pin_index < me.pin_len)]
+    fn get_pin(&self, pin_index: usize) -> Option<&gpio::InterruptValueWrapper<'a, IP>> {
+        // NO_PANIC_EDIT: safe because of the precondition on `pin_index`
+        // SAFETY: see above.
+        unsafe { *self.pins.get_unchecked(pin_index) }
     }
 }
 
@@ -205,7 +229,7 @@ impl<'a, IP: gpio::InterruptPin<'a>> SyscallDriver for GPIO<'a, IP> {
                     /* impossible pin */
                     CommandReturn::failure(ErrorCode::INVAL)
                 } else {
-                    if let Some(pin) = pins[pin_index] {
+                    if let Some(pin) = self.get_pin(pin_index) {
                         pin.make_output();
                         CommandReturn::success()
                     } else {
@@ -220,7 +244,7 @@ impl<'a, IP: gpio::InterruptPin<'a>> SyscallDriver for GPIO<'a, IP> {
                     /* impossible pin */
                     CommandReturn::failure(ErrorCode::INVAL)
                 } else {
-                    if let Some(pin) = pins[pin_index] {
+                    if let Some(pin) = self.get_pin(pin_index) {
                         pin.set();
                         CommandReturn::success()
                     } else {
@@ -235,7 +259,7 @@ impl<'a, IP: gpio::InterruptPin<'a>> SyscallDriver for GPIO<'a, IP> {
                     /* impossible pin */
                     CommandReturn::failure(ErrorCode::INVAL)
                 } else {
-                    if let Some(pin) = pins[pin_index] {
+                    if let Some(pin) = self.get_pin(pin_index) {
                         pin.clear();
                         CommandReturn::success()
                     } else {
@@ -250,7 +274,7 @@ impl<'a, IP: gpio::InterruptPin<'a>> SyscallDriver for GPIO<'a, IP> {
                     /* impossible pin */
                     CommandReturn::failure(ErrorCode::INVAL)
                 } else {
-                    if let Some(pin) = pins[pin_index] {
+                    if let Some(pin) = self.get_pin(pin_index) {
                         pin.toggle();
                         CommandReturn::success()
                     } else {
@@ -276,7 +300,7 @@ impl<'a, IP: gpio::InterruptPin<'a>> SyscallDriver for GPIO<'a, IP> {
                     /* impossible pin */
                     CommandReturn::failure(ErrorCode::INVAL)
                 } else {
-                    if let Some(pin) = pins[pin_index] {
+                    if let Some(pin) = self.get_pin(pin_index) {
                         let pin_state = pin.read();
                         CommandReturn::success_u32(pin_state as u32)
                     } else {
@@ -304,7 +328,7 @@ impl<'a, IP: gpio::InterruptPin<'a>> SyscallDriver for GPIO<'a, IP> {
                     /* impossible pin */
                     CommandReturn::failure(ErrorCode::INVAL)
                 } else {
-                    if let Some(pin) = pins[pin_index] {
+                    if let Some(pin) = self.get_pin(pin_index) {
                         pin.disable_interrupts();
                         pin.deactivate_to_low_power();
                         CommandReturn::success()
@@ -320,7 +344,7 @@ impl<'a, IP: gpio::InterruptPin<'a>> SyscallDriver for GPIO<'a, IP> {
                     /* impossible pin */
                     CommandReturn::failure(ErrorCode::INVAL)
                 } else {
-                    if let Some(pin) = pins[pin_index] {
+                    if let Some(pin) = self.get_pin(pin_index) {
                         pin.deactivate_to_low_power();
                         CommandReturn::success()
                     } else {
