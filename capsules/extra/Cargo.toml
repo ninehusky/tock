@@ -13,6 +13,12 @@ kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
 tickv = { path = "../../libraries/tickv" }
 capsules-core = { path = "../core" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = ["src/net/util.rs"]
 
 [lints]
 workspace = true

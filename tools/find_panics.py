@@ -60,12 +60,15 @@ import sys
 
 if platform.system() == 'Darwin':
     DWARFDUMP = "dwarfdump"
+    # Homebrew binutils installs as gobjdump; fall back to arm-none-eabi-objdump
+    ARM_OBJDUMP_DEFAULT = "/opt/homebrew/Cellar/binutils/2.46.0/bin/gobjdump"
 elif platform.system() == 'Linux':
     DWARFDUMP = "llvm-dwarfdump"
+    ARM_OBJDUMP_DEFAULT = "arm-none-eabi-objdump"
 else:
     raise NotImplementedError("Unknown platform")
 # Note: In practice, GCC objdumps are better at symbol resolution than LLVM objdump
-ARM_OBJDUMP = "arm-none-eabi-objdump"
+ARM_OBJDUMP = ARM_OBJDUMP_DEFAULT
 RISCV_OBJDUMP = "riscv64-unknown-elf-objdump"
 
 # TODO: For all functions below the initial batch, it would like be preferable to
@@ -206,6 +209,11 @@ def parse_args():
         help="Output additional DWARF info for each panic location in the binary",
     )
     parser.add_argument("--riscv", action="store_true", help="Use risc-v based objdump")
+    parser.add_argument(
+        "--objdump",
+        default=None,
+        help="Path to objdump binary (default: gobjdump on macOS, arm-none-eabi-objdump on Linux)",
+    )
     return parser.parse_args()
 
 
@@ -437,6 +445,8 @@ def main():
     objdump = ARM_OBJDUMP
     if args.riscv:
         objdump = RISCV_OBJDUMP
+    if args.objdump:
+        objdump = args.objdump
 
     (panic_list, within_core_panic_list, no_info_panic_list) = find_all_panics(
         objdump, args.ELF, args.riscv

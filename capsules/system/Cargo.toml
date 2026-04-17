@@ -11,7 +11,7 @@ edition.workspace = true
 [dependencies]
 kernel = { path = "../../kernel" }
 tock-tbf = { path = "../../libraries/tock-tbf" }
-flux-rs = { git = "https://github.com/flux-rs/flux" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 
 [lints]
 workspace = true

@@ -9,13 +9,13 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
-flux-core = { git  = "https://github.com/flux-rs/flux.git"}
+flux-core = { path = "/Users/andrew/research/flux/lib/flux-core" }
 kernel = { path = "../../kernel" }
 flux_support = { path = "../../flux_support" }
 tock-registers = { path = "../../libraries/tock-register-interface" }
 riscv-csr = { path = "../../libraries/riscv-csr" }
 riscv = { path = "../riscv" }
-flux-rs = { git  = "https://github.com/flux-rs/flux.git" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 
 [package.metadata.flux]
 enabled = true

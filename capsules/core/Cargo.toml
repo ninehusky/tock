@@ -12,6 +12,13 @@ edition.workspace = true
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
 tickv = { path = "../../libraries/tickv" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [ "src/button.rs", "src/gpio.rs" ]
+
 
 [lints]
 workspace = true
