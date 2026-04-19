@@ -18,7 +18,9 @@ flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
-include = ["src/net/util.rs"]
+include = [
+    "src/net/util.rs",
+]
 
 [lints]
 workspace = true
