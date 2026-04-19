@@ -113,7 +113,8 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
 
     #[flux_rs::sig(fn(&Self[@me], pin_num: u32) -> gpio::ActivationState requires pin_num < me.pin_len)]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
-        let pin = &self.pins[pin_num as usize];
+        // NO_PANIC_EDIT: safe by precondition pin_num < me.pin_len
+        let pin = unsafe { self.pins.get_unchecked(pin_num as usize) };
         pin.0.read_activation(pin.1)
     }
 }
