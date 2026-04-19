@@ -251,8 +251,22 @@ impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
         // this button if so.
         if interrupt_count.get() == 0 {
             // NO_PANIC_EDIT
-            // SAFETY: flux signature forbids out-of-bounds access of pins.
-            // self.pins[pin_num as usize].0.disable_interrupts();
+            // THIS ISN'T ACTUALLY SAFE: locally, yes, this flux signature forbids out-of-bounds access of pins.
+            // Although, because this is trusted_impl, I don't think this is
+            // actually safe.
+            //
+            // More concretely: I think something like this will be checked:
+            // ```
+            // let button: Button = ...;
+            // button.fired(100); // this will check if 100 is in bounds.
+            // ```
+            // I think something like this, which is what actually happens in
+            // `kernel::hil::gpio::InterruptPin::fired`, will not be checked:
+            // ```
+            // let button: &dyn ClientWithValue = ...;
+            // button.fired(100); // this will NOT check if 100 is in bounds
+            // ```
+            // Once we've upstreamed `dyn`-based checking, we can start to check this.
             unsafe {
                 self.pins.get_unchecked(pin_num as usize).0.disable_interrupts();
             }
