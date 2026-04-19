@@ -44,7 +44,45 @@ def load_sinks(path: Path) -> set[str]:
     return sinks
 
 
-def scan(dis_path: Path, sinks: set[str]):
+def build_demangle_map(dis_path: Path) -> dict[str, str]:
+    """Return {mangled: demangled} for every unique bl target in the disassembly."""
+    mangled = set()
+    with dis_path.open() as fh:
+        pending = ""
+        for raw in fh:
+            if pending:
+                raw = pending + raw.lstrip()
+                pending = ""
+            if raw.endswith("\\\n"):
+                pending = raw[:-2]
+                continue
+            stripped = raw.strip()
+            parts = stripped.split('\t')
+            if len(parts) < 3 or parts[2].strip() != 'bl':
+                continue
+            operand = parts[3] if len(parts) > 3 else ""
+            lt = operand.find('<')
+            gt = operand.rfind('>')
+            if lt == -1 or gt == -1:
+                continue
+            mangled.add(operand[lt + 1:gt])
+
+    if not mangled:
+        return {}
+
+    mangled_list = list(mangled)
+    try:
+        out = subprocess.check_output(
+            ['rustfilt'], input='\n'.join(mangled_list), text=True, stderr=subprocess.DEVNULL
+        )
+        demangled = out.splitlines()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        demangled = mangled_list  # fall back to identity
+
+    return dict(zip(mangled_list, demangled))
+
+
+def scan(dis_path: Path, sinks: set[str], demangle: dict[str, str]):
     """
     Yield (call_addr, enclosing_func, target_name) for every bl in the
     disassembly whose target symbol name is a panic sink.
@@ -88,8 +126,9 @@ def scan(dis_path: Path, sinks: set[str]):
                 continue
             target_name = operand[lt + 1:gt]
 
-            if target_name in sinks:
-                yield call_addr, current_func, target_name
+            demangled_name = demangle.get(target_name, target_name)
+            if demangled_name in sinks:
+                yield call_addr, current_func, demangled_name
 
 
 def addr2line(binary: Path, tool: Path, addrs: list[str]) -> dict[str, list[str]]:
@@ -183,7 +222,8 @@ def main():
 
     print(f"Loaded {len(sinks)} panic sinks.\n")
 
-    results = list(scan(dis_path, sinks))
+    demangle = build_demangle_map(dis_path)
+    results = list(scan(dis_path, sinks, demangle))
     print(f"Found {len(results)} panic call sites — resolving with addr2line...\n")
 
     # Resolve all addresses in one batch
