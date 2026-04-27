@@ -91,3 +91,9 @@ boards/apollo3/redboard_artemis_nano/redboard-artemis-nano-tests.bin
 
 .liquid
 log
+
+# panic-stats venv
+tools/.venv/
+
+# regenerable disassembly artifact from panic_survey.py
+tools/nrf52840dk.dis
