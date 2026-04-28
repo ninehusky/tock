@@ -166,6 +166,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
     #[flux_rs::sig(
         fn(self: &strg Self, _) -> Option<_> ensures self: Self
     )]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn remove_first_matching<F>(&mut self, f: F) -> Option<T>
     where
         F: Fn(&T) -> bool,
@@ -203,6 +204,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
     #[flux_rs::sig(
         fn(self: &strg RingBuffer<T>, _) ensures self: RingBuffer<T>
     )]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn retain<F>(&mut self, mut f: F)
     where
         F: FnMut(&T) -> bool,

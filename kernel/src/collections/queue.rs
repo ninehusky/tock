@@ -29,6 +29,7 @@ pub trait Queue<T> {
 
     /// Remove and return one (the first) element that matches the predicate.
     #[flux_rs::sig(fn(self: &strg Self, _) -> Option<T> ensures self: Self)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn remove_first_matching<F>(&mut self, f: F) -> Option<T>
     where
         F: Fn(&T) -> bool;
@@ -39,6 +40,7 @@ pub trait Queue<T> {
 
     /// Retains only the elements that satisfy the predicate.
     #[flux_rs::sig(fn(self: &strg Self, _) ensures self: Self)]
+    #[flux_rs::no_panic_if(F::no_panic())]
     fn retain<F>(&mut self, f: F)
     where
         F: FnMut(&T) -> bool;
