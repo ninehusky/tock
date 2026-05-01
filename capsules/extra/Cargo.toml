@@ -19,7 +19,7 @@ flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 enabled = true
 check_overflow = "lazy"
 include = [
-    "src/net/util.rs",
+    "src/net/ipv6/ip_utils.rs"
 ]
 
 [lints]

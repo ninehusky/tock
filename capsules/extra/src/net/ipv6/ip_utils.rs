@@ -117,6 +117,14 @@ impl IPAddr {
     }
 }
 
+#[flux_rs::sig(
+    fn(
+        ip6_header: &IP6Header,
+        udp_header: &UDPHeader,
+        udp_length: u16{u: u >= 8 && u - 8 <= n},
+        payload: &[u8][@n],
+    ) -> u16
+)]
 pub fn compute_udp_checksum(
     ip6_header: &IP6Header,
     udp_header: &UDPHeader,
@@ -234,6 +242,8 @@ pub fn compute_ipv6_ph_sum(ip6_header: &IP6Header) -> u32 {
     // sum over src/dest addresses
     let mut i = 0;
     while i < 16 {
+        #[flux::defs{ invariant qualifier ParityIpv6PhSum(i: int) { i % 2 == 0 } }]
+        const _: () = ();
         let msb_src = (ip6_header.src_addr.0[i] as u32) << 8;
         let lsb_src = ip6_header.src_addr.0[i + 1] as u32;
         sum += msb_src + lsb_src;
@@ -251,11 +261,16 @@ pub fn compute_ipv6_ph_sum(ip6_header: &IP6Header) -> u32 {
     sum
 }
 
+#[flux_rs::sig(fn(buf: &[u8][@n], len: u16{l: l <= n && l % 2 == 0}) -> u32)]
+// There is an out-of-bounds read if the length's odd:
+// consider len == 1: the `lsb` line will read buf[1]
 pub fn compute_sum(buf: &[u8], len: u16) -> u32 {
     let mut sum: u32 = 0;
 
     let mut i: usize = 0;
     while i < (len as usize) {
+        #[flux::defs{ invariant qualifier ParityComputeSum(i: int) { i % 2 == 0 } }]
+        const _: () = ();
         let msb = (buf[i] as u32) << 8;
         let lsb = buf[i + 1] as u32;
         sum += msb + lsb;
