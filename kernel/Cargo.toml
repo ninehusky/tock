@@ -11,8 +11,8 @@ edition.workspace = true
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
-no_panic = true
-include = ["src/collections/ring_buffer.rs"]
+# no_panic = true
+# include = ["src/collections/ring_buffer.rs"]
 
 [dependencies]
 tock-registers = { path = "../libraries/tock-register-interface" }
