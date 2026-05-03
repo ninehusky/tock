@@ -15,5 +15,14 @@ readme = "README.md"
 keywords = ["flash", "key-value-store"]
 categories = ["database-implementations", "no-std"]
 
+[dependencies]
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux_support = { path = "../../flux_support" }
+
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [ "src/tickv.rs" ]
+
 [lints]
 workspace = true

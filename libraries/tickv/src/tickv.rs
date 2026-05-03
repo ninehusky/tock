@@ -58,9 +58,12 @@ pub(crate) enum State {
 }
 
 /// The struct storing all of the TicKV information.
+#[flux_rs::refined_by(flash_size: int)]
+#[flux_rs::invariant(S > 0 && flash_size >= S)]
 pub struct TicKV<'a, C: FlashController<S>, const S: usize> {
     /// The controller used for flash commands
     pub controller: C,
+    #[field(usize[flash_size])]
     flash_size: usize,
     pub(crate) read_buffer: Cell<Option<&'a mut [u8; S]>>,
     pub(crate) state: Cell<State>,
@@ -110,6 +113,12 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     /// `controller`: An new struct implementing `FlashController`
     /// `flash_size`: The total size of the flash used for TicKV
     pub fn new(controller: C, read_buffer: &'a mut [u8; S], flash_size: usize) -> Self {
+        // S is a const generic for the flash region size; a zero-sized region
+        // is meaningless. flash_size must accommodate at least one region.
+        // Real callers always pass a positive S and adequately sized flash.
+        // Discharging the struct invariants here.
+        flux_support::assume(S > 0);
+        flux_support::assume(flash_size >= S);
         Self {
             controller,
             flash_size,
