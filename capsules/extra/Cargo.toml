@@ -20,7 +20,7 @@ flux_support = { path = "../../flux_support" }
 enabled = true
 check_overflow = "lazy"
 include = [
-    "src/net/ipv6/ip_utils.rs"
+    "src/net/ipv6/ip_utils.rs",
 ]
 
 [lints]

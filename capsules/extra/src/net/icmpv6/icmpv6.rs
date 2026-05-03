@@ -77,6 +77,7 @@ impl ICMP6Header {
         self.options = options;
     }
 
+    #[flux_rs::sig(fn(self: &mut Self, len: u16) ensures self: Self[len])]
     pub fn set_len(&mut self, len: u16) {
         self.len = len;
     }

@@ -68,9 +68,9 @@ impl<T> [T] {
     #[flux_rs::sig(fn(&[T][@len]) -> Iter<T>[0, len])]
     fn iter(v: &[T]) -> Iter<'_, T>;
 
-    #[flux_rs::no_panic_if(mid <= len)]
     #[flux_rs::sig(
         fn(&[T][@len], mid: usize) -> (&[T][mid], &[T][len - mid])
+        requires mid <= len
     )]
     fn split_at(v: &[T], mid: usize) -> (&[T], &[T]);
 }

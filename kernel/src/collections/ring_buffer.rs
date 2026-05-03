@@ -55,6 +55,8 @@ impl<'a, T: Copy> RingBuffer<'a, T> {
         if self.head < self.tail {
             (Some(&self.ring[self.head..self.tail]), None)
         } else if self.head > self.tail {
+            // The extern spec for split_at requires
+            // in-boundsness.
             let (left, right) = self.ring.split_at(self.head);
             (
                 Some(right),
