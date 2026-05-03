@@ -92,16 +92,28 @@ impl IPAddr {
     pub fn set_unicast_link_local(&mut self) {
         self.0[0] = 0xfe;
         self.0[1] = 0x80;
-        for i in 2..8 {
+        // for i in 2..8 {
+        //     self.0[i] = 0;
+        // }
+        let mut i = 2;
+        while i < 8 {
             self.0[i] = 0;
+            i += 1;
         }
     }
 
     // Panics if prefix slice does not contain enough bits
+    // `prefix_len` is in _bits_.
+    #[flux_rs::sig(
+        fn(self: &mut Self, prefix: &[u8][@n], prefix_len: u8{p: p <= 128 && 8 * n >= p}) // we may want to make this `8 * n == p`.
+    )]
     pub fn set_prefix(&mut self, prefix: &[u8], prefix_len: u8) {
         let full_bytes = (prefix_len / 8) as usize;
-        let remaining = (prefix_len & 0x7) as usize;
+        let remaining = (prefix_len % 8) as usize;
         let bytes = full_bytes + usize::from(remaining != 0);
+        // Because this `assert` goes through, we can change the 
+        // following `assert!` to `assert_unchecked` at a later stage.
+        flux_support::assert(bytes <= prefix.len() && bytes <= 16);
         assert!(bytes <= prefix.len() && bytes <= 16);
 
         self.0[0..full_bytes].copy_from_slice(&prefix[0..full_bytes]);
@@ -121,6 +133,8 @@ impl IPAddr {
     fn(
         ip6_header: &IP6Header,
         udp_header: &UDPHeader,
+        // u >= 8 required b/c of subtraction on line 182,
+        // u - 8 <= n b/c of indexing into payload on line 184
         udp_length: u16{u: u >= 8 && u - 8 <= n},
         payload: &[u8][@n],
     ) -> u16
@@ -192,6 +206,14 @@ pub fn compute_udp_checksum(
     sum as u16 //Return result as u16 in host byte order */
 }
 
+#[flux_rs::sig(
+    fn(
+        ipv6_header: &IP6Header,
+        icmp_header: &ICMP6Header[@l],
+        payload: &[u8][@n],
+    ) -> u16
+    requires l >= 8 && l - 8 <= n && (l - 8) % 2 == 0
+)]
 pub fn compute_icmp_checksum(
     ipv6_header: &IP6Header,
     icmp_header: &ICMP6Header,

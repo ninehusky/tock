@@ -14,10 +14,12 @@ use crate::net::stream::{encode_u16, encode_u32, encode_u8};
 
 /// A struct representing an ICMPv6 header.
 #[derive(Copy, Clone)]
+#[flux_rs::refined_by(len: int)]
 pub struct ICMP6Header {
     pub code: u8,
     pub cksum: u16,
     pub options: ICMP6HeaderOptions,
+    #[field(u16[len])]
     pub len: u16, // Not a real ICMP field, here for convenience
 }
 
@@ -109,10 +111,12 @@ impl ICMP6Header {
         self.options
     }
 
+    #[flux_rs::sig(fn(&Self[@l]) -> u16[l])]
     pub fn get_len(&self) -> u16 {
         self.len
     }
 
+    #[flux_rs::sig(fn(&Self) -> usize[8])]
     pub fn get_hdr_size(&self) -> usize {
         8
     }
