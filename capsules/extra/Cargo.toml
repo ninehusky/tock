@@ -21,6 +21,7 @@ enabled = true
 check_overflow = "lazy"
 include = [
     "src/net/ipv6/ip_utils.rs",
+    "src/ieee802154/framer.rs",
 ]
 
 [lints]

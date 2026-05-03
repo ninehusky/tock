@@ -404,6 +404,10 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// IEEE 802.15.4-2015, 9.2.3, incoming frame security procedure
+    #[flux_rs::sig(
+        fn(&Self, buf: &mut [u8][@n], usize, u8) -> RxState
+        requires n >= radio::PSDU_OFFSET + LQI_SIZE
+    )]
     fn incoming_frame_security(
         &self,
         buf: &'static mut [u8],
@@ -418,6 +422,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
 
         // The buffer containing the 15.4 packet also contains the PSDU bytes and an LQI
         // byte. We only pass the 15.4 packet up the stack and slice buf accordingly.
+        flux_support::assert(buf.len() >= radio::PSDU_OFFSET + LQI_SIZE);
         let frame_buffer = &buf[radio::PSDU_OFFSET..(buf.len() - LQI_SIZE)];
 
         let result = Header::decode(frame_buffer, false)
@@ -886,6 +891,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::TxClient for Framer<'a, M, A> {
 }
 
 impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::RxClient for Framer<'a, M, A> {
+    #[flux_rs::trusted(reason = "Andrew: needs a way to generically specify precondition on top of `incoming_frame_security`")]
     fn receive(
         &self,
         buf: &'static mut [u8],
