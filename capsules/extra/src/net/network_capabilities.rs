@@ -46,6 +46,10 @@ impl AddrRange {
             AddrRange::AddrSet(allowed_addrs) => allowed_addrs.iter().any(|&a| a == addr),
             AddrRange::Addr(allowed_addr) => addr == *allowed_addr, //TODO: refs?
             AddrRange::Subnet(allowed_addr, prefix_len) => {
+                // Per the AddrRange::Subnet convention (see enum definition),
+                // prefix_len is at most 128. TODO: encode this as an enum
+                // invariant once we refine AddrRange.
+                flux_support::assume(*prefix_len <= 128);
                 let full_bytes: usize = prefix_len / 8;
                 let remainder_bits: usize = prefix_len % 8;
                 // initial bytes -- TODO: edge case
@@ -54,6 +58,13 @@ impl AddrRange {
                 } else if remainder_bits == 0 {
                     true //this case is necessary bc right shifting a u8 by 8 bits is UB
                 } else {
+                    // TODO: get petros to look at this -- perhaps we can use Lean to prove this?
+                    // remainder_bits != 0 here, so prefix_len is not a multiple of 8.
+                    // Combined with prefix_len <= 128, that means prefix_len <= 127,
+                    // hence full_bytes = prefix_len / 8 <= 15 < 16. Flux's solver
+                    // doesn't carry the modular-arithmetic step, so we assume the
+                    // (mathematically derivable) bound directly.
+                    flux_support::assume(full_bytes < 16);
                     addr.0[full_bytes] >> (8 - remainder_bits)
                         == allowed_addr.0[full_bytes] >> (8 - remainder_bits)
                 }

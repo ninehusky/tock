@@ -190,12 +190,17 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///
     /// On success nothing will be returned.
     /// On error a `ErrorCode` will be returned.
+    #[flux_rs::sig(
+        fn(&Self, u64, value: &mut [u8][@n], length: usize) -> Result<SuccessCode, (&mut [u8], ErrorCode)>
+        requires length <= n
+    )]
     pub fn append_key(
         &self,
         hash: u64,
         value: &'static mut [u8],
         length: usize,
     ) -> Result<SuccessCode, (&'static mut [u8], ErrorCode)> {
+        flux_support::assert(length <= value.len());
         match self.tickv.append_key(hash, &value[0..length]) {
             Ok(_code) => {
                 // Ok is a problem, since that means no asynchronous operations

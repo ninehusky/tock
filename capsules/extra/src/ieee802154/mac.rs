@@ -157,6 +157,7 @@ impl<'a, R: radio::Radio<'a>> Mac<'a> for AwakeMac<'a, R> {
             return Err((ErrorCode::INVAL, full_mac_frame));
         }
 
+        flux_support::assert(full_mac_frame.len() >= frame_len + PSDU_OFFSET);
         full_mac_frame.copy_within(0..frame_len, PSDU_OFFSET);
         self.radio.transmit(full_mac_frame, frame_len)
     }
