@@ -284,6 +284,7 @@ impl Command {
     /// Write the buffer with the provided data.
     /// If the provided data's length is smaller than the buffer length,
     /// the left over bytes are not modified due to '\0' termination.
+    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn write(&mut self, buf: &[u8; COMMAND_BUF_LEN]) {
         self.len = buf
             .iter()
@@ -293,6 +294,7 @@ impl Command {
         (self.buf).copy_from_slice(buf);
     }
 
+    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn insert_byte(&mut self, byte: u8, pos: usize) {
         for i in (pos..self.len).rev() {
             self.buf[i + 1] = self.buf[i];
@@ -304,6 +306,7 @@ impl Command {
         }
     }
 
+    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn delete_byte(&mut self, pos: usize) {
         for i in pos..self.len {
             self.buf[i] = self.buf[i + 1];
@@ -331,6 +334,7 @@ impl Default for Command {
 }
 
 impl PartialEq<[u8; COMMAND_BUF_LEN]> for Command {
+    #[flux_rs::trusted(reason = "ICE: flux-infer/src/projections.rs:382")]
     fn eq(&self, other_buf: &[u8; COMMAND_BUF_LEN]) -> bool {
         self.buf
             .iter()
@@ -356,6 +360,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
     }
 
     /// Creates an empty space in the history for the next command
+    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn make_space(&mut self, cmd: &[u8]) {
         let mut cmd_arr = [0; COMMAND_BUF_LEN];
         cmd_arr.copy_from_slice(cmd);
@@ -367,6 +372,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
         }
     }
 
+    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn write_to_first(&mut self, cmd: &[u8]) {
         let mut cmd_arr = [0; COMMAND_BUF_LEN];
         cmd_arr.copy_from_slice(cmd);
@@ -374,6 +380,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
     }
 
     // Set the next index in the command history
+    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn next_cmd_idx(&mut self) -> Option<usize> {
         if self.cmd_idx + 1 >= COMMAND_HISTORY_LEN {
             None
@@ -749,6 +756,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
     }
 
     // Process the command in the command buffer and clear the buffer.
+    #[flux_rs::trusted(reason = "blocked_cell: bounds inside MapCell closure require Cell-state invariants")]
     fn read_command(&self) {
         self.command_buffer.map(|command| {
             let terminator = command.iter().position(|&x| x == 0).unwrap_or(0);
@@ -1038,6 +1046,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         self.create_state_buffer(self.writer_state.get());
     }
 
+    #[flux_rs::trusted(reason = "blocked_cell: bounds inside MapCell/TakeCell closures require Cell-state invariants")]
     fn write_byte(&self, byte: u8) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
@@ -1172,6 +1181,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
 impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCapability>
     uart::ReceiveClient for ProcessConsole<'a, COMMAND_HISTORY_LEN, A, C>
 {
+    #[flux_rs::trusted(reason = "ICE: flux-infer/src/infer.rs:427 UnsolvedEvar in check_rvalue_closure")]
     fn received_buffer(
         &self,
         read_buf: &'static mut [u8],
