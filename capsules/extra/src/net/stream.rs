@@ -3,24 +3,30 @@
 // Copyright Tock Contributors 2022.
 
 #[derive(Debug)]
+#[flux_rs::refined_by(is_done: bool)]
 pub enum SResult<Output = (), Error = ()> {
     // `Done(off, out)`: No errors encountered. We are currently at `off` in the
     // buffer, and the previous encoder/decoder produced output `out`.
+    #[variant((usize, Output) -> SResult<Output, Error>[true])]
     Done(usize, Output),
 
     // `Needed(bytes)`: Could not proceed because we needed to have `bytes`
     // bytes in the buffer, but there weren't.
+    #[variant((usize) -> SResult<Output, Error>[false])]
     Needed(usize),
 
     // `Error(err)`: Some other error occurred.
+    #[variant((Error) -> SResult<Output, Error>[false])]
     Error(Error),
 }
 
 impl<Output, Error> SResult<Output, Error> {
+    #[flux_rs::sig(fn(&Self[@b]) -> bool[b])]
     pub fn is_done(&self) -> bool {
         match *self {
             SResult::Done(_, _) => true,
-            _ => false,
+            SResult::Needed(_) => false,
+            SResult::Error(_) => false,
         }
     }
 
@@ -38,10 +44,12 @@ impl<Output, Error> SResult<Output, Error> {
         }
     }
 
+    #[flux_rs::sig(fn(Self[@b]) -> Option<(usize, Output)>[b])]
     pub fn done(self) -> Option<(usize, Output)> {
         match self {
             SResult::Done(offset, out) => Some((offset, out)),
-            _ => None,
+            SResult::Needed(_) => None,
+            SResult::Error(_) => None,
         }
     }
 
@@ -263,6 +271,7 @@ pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
+#[flux_rs::trusted(reason = "Andrew: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `bs.len()`")]
 pub fn encode_bytes_be(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
     for (i, b) in bs.iter().rev().enumerate() {
@@ -295,6 +304,7 @@ pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
+#[flux_rs::trusted(reason = "Andrew: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `out.len()`")]
 pub fn decode_bytes_be(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     for (i, b) in buf[..out.len()].iter().rev().enumerate() {

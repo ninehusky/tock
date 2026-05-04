@@ -24,6 +24,7 @@ include = [
     "src/ieee802154/framer.rs",
     "src/net/network_capabilities.rs",
     "src/ieee802154/mac.rs",
+    "src/net/stream.rs",
 ]
 
 [lints]
