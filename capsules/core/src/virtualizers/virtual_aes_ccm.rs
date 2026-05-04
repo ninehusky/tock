@@ -331,6 +331,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
     /// `auth_len` (the length of the AuthData field) and `enc_len` (the
     /// combined length of AuthData and PData/CData) are returned. `auth_len` is
     /// guaranteed to be >= AES128_BLOCK_SIZE
+    #[flux_rs::trusted(reason = "TODO: copy_from_slice -- may need simple refinement on range syntax `i..j`")]
     fn encode_ccm_buffer(
         buf: &mut [u8],
         nonce: &[u8; CCM_NONCE_LENGTH],
@@ -505,6 +506,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
     }
 
+    #[flux_rs::trusted(reason = "TODO: discharge copy_from_slice precondition; cascade from new extern spec")]
     fn end_ccm(&self) {
         let tag_valid = self.buf.map_or(false, |buf| {
             self.crypt_buf.map_or_else(

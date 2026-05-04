@@ -421,6 +421,7 @@ impl ConsoleWriter {
     }
 }
 impl fmt::Write for ConsoleWriter {
+    #[flux_rs::trusted(reason = "TODO: copy_from_slice precondition fails. need to refine str::as_bytes")]
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let curr = (s).as_bytes().len();
         self.buf[self.size..self.size + curr].copy_from_slice((s).as_bytes());
@@ -430,6 +431,7 @@ impl fmt::Write for ConsoleWriter {
 }
 
 impl BinaryWrite for ConsoleWriter {
+    #[flux_rs::trusted(reason = "TODO: copy_from_slice. probably easy, but may need refinement on usize::min.")]
     fn write_buffer(&mut self, buffer: &[u8]) -> Result<usize, ()> {
         let start = self.size;
         let remaining = self.buf.len() - start;
@@ -1064,6 +1066,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         }
     }
 
+    #[flux_rs::trusted(reason = "TODO: discharge copy_from_slice precondition; cascade from new extern spec")]
     fn write_bytes(&self, bytes: &[u8]) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
@@ -1090,6 +1093,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
     ///
     /// Returns Ok(usize) with the number of bytes sent from the queue. If Ok(0)
     /// is returned, nothing was sent and the UART is free.
+    #[flux_rs::trusted(reason = "TODO: copy_from_slice -- cmp::min is tricky; may be blocked on cell stuff")]
     fn handle_queue(&self) -> Result<usize, ErrorCode> {
         if self.tx_in_progress.get() {
             // This shouldn't happen because we should only try to handle the
