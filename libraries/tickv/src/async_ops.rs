@@ -317,6 +317,10 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     /// This should be used to copy the data that the implementation wanted
     /// to read when calling `read_region` after the async operation has
     /// completed.
+    #[flux_rs::sig(
+        fn(&Self, read_buffer: &[u8][@n]) -> ()
+        requires n == S
+    )]
     pub fn set_read_buffer(&self, read_buffer: &[u8]) {
         let buf = self.tickv.read_buffer.take().unwrap();
         buf.copy_from_slice(read_buffer);

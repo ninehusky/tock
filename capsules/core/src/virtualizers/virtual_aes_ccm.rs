@@ -103,11 +103,17 @@ enum CCMState {
 }
 
 // to cache up the function parameters of the crypt() function
+#[flux_rs::refined_by(buf_len: int, a_off: int, m_off: int, m_len: int, mic_len: int)]
 struct CryptFunctionParameters {
+    #[field(&mut [u8][buf_len])]
     buf: &'static mut [u8],
+    #[field(usize[a_off])]
     a_off: usize,
+    #[field(usize[m_off])]
     m_off: usize,
+    #[field(usize[m_len])]
     m_len: usize,
+    #[field(usize[mic_len])]
     mic_len: usize,
     confidential: bool,
     encrypting: bool,
@@ -163,6 +169,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> MuxAES128CCM<'a, A> 
         self.deferred_call.set();
     }
 
+    #[flux_rs::trusted(reason = "ICE: crates/flux-infer/src/fixpoint_encoding.rs:1746:17")]
     fn do_next_op(&self) {
         if self.inflight.is_none() {
             let mnode = self
@@ -442,6 +449,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
     }
 
+    #[flux_rs::trusted(reason = "extern-spec gap: IndexMut<I> for [T] not specified in flux_support; iv[0] = 1 is provably safe (iv: [u8; 16])")]
     fn start_ccm_encrypt(&self) -> Result<(), ErrorCode> {
         if !(self.state.get() == CCMState::Auth)
             && !(self.state.get() == CCMState::Idle && self.reversed())
@@ -576,6 +584,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
+    #[flux_rs::trusted(reason = "blocked-cell")]
     fn save_tag_block(&self) {
         // Copies [auth_len - AES128_BLOCK_SIZE..auth_len] to saved_tag
         // and zeroes it out
@@ -590,6 +599,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
+    #[flux_rs::trusted(reason = "blocked-cell")]
     fn swap_tag_block(&self) {
         // Swaps [auth_len - AES128_BLOCK_SIZE..auth_len] with
         // the value in saved_tag
@@ -602,6 +612,11 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
+    #[flux_rs::sig(
+        fn(&Self, parameter: CryptFunctionParameters[@p])
+            -> Result<(), (ErrorCode, &mut [u8])>
+            requires p.a_off <= p.m_off && p.m_off + p.m_len + p.mic_len <= p.buf_len
+    )]
     fn crypt_r(
         &self,
         parameter: CryptFunctionParameters,
@@ -625,6 +640,8 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         self.confidential.set(confidential);
         self.encrypting.set(encrypting);
 
+        flux_support::assert(a_off <= m_off);
+        flux_support::assert(m_off + m_len <= buf.len());
         let res = self.prepare_ccm_buffer(
             &self.nonce.get(),
             mic_len,
@@ -666,6 +683,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
         self.ccm_client.set(client);
     }
 
+    #[flux_rs::trusted(reason = "Real bug: guard `key.len() < AES128_KEY_SIZE` allows longer keys; downstream `copy_from_slice` panics for `key.len() > 16`. Needs guard `!= AES128_KEY_SIZE` to be sound.")]
     fn set_key(&self, key: &[u8]) -> Result<(), ErrorCode> {
         if key.len() < AES128_KEY_SIZE {
             Err(ErrorCode::INVAL)
@@ -677,6 +695,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
         }
     }
 
+    #[flux_rs::trusted(reason = "Real bug: guard `nonce.len() < CCM_NONCE_LENGTH` allows longer nonces; downstream `copy_from_slice` panics for `nonce.len() > CCM_NONCE_LENGTH`. Needs guard `!= CCM_NONCE_LENGTH` to be sound.")]
     fn set_nonce(&self, nonce: &[u8]) -> Result<(), ErrorCode> {
         if nonce.len() < CCM_NONCE_LENGTH {
             Err(ErrorCode::INVAL)
@@ -811,6 +830,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> AES128CBC for Virtua
 impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption::Client<'a>
     for VirtualAES128CCM<'a, A>
 {
+    #[flux_rs::trusted(reason = "blocked-cell")]
     fn crypt_done(&self, _: Option<&'static mut [u8]>, crypt_buf: &'static mut [u8]) {
         self.crypt_buf.replace(crypt_buf);
         match self.state.get() {

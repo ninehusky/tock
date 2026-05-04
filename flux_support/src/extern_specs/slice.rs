@@ -50,8 +50,7 @@ where
 
 // `Index<I>` for `[T]` forwards `in_bounds` to the underlying `SliceIndex`
 // impl, so the `index` method's precondition specializes per-`I` automatically.
-#[flux_rs::extern_spec(core::slice)]
-#[flux_rs::assoc(fn in_bounds(len: int, idx: I) -> bool {
+#[flux_rs::extern_spec(core::slice)] #[flux_rs::assoc(fn in_bounds(len: int, idx: I) -> bool {
     <I as SliceIndex<[T]>>::in_bounds(idx, len)
 })]
 impl<T, I: SliceIndex<[T]>> Index<I> for [T] {
@@ -73,4 +72,12 @@ impl<T> [T] {
         requires mid <= len
     )]
     fn split_at(v: &[T], mid: usize) -> (&[T], &[T]);
+
+    #[flux::sig(
+        fn(&mut [T][@len], src: &[T][@src_len]) -> ()
+        requires src_len == len
+    )]
+    const fn copy_from_slice(&mut self, src: &[T])
+    where
+        T: Copy;
 }
