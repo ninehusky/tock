@@ -800,6 +800,7 @@ impl ReadableProcessSlice {
     }
 
     /// Return the length of the slice in bytes.
+    #[flux_rs::sig(fn(&Self[@n]) -> usize[n])]
     pub fn len(&self) -> usize {
         self.slice.len()
     }
@@ -994,6 +995,7 @@ impl WriteableProcessSlice {
     /// # Panics
     ///
     /// This function will panic if `src.len() != self.len()`.
+    #[flux_rs::sig(fn(self: &Self[@n], src: &[u8][n]))]
     pub fn copy_from_slice(&self, src: &[u8]) {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
@@ -1012,6 +1014,7 @@ impl WriteableProcessSlice {
         }
 
         if self.copy_from_slice_or_err(src).is_err() {
+            flux_support::assert(false);
             len_mismatch_fail(self.len(), src.len());
         }
     }
@@ -1020,6 +1023,7 @@ impl WriteableProcessSlice {
     ///
     /// The length of `src` must be the same as `self`. Subslicing can
     /// be used to obtain a slice of matching length.
+    #[flux_rs::sig(fn(self: &Self[@n], src: &[u8][@m]) -> Result<(), ErrorCode>[n == m])]
     pub fn copy_from_slice_or_err(&self, src: &[u8]) -> Result<(), ErrorCode> {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
@@ -1041,6 +1045,7 @@ impl WriteableProcessSlice {
     }
 
     /// Return the length of the slice in bytes.
+    #[flux_rs::sig(fn(&Self[@n]) -> usize[n])]
     pub fn len(&self) -> usize {
         self.slice.len()
     }
