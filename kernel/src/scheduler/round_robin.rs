@@ -125,7 +125,10 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         SchedulingDecision::RunProcess((next, Some(timeslice)))
     }
 
+    #[flux_rs::trusted_impl(reason = "TODO: we would need to push a refinement up to the `Scheduler` trait to discharge the precondition, which elicits more proofs about callers.")]
+    #[flux_rs::sig(fn (&Self, StoppedExecutingReason, execution_time_us: Option<u32>[true]) -> ())]
     fn result(&self, result: StoppedExecutingReason, execution_time_us: Option<u32>) {
+        flux_support::assert(execution_time_us.is_some());
         let execution_time_us = execution_time_us.unwrap(); // should never fail
         let reschedule = match result {
             StoppedExecutingReason::KernelPreemption => {

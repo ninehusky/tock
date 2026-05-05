@@ -38,6 +38,7 @@ macro_rules! static_init {
 /// `static_buf!()` are hidden within calls to `static_init!()` or
 /// component helper macros, so start your search there.
 #[inline(never)]
+#[flux_rs::sig(fn(used: &strg bool[false]) ensures used: bool[true])]
 pub fn static_buf_check_used(used: &mut bool) {
     // Check if this `BUF` has already been declared and initialized. If it
     // has, then this is a repeated `static_buf!()` call which is an error

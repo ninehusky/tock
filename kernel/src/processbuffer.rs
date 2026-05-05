@@ -749,6 +749,7 @@ impl ReadableProcessSlice {
     /// # Panics
     ///
     /// This function will panic if `self.len() != dest.len()`.
+    #[flux_rs::sig(fn(self: &Self[@n], dest: &mut [u8][n]))]
     pub fn copy_to_slice(&self, dest: &mut [u8]) {
         // The panic code path was put into a cold function to not
         // bloat the call site.
@@ -763,6 +764,7 @@ impl ReadableProcessSlice {
         }
 
         if self.copy_to_slice_or_err(dest).is_err() {
+            flux_support::assert(false);
             len_mismatch_fail(dest.len(), self.len());
         }
     }
@@ -775,7 +777,7 @@ impl ReadableProcessSlice {
     #[flux_rs::trusted(
         reason = "assertion might fail: possible out of bound access (needs spec for Enumerate)"
     )]
-    #[flux_rs::sig(fn (self: &Self, dest: &strg [u8][@n]) -> Result<(), ErrorCode> ensures dest: [u8][n] )]
+    #[flux_rs::sig(fn(self: &Self[@n], dest: &strg [u8][@m]) -> Result<(), ErrorCode>[n == m] ensures dest: [u8][m])]
     pub fn copy_to_slice_or_err(&self, dest: &mut [u8]) -> Result<(), ErrorCode> {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
