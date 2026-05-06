@@ -177,6 +177,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///
     /// On success a `SuccessCode` will be returned.
     /// On error a `ErrorCode` will be returned.
+    #[flux_rs::sig(fn(&Self, hashed_main_key: u64{hashed_main_key != 0 && hashed_main_key != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn initialise(&self, hashed_main_key: u64) -> Result<SuccessCode, ErrorCode> {
         self.key.replace(Some(hashed_main_key));
         self.tickv.initialise(hashed_main_key)
@@ -237,6 +238,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
+    #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}, buf: &mut [u8]) -> Result<SuccessCode, (&mut [u8], ErrorCode)>)]
     pub fn get_key(
         &self,
         hash: u64,
@@ -272,6 +274,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
+    #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn invalidate_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         match self.tickv.invalidate_key(hash) {
             Ok(_code) => Err(ErrorCode::WriteFail),
@@ -292,6 +295,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
+    #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn zeroise_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         match self.tickv.zeroise_key(hash) {
             Ok(_code) => Err(ErrorCode::WriteFail),
@@ -344,6 +348,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///    Length usize:
     ///        The number of valid bytes in the buffer. 0 if Buf is None.
     /// The buffers will only be returned on a non async error or on success.
+    #[flux_rs::trusted(reason = "TODO: hash comes from `self.key.get().unwrap()` (Cell). Need cell-state refinement to discharge `hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF` from get_key/invalidate_key/zeroise_key.")]
     pub fn continue_operation(&self) -> ContinueReturn {
         let (ret, length) = match self.tickv.state.get() {
             State::Init(_) => (self.tickv.initialise(self.key.get().unwrap()), 0),

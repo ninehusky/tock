@@ -139,6 +139,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// On success nothing will be returned.
     /// On error a `ErrorCode` will be returned.
+    #[flux_rs::sig(fn(&Self, hashed_main_key: u64{hashed_main_key != 0 && hashed_main_key != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn initialise(&self, hashed_main_key: u64) -> Result<SuccessCode, ErrorCode> {
         let mut buf: [u8; 0] = [0; 0];
 
@@ -216,6 +217,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     }
 
     /// Get region number from a hashed key
+    #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> usize)]
     fn get_region(&self, hash: u64) -> usize {
         assert_ne!(hash, 0xFFFF_FFFF_FFFF_FFFF);
         assert_ne!(hash, 0);
@@ -676,6 +678,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// If a power loss occurs before success is returned the data is assumed to
     /// be lost.
+    #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}, buf: &mut [u8]) -> Result<(SuccessCode, usize), ErrorCode>)]
     pub fn get_key(&self, hash: u64, buf: &mut [u8]) -> Result<(SuccessCode, usize), ErrorCode> {
         let region = self.get_region(hash);
 
@@ -812,6 +815,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
+    #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn invalidate_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
 
@@ -911,6 +915,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
+    #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn zeroise_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
 
