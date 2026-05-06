@@ -110,7 +110,9 @@ pub struct Frame {
 /// These offsets are relative to the PSDU or `buf[radio::PSDU_OFFSET..]` so
 /// that the mac frame length is `data_offset + data_len`
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[flux_rs::refined_by(fcf: int)]
 struct FrameInfo {
+    #[field(FrameType[fcf])]
     frame_type: FrameType,
 
     // The MAC payload, including Payload IEs
@@ -186,6 +188,7 @@ impl FrameInfo {
     /// fields, not including the MIC. The a data is always the remaining prefix
     /// of the header, so it can be determined implicitly.
     #[allow(dead_code)]
+    #[flux_rs::sig(fn (&Self[@slf]) -> (usize, usize) requires slf.fcf != 0 && slf.fcf != 3)]
     fn ccm_encrypt_ranges(&self) -> (usize, usize) {
         // IEEE 802.15.4-2015: Table 9-1. Exceptions to Private Payload field
         // The boundary between open and private payload fields depends
@@ -528,6 +531,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// Advances the transmission pipeline if it can be advanced.
+    #[flux_rs::trusted(reason = "need to prove precondition about cell so that ccm_encrypt_ranges won't panic")]
     fn step_transmit_state(&self) -> Result<(), (ErrorCode, &'static mut [u8])> {
         self.tx_state.take().map_or_else(
             || panic!("missing tx_state"),
@@ -600,7 +604,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// Advances the reception pipeline if it can be advanced.
-    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice; ccm_encrypt_ranges precondition is on cell")]
     fn step_receive_state(&self) {
         self.rx_state.take().map(|state| {
             let next_state = match state {
