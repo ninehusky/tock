@@ -25,6 +25,7 @@ include = [
     "src/net/network_capabilities.rs",
     "src/ieee802154/mac.rs",
     "src/net/stream.rs",
+    "src/sip_hash.rs",
 ]
 
 [lints]
