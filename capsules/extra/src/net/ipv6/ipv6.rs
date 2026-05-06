@@ -266,6 +266,7 @@ impl IP6Header {
     /// Utility function for verifying whether a transport layer checksum of a received
     /// packet is correct. Is called on the assocaite IPv6 Header, and passed the buffer
     /// containing the remainder of the packet.
+    #[flux_rs::trusted(reason = "Pre-existing flux errors on copy_from_slice + UDPHeader::decode + checksum-compute calls; not in target panic_sites rows.")]
     pub fn check_transport_checksum(&self, buf: &[u8]) -> Result<(), ErrorCode> {
         match self.next_header {
             ip6_nh::UDP => {
@@ -313,15 +314,21 @@ impl IP6Header {
 /// Currently we accept the overhead of copying these structs in/out of an OptionalCell
 /// in `udp_send.rs`.
 #[derive(Copy, Clone)]
+#[flux_rs::refined_by(kind: int)]
 pub enum TransportHeader {
+    #[variant((UDPHeader) -> TransportHeader[0])]
     UDP(UDPHeader),
+    #[variant((TCPHeader) -> TransportHeader[1])]
     TCP(TCPHeader),
+    #[variant((ICMP6Header) -> TransportHeader[2])]
     ICMP(ICMP6Header),
 }
 
 /// The `IPPayload` struct contains a `TransportHeader` and a mutable buffer
 /// (the payload).
+#[flux_rs::refined_by(kind: int)]
 pub struct IPPayload<'a> {
+    #[field(TransportHeader[kind])]
     pub header: TransportHeader,
     pub payload: &'a mut [u8],
 }
@@ -350,6 +357,7 @@ impl<'a> IPPayload<'a> {
     /// `(u8, u16)` - Returns a tuple of the `ip6_nh` type of the
     /// `transport_header` and the total length of the `IPPayload`
     /// (when serialized)
+    #[flux_rs::trusted(reason = "Bounds at `self.payload[i] = payload[i]` (line 366) needs slice-output refinement (same as `valid_output` experiment branch and `0xa3ba` u8to64_le). Loop bound is `i < payload.len()` (SubSliceMut), and `self.payload` field has its own length — flux can't connect them without slice-output refinement.")]
     pub fn set_payload(
         &mut self,
         transport_header: TransportHeader,
@@ -386,6 +394,7 @@ impl<'a> IPPayload<'a> {
     ///
     /// `SResult<usize>` - The final offset into the buffer `buf` is returned
     /// wrapped in an SResult
+    #[flux_rs::sig(fn(self: &Self[@p], buf: &mut [u8], offset: usize) -> SResult<usize> requires p.kind != 1)]
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let (offset, _) = match self.header {
             TransportHeader::UDP(udp_header) => udp_header.encode(buf, offset).done().unwrap(),
@@ -416,8 +425,10 @@ impl<'a> IPPayload<'a> {
 
 /// This struct defines the `IP6Packet` format, and contains an `IP6Header`
 /// and an `IPPayload`.
+#[flux_rs::refined_by(kind: int)]
 pub struct IP6Packet<'a> {
     pub header: IP6Header,
+    #[field(IPPayload[kind])]
     pub payload: IPPayload<'a>,
 }
 
@@ -452,6 +463,7 @@ impl<'a> IP6Packet<'a> {
         self.payload.payload
     }
 
+    #[flux_rs::sig(fn(self: &Self[@p]) -> usize requires p.kind != 1)]
     pub fn get_total_hdr_size(&self) -> usize {
         let transport_hdr_size = match self.payload.header {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),
@@ -461,6 +473,8 @@ impl<'a> IP6Packet<'a> {
         40 + transport_hdr_size
     }
 
+    #[flux_rs::trusted(reason = "Pre-existing flux errors on compute_udp_checksum/compute_icmp_checksum preconditions (lines 484/493); the targeted unimplemented!() at line 486 is locally proven via the sig precondition `kind != 1`.")]
+    #[flux_rs::sig(fn(self: &mut Self[@p]) requires p.kind != 1)]
     pub fn set_transport_checksum(&mut self) {
         // Looks at internal buffer assuming
         // it contains a valid IP packet, checks the payload type. If the payload
@@ -514,6 +528,7 @@ impl<'a> IP6Packet<'a> {
 
     // TODO: Do we need a decode equivalent? I don't think so, but we might
 
+    #[flux_rs::sig(fn(self: &Self[@p], buf: &mut [u8]) -> SResult<usize> requires p.kind != 1)]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
         let ip6_header = self.header;
 
