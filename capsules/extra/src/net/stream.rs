@@ -264,6 +264,7 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_done!(4);
 }
 
+#[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
     buf[..bs.len()].copy_from_slice(bs);
@@ -271,7 +272,7 @@ pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
-#[flux_rs::trusted(reason = "Andrew: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `bs.len()`")]
+#[flux_rs::trusted(reason = "missing spec: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `bs.len()`")]
 pub fn encode_bytes_be(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
     for (i, b) in bs.iter().rev().enumerate() {
@@ -296,6 +297,7 @@ pub fn decode_u32(buf: &[u8]) -> SResult<u32> {
     stream_done!(4, b);
 }
 
+#[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
 pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     let len = out.len();
@@ -304,7 +306,7 @@ pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
-#[flux_rs::trusted(reason = "Andrew: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `out.len()`")]
+#[flux_rs::trusted(reason = "missing spec: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `out.len()`")]
 pub fn decode_bytes_be(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     for (i, b) in buf[..out.len()].iter().rev().enumerate() {

@@ -138,6 +138,7 @@ impl Frame {
     }
 
     /// Appends payload bytes into the frame if possible
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
     pub fn append_payload(&mut self, payload: &[u8]) -> Result<(), ErrorCode> {
         if payload.len() > self.remaining_data_capacity() {
             return Err(ErrorCode::NOMEM);
@@ -151,6 +152,7 @@ impl Frame {
 
     /// Appends payload bytes from a process slice into the frame if
     /// possible
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
     pub fn append_payload_process(
         &mut self,
         payload_buf: &ReadableProcessSlice,
@@ -598,6 +600,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// Advances the reception pipeline if it can be advanced.
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
     fn step_receive_state(&self) {
         self.rx_state.take().map(|state| {
             let next_state = match state {
@@ -891,7 +894,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::TxClient for Framer<'a, M, A> {
 }
 
 impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::RxClient for Framer<'a, M, A> {
-    #[flux_rs::trusted(reason = "Andrew: needs a way to generically specify precondition on top of `incoming_frame_security`")]
+    #[flux_rs::trusted(reason = "missing: needs a way to generically specify precondition on top of `incoming_frame_security`")]
     fn receive(
         &self,
         buf: &'static mut [u8],

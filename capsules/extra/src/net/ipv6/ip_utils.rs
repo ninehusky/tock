@@ -107,6 +107,7 @@ impl IPAddr {
     #[flux_rs::sig(
         fn(self: &mut Self, prefix: &[u8][@n], prefix_len: u8{p: p <= 128 && 8 * n >= p}) // we may want to make this `8 * n == p`.
     )]
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice. flux_support::assert ensures the next assert fine.")]
     pub fn set_prefix(&mut self, prefix: &[u8], prefix_len: u8) {
         let full_bytes = (prefix_len / 8) as usize;
         let remaining = (prefix_len % 8) as usize;
