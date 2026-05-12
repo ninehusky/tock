@@ -28,6 +28,7 @@ include = [
     "src/sip_hash.rs",
     "src/net/ipv6/ipv6.rs",
     "src/net/sixlowpan/sixlowpan_state.rs",
+    "def:result_to_errorcode",
 ]
 
 [lints]

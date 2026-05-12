@@ -76,6 +76,16 @@ mod rw_allow {
     pub const COUNT: u8 = 3;
 }
 
+// Helper fn that converts a Result.. the precondition
+// implies that the `unwrap` will succeed.
+// TODO: this should be checked at the `command` callsite..
+// I had it originally (and it didn't throw an error), but I didn't include `driver.rs`
+// in the `Cargo.toml` because it was also giving errors for non-panic-row statements.
+#[flux_rs::sig(fn(rc: Result<(), kernel::ErrorCode>{r: !r.b}) -> kernel::ErrorCode)]
+fn result_to_errorcode(rc: Result<(), kernel::ErrorCode>) -> kernel::ErrorCode {
+    rc.try_into().unwrap()
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct UDPEndpoint {
     addr: IPAddr,
@@ -540,7 +550,7 @@ impl<'a> SyscallDriver for UDPDriver<'a> {
                             }
                         })
                     }
-                    Err(retcode) => CommandReturn::failure(retcode.try_into().unwrap()),
+                    Err(retcode) => CommandReturn::failure(result_to_errorcode(retcode)),
                 }
             }
             4 => CommandReturn::success_u32(self.max_tx_pyld_len as u32),

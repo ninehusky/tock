@@ -14,4 +14,9 @@ impl<T, E> Result<T, E> {
 
     #[sig(fn(&Result<T,E>[@b]) -> bool[!b])]
     const fn is_err(&self) -> bool;
+
+    #[sig(fn(Result<T, E>[true]) -> T)]
+    fn unwrap(self) -> T
+    where
+        E: core::fmt::Debug;
 }

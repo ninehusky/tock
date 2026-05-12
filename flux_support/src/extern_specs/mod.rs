@@ -1,3 +1,4 @@
+mod convert;
 mod iter;
 mod mem;
 mod non_null;
