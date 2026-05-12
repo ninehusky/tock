@@ -11,6 +11,9 @@ edition.workspace = true
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
+include = [
+    "def:get_remaining_us",
+]
 
 [dependencies]
 kernel = { path = "../../kernel" }

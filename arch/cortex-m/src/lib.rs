@@ -28,7 +28,6 @@ pub mod scb;
 pub mod support;
 #[flux_rs::ignore]
 pub mod syscall;
-#[flux_rs::ignore]
 pub mod systick;
 
 pub mod mpu;

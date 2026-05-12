@@ -108,6 +108,8 @@ impl SysTick {
     // user using the `new_with_calibration` constructor return `self.hertz`.
     // Otherwise, compute the frequncy using the calibration value that is set
     // in hardware.
+    #[flux_rs::trusted(reason = "Body's `self.hertz != 0` branch returns `self.hertz`, which is provably > 0 from the path condition. The else branch reads `tenms` from the SysTick calibration register and returns `tenms * 100` — a value that is non-zero in practice on calibrated hardware but cannot be proved from code alone (it's a `*const SystickRegisters` read). Manually verified that the only safe assumption is `r > 0`; revisit if board init paths can produce uncalibrated SysTick.")]
+    #[flux_rs::sig(fn (&Self) -> u32{r : r > 0})]
     fn hertz(&self) -> u32 {
         if self.hertz != 0 {
             self.hertz
@@ -205,6 +207,7 @@ impl kernel::platform::scheduler_timer::SchedulerTimer for SysTick {
             None
         } else {
             let hertz = self.hertz() as u64;
+            flux_support::assert(hertz > 0);
             Some(((tics * 1_000_000) / hertz) as u32)
         }
     }
