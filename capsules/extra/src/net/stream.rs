@@ -242,12 +242,14 @@ macro_rules! dec_consume {
     } };
 }
 
+#[flux_rs::sig(fn(&mut [u8][@n], u8) -> SResult[n >= 1])]
 pub fn encode_u8(buf: &mut [u8], b: u8) -> SResult {
     stream_len_cond!(buf, 1);
     buf[0] = b;
     stream_done!(1);
 }
 
+#[flux_rs::sig(fn(&mut [u8][@n], u16) -> SResult[n >= 2])]
 pub fn encode_u16(buf: &mut [u8], b: u16) -> SResult {
     stream_len_cond!(buf, 2);
     buf[0] = (b >> 8) as u8;
@@ -255,6 +257,7 @@ pub fn encode_u16(buf: &mut [u8], b: u16) -> SResult {
     stream_done!(2);
 }
 
+#[flux_rs::sig(fn(&mut [u8][@n], u32) -> SResult[n >= 4])]
 pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_len_cond!(buf, 4);
     buf[0] = (b >> 24) as u8;
@@ -264,7 +267,8 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_done!(4);
 }
 
-#[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
+#[flux_rs::trusted(reason = "missing spec: copy_from_slice. Sig captures the Done-iff-sufficient-buffer relationship that callers rely on (same shape as the verified `encode_u8`/`u16`/`u32`).")]
+#[flux_rs::sig(fn(&mut [u8][@n], &[u8][@m]) -> SResult[n >= m])]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
     buf[..bs.len()].copy_from_slice(bs);

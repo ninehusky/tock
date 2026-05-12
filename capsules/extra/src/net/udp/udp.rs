@@ -75,6 +75,7 @@ impl UDPHeader {
         u16::from_be(self.cksum)
     }
 
+    #[flux_rs::sig(fn(&Self) -> usize[8])]
     pub fn get_hdr_size(&self) -> usize {
         // TODO
         8
@@ -91,6 +92,7 @@ impl UDPHeader {
     ///
     /// This function returns the new offset into the buffer wrapped in an
     /// SResult.
+    #[flux_rs::sig(fn(&Self, &mut [u8][@n], offset: usize) -> SResult<usize>[n >= 8 + offset])]
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         stream_len_cond!(buf, self.get_hdr_size() + offset);
 

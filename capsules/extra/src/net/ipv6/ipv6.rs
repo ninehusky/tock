@@ -160,6 +160,8 @@ impl IP6Header {
     /// # Return Value
     ///
     /// `SResult<usize>` - The offset wrapped in an SResult
+    #[flux_rs::trusted(reason = "Sig captures Done iff buf.len() >= 40 (IPv6 header is fixed 40 bytes). Body is `stream_len_cond!(buf, 40)` + 6 `enc_consume!`s writing 4+2+1+1+16+16 = 40 bytes. UDPHeader::encode/ICMP6Header::encode (in the same Done-iff-fits-buffer pattern) verify their bodies for real; IP6Header::encode does not because Flux's current extern specs for `[u8; N]` → `&[u8]` coercion (via `version_class_flow` / `src_addr.0` / `dst_addr.0` array fields) drop length info into `encode_bytes`. When that extern spec gap closes, the trust can be removed.")]
+    #[flux_rs::sig(fn(&Self, &mut [u8][@n]) -> SResult<usize>[n >= 40])]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
         stream_len_cond!(buf, 40);
 
@@ -394,7 +396,7 @@ impl<'a> IPPayload<'a> {
     ///
     /// `SResult<usize>` - The final offset into the buffer `buf` is returned
     /// wrapped in an SResult
-    #[flux_rs::sig(fn(self: &Self[@p], buf: &mut [u8], offset: usize) -> SResult<usize> requires p.kind != 1)]
+    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && n >= 8 + offset)]
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let (offset, _) = match self.header {
             TransportHeader::UDP(udp_header) => udp_header.encode(buf, offset).done().unwrap(),
@@ -528,12 +530,17 @@ impl<'a> IP6Packet<'a> {
 
     // TODO: Do we need a decode equivalent? I don't think so, but we might
 
-    #[flux_rs::sig(fn(self: &Self[@p], buf: &mut [u8]) -> SResult<usize> requires p.kind != 1)]
+    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n]) -> SResult<usize> requires p.kind != 1 && n >= 48)]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
         let ip6_header = self.header;
 
         // TODO: Handle unwrap safely
         let (off, _) = ip6_header.encode(buf).done().unwrap();
+        // SResult does not currently expose the offset value in Done(off, _) at
+        // the index level, so we restore the invariant that the body would prove
+        // (off == 40) for the next call's precondition. The encoder body itself
+        // is trusted only because of a Flux extern-spec gap on [u8; N] -> &[u8].
+        flux_support::assume(off == 40);
         self.payload.encode(buf, off)
     }
 }

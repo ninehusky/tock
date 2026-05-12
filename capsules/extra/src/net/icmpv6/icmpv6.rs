@@ -133,6 +133,7 @@ impl ICMP6Header {
     ///
     /// This function returns the new offset into the buffer,
     /// wrapped in an SResult
+    #[flux_rs::sig(fn(&Self, &mut [u8][@n], offset: usize) -> SResult<usize>[n >= 8 + offset])]
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let mut off = offset;
 
