@@ -625,13 +625,18 @@ pub enum UsbState {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[flux_rs::refined_by(kind: int)]
 pub enum EndpointState {
+    #[variant(EndpointState[0])]
     Disabled,
+    #[variant((CtrlState) -> EndpointState[1])]
     Ctrl(CtrlState),
+    #[variant((TransferType, Option<BulkInState>, Option<BulkOutState>) -> EndpointState[2])]
     Bulk(TransferType, Option<BulkInState>, Option<BulkOutState>),
 }
 
 impl EndpointState {
+    #[flux_rs::sig(fn(EndpointState[@k]) -> CtrlState requires k == 1)]
     fn ctrl_state(self) -> CtrlState {
         match self {
             EndpointState::Ctrl(state) => state,
@@ -639,6 +644,7 @@ impl EndpointState {
         }
     }
 
+    #[flux_rs::sig(fn(EndpointState[@k]) -> (TransferType, Option<BulkInState>, Option<BulkOutState>) requires k == 2)]
     fn bulk_state(self) -> (TransferType, Option<BulkInState>, Option<BulkOutState>) {
         match self {
             EndpointState::Bulk(transfer_type, in_state, out_state) => {
@@ -2150,6 +2156,7 @@ fn status_epout(ep: usize) -> Field<u32, EndpointStatus::Register> {
     }
 }
 
+#[flux_rs::sig(fn(ep: usize{e: e < 8}) -> Field<u32, Interrupt::Register>)]
 fn inter_endepin(ep: usize) -> Field<u32, Interrupt::Register> {
     match ep {
         0 => Interrupt::ENDEPIN0,
@@ -2164,6 +2171,7 @@ fn inter_endepin(ep: usize) -> Field<u32, Interrupt::Register> {
     }
 }
 
+#[flux_rs::sig(fn(ep: usize{e: e < 8}) -> Field<u32, Interrupt::Register>)]
 fn inter_endepout(ep: usize) -> Field<u32, Interrupt::Register> {
     match ep {
         0 => Interrupt::ENDEPOUT0,

@@ -8,10 +8,22 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [
+    "def:inter_endepin",
+    "def:inter_endepout",
+    "def:ctrl_state",
+    "def:bulk_state",
+]
+
 [dependencies]
 cortexm4 = { path = "../../arch/cortex-m4" }
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux_support = { path = "../../flux_support" }
 
 [dependencies.nrf5x]
 path = "../nrf5x"
