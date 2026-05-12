@@ -17,9 +17,11 @@ use crate::net::stream::SResult;
 /// Note that the implementation of this struct provides getters and setters
 /// for the various fields of the header, to avoid confusion with endian-ness.
 #[derive(Copy, Clone, Debug)]
+#[flux_rs::refined_by(len: int)]
 pub struct UDPHeader {
     src_port: u16,
     dst_port: u16,
+    #[field(u16[len])]
     len: u16,
     cksum: u16,
 }
@@ -51,6 +53,8 @@ impl UDPHeader {
         self.src_port = port.to_be();
     }
 
+    #[flux_rs::trusted(reason = "Stores in big-endian byte order; `u16::to_be` is not modeled by Flux extern specs. Sig records the logical len at the refinement level.")]
+    #[flux_rs::sig(fn(self: &mut Self, len: u16) ensures self: Self[len])]
     pub fn set_len(&mut self, len: u16) {
         self.len = len.to_be();
     }
@@ -67,6 +71,8 @@ impl UDPHeader {
         u16::from_be(self.dst_port)
     }
 
+    #[flux_rs::trusted(reason = "Stores in big-endian byte order; `u16::from_be` is not modeled by Flux extern specs. Sig records the logical len at the refinement level.")]
+    #[flux_rs::sig(fn(&Self[@l]) -> u16[l])]
     pub fn get_len(&self) -> u16 {
         u16::from_be(self.len)
     }

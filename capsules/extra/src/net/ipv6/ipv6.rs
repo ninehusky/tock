@@ -316,13 +316,14 @@ impl IP6Header {
 /// Currently we accept the overhead of copying these structs in/out of an OptionalCell
 /// in `udp_send.rs`.
 #[derive(Copy, Clone)]
-#[flux_rs::refined_by(kind: int)]
+#[flux_rs::refined_by(kind: int, len: int)]
 pub enum TransportHeader {
-    #[variant((UDPHeader) -> TransportHeader[0])]
+    #[variant((UDPHeader[@l]) -> TransportHeader[0, l])]
     UDP(UDPHeader),
-    #[variant((TCPHeader) -> TransportHeader[1])]
+    // TCP headers aren't implemented yet, so we cannot rely on its length at all in our proofs.
+    #[variant((TCPHeader) -> TransportHeader[1, 0])]
     TCP(TCPHeader),
-    #[variant((ICMP6Header) -> TransportHeader[2])]
+    #[variant((ICMP6Header[@l]) -> TransportHeader[2, l])]
     ICMP(ICMP6Header),
 }
 
