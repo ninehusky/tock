@@ -98,7 +98,7 @@ impl UDPHeader {
     ///
     /// This function returns the new offset into the buffer wrapped in an
     /// SResult.
-    #[flux_rs::sig(fn(&Self, &mut [u8][@n], offset: usize) -> SResult<usize>[n >= 8 + offset])]
+    #[flux_rs::sig(fn(&Self, &mut [u8][@n], offset: usize) -> SResult<usize>{r: (r.is_done <=> n >= 8 + offset) && (r.is_done => r.offset == offset + 8)})]
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         stream_len_cond!(buf, self.get_hdr_size() + offset);
 

@@ -3,25 +3,25 @@
 // Copyright Tock Contributors 2022.
 
 #[derive(Debug)]
-#[flux_rs::refined_by(is_done: bool)]
+#[flux_rs::refined_by(is_done: bool, offset: int)]
 pub enum SResult<Output = (), Error = ()> {
     // `Done(off, out)`: No errors encountered. We are currently at `off` in the
     // buffer, and the previous encoder/decoder produced output `out`.
-    #[variant((usize, Output) -> SResult<Output, Error>[true])]
+    #[variant((usize[@o], Output) -> SResult<Output, Error>[true, o])]
     Done(usize, Output),
 
     // `Needed(bytes)`: Could not proceed because we needed to have `bytes`
     // bytes in the buffer, but there weren't.
-    #[variant((usize) -> SResult<Output, Error>[false])]
+    #[variant((usize) -> SResult<Output, Error>[false, 0])]
     Needed(usize),
 
     // `Error(err)`: Some other error occurred.
-    #[variant((Error) -> SResult<Output, Error>[false])]
+    #[variant((Error) -> SResult<Output, Error>[false, 0])]
     Error(Error),
 }
 
 impl<Output, Error> SResult<Output, Error> {
-    #[flux_rs::sig(fn(&Self[@b]) -> bool[b])]
+    #[flux_rs::sig(fn(&Self[@b, @_off]) -> bool[b])]
     pub fn is_done(&self) -> bool {
         match *self {
             SResult::Done(_, _) => true,
@@ -44,7 +44,7 @@ impl<Output, Error> SResult<Output, Error> {
         }
     }
 
-    #[flux_rs::sig(fn(Self[@b]) -> Option<(usize, Output)>[b])]
+    #[flux_rs::sig(fn(Self[@b, @off]) -> Option<(usize[off], Output)>[b])]
     pub fn done(self) -> Option<(usize, Output)> {
         match self {
             SResult::Done(offset, out) => Some((offset, out)),
@@ -242,14 +242,14 @@ macro_rules! dec_consume {
     } };
 }
 
-#[flux_rs::sig(fn(&mut [u8][@n], u8) -> SResult[n >= 1])]
+#[flux_rs::sig(fn(&mut [u8][@n], u8) -> SResult{r: (r.is_done <=> n >= 1) && (r.is_done => r.offset == 1)})]
 pub fn encode_u8(buf: &mut [u8], b: u8) -> SResult {
     stream_len_cond!(buf, 1);
     buf[0] = b;
     stream_done!(1);
 }
 
-#[flux_rs::sig(fn(&mut [u8][@n], u16) -> SResult[n >= 2])]
+#[flux_rs::sig(fn(&mut [u8][@n], u16) -> SResult{r: (r.is_done <=> n >= 2) && (r.is_done => r.offset == 2)})]
 pub fn encode_u16(buf: &mut [u8], b: u16) -> SResult {
     stream_len_cond!(buf, 2);
     buf[0] = (b >> 8) as u8;
@@ -257,7 +257,7 @@ pub fn encode_u16(buf: &mut [u8], b: u16) -> SResult {
     stream_done!(2);
 }
 
-#[flux_rs::sig(fn(&mut [u8][@n], u32) -> SResult[n >= 4])]
+#[flux_rs::sig(fn(&mut [u8][@n], u32) -> SResult{r: (r.is_done <=> n >= 4) && (r.is_done => r.offset == 4)})]
 pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_len_cond!(buf, 4);
     buf[0] = (b >> 24) as u8;
@@ -267,7 +267,7 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_done!(4);
 }
 
-#[flux_rs::sig(fn(&mut [u8][@n], &[u8][@m]) -> SResult[n >= m])]
+#[flux_rs::sig(fn(&mut [u8][@n], &[u8][@m]) -> SResult{r: (r.is_done <=> n >= m) && (r.is_done => r.offset == m)})]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
     // Explicit assert is load-bearing: `flux_support`'s `IndexMut::index_mut`
