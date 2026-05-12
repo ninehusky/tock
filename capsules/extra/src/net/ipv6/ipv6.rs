@@ -363,7 +363,7 @@ impl<'a> IPPayload<'a> {
     /// `(u8, u16)` - Returns a tuple of the `ip6_nh` type of the
     /// `transport_header` and the total length of the `IPPayload`
     /// (when serialized)
-    #[flux_rs::trusted(reason = "Bounds at `self.payload[i] = payload[i]` (line 366) needs slice-output refinement (same as `valid_output` experiment branch and `0xa3ba` u8to64_le). Loop bound is `i < payload.len()` (SubSliceMut), and `self.payload` field has its own length — flux can't connect them without slice-output refinement.")]
+    #[flux_rs::trusted(reason = "Two remaining gaps after the SubSliceMut refinement landed: (1) Flux can't discharge the for-loop slice op `self.payload[i] = payload[i]` even with `payload.len() <= self.payload.payload_buf_len` as a precondition — needs further investigation. (2) The match arms appear (unverified) to follow Copy semantics: `mut udp_header` destructured from `Copy` `transport_header` may mutate a copy that doesn't propagate back, so `self.header = transport_header` writes the ORIGINAL `l`, and the struct invariant maintenance there needs a precondition on the input header's `l`. Worth tracing whether this is a real Tock bug or whether something else propagates the length.")]
     pub fn set_payload(
         &mut self,
         transport_header: TransportHeader,
@@ -414,6 +414,10 @@ impl<'a> IPPayload<'a> {
         let payload_length = self.get_payload_length();
         // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
         // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
+        // Explicit assert is load-bearing today: trait-impl extern_specs (Index::index's in_bounds) are silently
+        // dropped across the fluxmeta boundary in consumer crates, so without this Flux wouldn't actually enforce
+        // the slice-op precondition. Drop the assert once the fluxmeta gap is fixed upstream.
+        flux_support::assert(payload_length <= self.payload.len());
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)
     }

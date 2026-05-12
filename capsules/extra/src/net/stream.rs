@@ -270,6 +270,10 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
 #[flux_rs::sig(fn(&mut [u8][@n], &[u8][@m]) -> SResult[n >= m])]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
+    // Explicit assert is load-bearing: trait-impl extern_specs (IndexMut::index_mut
+    // in_bounds) are silently dropped across the fluxmeta boundary. Drop once
+    // upstream gap is fixed.
+    flux_support::assert(bs.len() <= buf.len());
     buf[..bs.len()].copy_from_slice(bs);
     stream_done!(bs.len());
 }
@@ -299,6 +303,7 @@ pub fn decode_u32(buf: &[u8]) -> SResult<u32> {
     let b = (buf[0] as u32) << 24 | (buf[1] as u32) << 16 | (buf[2] as u32) << 8 | (buf[3] as u32);
     stream_done!(4, b);
 }
+
 
 #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
 pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {

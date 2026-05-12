@@ -278,10 +278,16 @@ fn set_frag_hdr(
     } else {
         lowpan_frag::FRAGN_HDR
     };
+    // Right now, the slicing operations aren't getting checked.
+    // So we'll add some asserts while that's getting patched up.
+    flux_support::assert(2 <= hdr.len());
     u16_to_network_slice(dgram_size, &mut hdr[0..2]);
+    flux_support::assert(0 < hdr.len());
     hdr[0] = mask | (hdr[0] & !mask);
+    flux_support::assert(4 <= hdr.len());
     u16_to_network_slice(dgram_tag, &mut hdr[2..4]);
     if !is_frag1 {
+        flux_support::assert(4 < hdr.len());
         hdr[4] = (dgram_offset / 8) as u8;
     }
 }
