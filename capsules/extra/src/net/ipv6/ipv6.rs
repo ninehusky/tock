@@ -414,9 +414,9 @@ impl<'a> IPPayload<'a> {
         let payload_length = self.get_payload_length();
         // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
         // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
-        // Explicit assert is load-bearing today: trait-impl extern_specs (Index::index's in_bounds) are silently
-        // dropped across the fluxmeta boundary in consumer crates, so without this Flux wouldn't actually enforce
-        // the slice-op precondition. Drop the assert once the fluxmeta gap is fixed upstream.
+        // Explicit assert is load-bearing: `flux_support`'s `Index::index` extern_spec puts `in_bounds` in
+        // `#[no_panic_if]` (opt-in per call-site), not in the sig's `requires`. Since this function isn't
+        // marked `#[flux_rs::no_panic]`, the slice-op bounds check wouldn't fire without this explicit assert.
         flux_support::assert(payload_length <= self.payload.len());
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)

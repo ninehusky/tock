@@ -270,9 +270,10 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
 #[flux_rs::sig(fn(&mut [u8][@n], &[u8][@m]) -> SResult[n >= m])]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
-    // Explicit assert is load-bearing: trait-impl extern_specs (IndexMut::index_mut
-    // in_bounds) are silently dropped across the fluxmeta boundary. Drop once
-    // upstream gap is fixed.
+    // Explicit assert is load-bearing: `flux_support`'s `IndexMut::index_mut`
+    // extern_spec puts `in_bounds` in `#[no_panic_if]` (opt-in per call-site),
+    // not in the sig's `requires`. Without `#[flux_rs::no_panic]` on this fn,
+    // the slice-op bounds check wouldn't fire without this explicit assert.
     flux_support::assert(bs.len() <= buf.len());
     buf[..bs.len()].copy_from_slice(bs);
     stream_done!(bs.len());
