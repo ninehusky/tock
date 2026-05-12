@@ -267,7 +267,6 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_done!(4);
 }
 
-#[flux_rs::trusted(reason = "missing spec: copy_from_slice. Sig captures the Done-iff-sufficient-buffer relationship that callers rely on (same shape as the verified `encode_u8`/`u16`/`u32`).")]
 #[flux_rs::sig(fn(&mut [u8][@n], &[u8][@m]) -> SResult[n >= m])]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());

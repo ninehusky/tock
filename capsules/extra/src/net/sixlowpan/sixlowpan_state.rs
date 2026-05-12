@@ -264,7 +264,6 @@ pub mod lowpan_frag {
     pub const FRAGN_HDR_SIZE: usize = 5;
 }
 
-#[flux_rs::trusted(reason = "Body has `&mut hdr[0..2]` and `&mut hdr[2..4]` sub-slices passed to `u16_to_network_slice` (precondition `n >= 2`); requires `valid_output` slice-output extern-spec gap to discharge. Sig captures local proof for the targeted hdr[4] panic (panic_sites row 0xba58) — provable from `hdr.len() >= 5`.")]
 #[flux_rs::sig(fn(dgram_size: u16, dgram_tag: u16, dgram_offset: usize, hdr: &mut [u8]{n: n >= 5}, is_frag1: bool))]
 fn set_frag_hdr(
     dgram_size: u16,
@@ -287,7 +286,7 @@ fn set_frag_hdr(
     }
 }
 
-#[flux_rs::trusted(reason = "Cascade: needs hdr.len() >= 5 precondition; bounds on hdr[0]/hdr[4] + the [0..2]/[2..4] sub-slices into network_slice_to_u16. Local proof obligation similar to set_frag_hdr's sig but caller-side discharge unknown.")]
+#[flux_rs::trusted(reason = "Body verifies with `output_pred`/`in_bounds` once caller(s) can supply `packet.len() >= 5`. Until `receive_frame` and its callers are refined with a `packet.len() >= 5` precondition, this stays trusted to avoid forcing a workspace-wide cascade.")]
 fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     let is_frag1 = match hdr[0] & lowpan_frag::FRAGN_HDR {
         lowpan_frag::FRAG1_HDR => true,
@@ -300,7 +299,7 @@ fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     (is_frag1, dgram_size, dgram_tag, (dgram_offset as usize) * 8)
 }
 
-#[flux_rs::trusted(reason = "Cascade: needs packet.len() >= 1 precondition for packet[0].")]
+#[flux_rs::trusted(reason = "Body verifies with `in_bounds` once caller(s) supply `packet.len() >= 1`. Stays trusted until `receive_frame`'s caller chain carries that precondition.")]
 fn is_fragment(packet: &[u8]) -> bool {
     let mask = packet[0] & lowpan_frag::FRAGN_HDR;
     (mask == lowpan_frag::FRAGN_HDR) || (mask == lowpan_frag::FRAG1_HDR)

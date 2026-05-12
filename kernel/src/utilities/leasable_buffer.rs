@@ -366,6 +366,7 @@ impl<'a, T, I> IndexMut<I> for SubSliceMut<'a, T>
 where
     I: SliceIndex<[T]>,
 {
+    #[flux_rs::trusted(reason = "Pending SubSliceMut refinement: this impl chains two refined index ops and we don't yet expose SubSliceMut's active-range length to Flux, so the output_pred postcondition can't be discharged. Body is a one-liner that delegates to the inner slice's IndexMut.")]
     fn index_mut(&mut self, idx: I) -> &mut Self::Output {
         &mut self.internal[self.active_range.start..self.active_range.end][idx]
     }
