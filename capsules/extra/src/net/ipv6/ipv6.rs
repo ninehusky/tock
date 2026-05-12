@@ -329,10 +329,12 @@ pub enum TransportHeader {
 
 /// The `IPPayload` struct contains a `TransportHeader` and a mutable buffer
 /// (the payload).
-#[flux_rs::refined_by(kind: int)]
+#[flux_rs::refined_by(kind: int, hdr_len: int, payload_buf_len: int)]
+#[flux_rs::invariant(hdr_len >= 8 => hdr_len - 8 <= payload_buf_len)]
 pub struct IPPayload<'a> {
-    #[field(TransportHeader[kind])]
+    #[field(TransportHeader[kind, hdr_len])]
     pub header: TransportHeader,
+    #[field(&mut [u8][payload_buf_len])]
     pub payload: &'a mut [u8],
 }
 
@@ -343,6 +345,7 @@ impl<'a> IPPayload<'a> {
     ///
     /// `header` - A `TransportHeader` for the `IPPayload`
     /// `payload` - A reference to a mutable buffer for the raw payload
+    #[flux_rs::sig(fn(TransportHeader[@k, @l], &mut [u8][@p]) -> IPPayload[k, l, p] requires l >= 8 => l - 8 <= p)]
     pub fn new(header: TransportHeader, payload: &'a mut [u8]) -> IPPayload<'a> {
         IPPayload { header, payload }
     }
@@ -397,7 +400,7 @@ impl<'a> IPPayload<'a> {
     ///
     /// `SResult<usize>` - The final offset into the buffer `buf` is returned
     /// wrapped in an SResult
-    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && n >= 8 + offset)]
+    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 8 + offset)]
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let (offset, _) = match self.header {
             TransportHeader::UDP(udp_header) => udp_header.encode(buf, offset).done().unwrap(),
@@ -411,6 +414,7 @@ impl<'a> IPPayload<'a> {
         stream_done!(offset, offset)
     }
 
+    #[flux_rs::sig(fn(&Self[@p]) -> usize[p.hdr_len - 8] requires p.kind != 1 && p.hdr_len >= 8)]
     fn get_payload_length(&self) -> usize {
         match self.header {
             TransportHeader::UDP(udp_header) => {
@@ -428,10 +432,10 @@ impl<'a> IPPayload<'a> {
 
 /// This struct defines the `IP6Packet` format, and contains an `IP6Header`
 /// and an `IPPayload`.
-#[flux_rs::refined_by(kind: int)]
+#[flux_rs::refined_by(kind: int, hdr_len: int, payload_buf_len: int)]
 pub struct IP6Packet<'a> {
     pub header: IP6Header,
-    #[field(IPPayload[kind])]
+    #[field(IPPayload[kind, hdr_len, payload_buf_len])]
     pub payload: IPPayload<'a>,
 }
 
@@ -531,7 +535,7 @@ impl<'a> IP6Packet<'a> {
 
     // TODO: Do we need a decode equivalent? I don't think so, but we might
 
-    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n]) -> SResult<usize> requires p.kind != 1 && n >= 48)]
+    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n]) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 48)]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
         let ip6_header = self.header;
 
