@@ -178,11 +178,12 @@ use flux_support::*;
 /// A leasable buffer can be used to pass a section of a larger mutable buffer
 /// but still get the entire buffer back in a callback.
 #[derive(Debug, PartialEq)]
-// #[flux_rs::refined_by(lo: int, hi: int, len: int)]
+#[flux_rs::refined_by(lo: int, hi: int, len: int)]
+#[flux_rs::invariant(lo <= hi && hi <= len)]
 pub struct SubSliceMut<'a, T> {
-    // #[field(&mut [T][len])]
+    #[field(&mut [T][len])]
     internal: &'a mut [T],
-    // #[field(FluxRange[lo, hi])]
+    #[field(FluxRange[lo, hi])]
     active_range: FluxRange,
 }
 
@@ -250,6 +251,7 @@ where
 
 impl<'a, T> SubSliceMut<'a, T> {
     /// Create a SubSlice from a passed reference to a raw buffer.
+    #[flux_rs::sig(fn(&mut [T][@n]) -> SubSliceMut<T>[0, n, n])]
     pub fn new(buffer: &'a mut [T]) -> Self {
         let len = buffer.len();
         SubSliceMut {
@@ -258,6 +260,7 @@ impl<'a, T> SubSliceMut<'a, T> {
         }
     }
 
+    #[flux_rs::sig(fn(&Self[@s]) -> &[T][s.hi - s.lo])]
     fn active_slice(&self) -> &[T] {
         &self.internal[self.active_range.start..self.active_range.end]
     }
@@ -286,6 +289,7 @@ impl<'a, T> SubSliceMut<'a, T> {
     }
 
     /// Returns the length of the currently accessible portion of the SubSlice.
+    #[flux_rs::sig(fn(&Self[@s]) -> usize[s.hi - s.lo])]
     pub fn len(&self) -> usize {
         self.active_slice().len()
     }
@@ -326,6 +330,7 @@ impl<'a, T> SubSliceMut<'a, T> {
     /// s.slice(0..250);
     /// network.send(s);
     /// ```
+    #[flux_rs::trusted(reason = "Generic over `RangeBounds<usize>`, so the new (start, end) can't be statically bounded without refining the RangeBounds trait itself. Body re-establishes the SubSliceMut invariant at runtime via wrapping/saturating math (any out-of-bounds caller will hit the underlying slice's bounds checks later, which Flux still tracks).")]
     #[flux_rs::spec(fn(self: &mut Self, range: R) ensures self: Self)]
     pub fn slice<R: RangeBounds<usize>>(&mut self, range: R) {
         let start = match range.start_bound() {
