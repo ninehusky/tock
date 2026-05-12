@@ -403,6 +403,8 @@ impl<'a> IPPayload<'a> {
     #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 8 + offset)]
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let (offset, _) = match self.header {
+            // The `unwrap` is safe because we require that `buf >= 8 + offset`, which is the
+            // exact condition under which `.encode()` returns a `Done`.
             TransportHeader::UDP(udp_header) => udp_header.encode(buf, offset).done().unwrap(),
             TransportHeader::ICMP(icmp_header) => icmp_header.encode(buf, offset).done().unwrap(),
             _ => {
@@ -410,6 +412,8 @@ impl<'a> IPPayload<'a> {
             }
         };
         let payload_length = self.get_payload_length();
+        // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
+        // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)
     }
