@@ -27,6 +27,7 @@ include = [
     "src/net/stream.rs",
     "src/sip_hash.rs",
     "src/net/ipv6/ipv6.rs",
+    "src/net/sixlowpan/sixlowpan_state.rs",
 ]
 
 [lints]

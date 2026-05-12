@@ -264,6 +264,8 @@ pub mod lowpan_frag {
     pub const FRAGN_HDR_SIZE: usize = 5;
 }
 
+#[flux_rs::trusted(reason = "Body has `&mut hdr[0..2]` and `&mut hdr[2..4]` sub-slices passed to `u16_to_network_slice` (precondition `n >= 2`); requires `valid_output` slice-output extern-spec gap to discharge. Sig captures local proof for the targeted hdr[4] panic (panic_sites row 0xba58) — provable from `hdr.len() >= 5`.")]
+#[flux_rs::sig(fn(dgram_size: u16, dgram_tag: u16, dgram_offset: usize, hdr: &mut [u8]{n: n >= 5}, is_frag1: bool))]
 fn set_frag_hdr(
     dgram_size: u16,
     dgram_tag: u16,
@@ -271,6 +273,7 @@ fn set_frag_hdr(
     hdr: &mut [u8],
     is_frag1: bool,
 ) {
+    flux_support::assert(hdr.len() >= 5);
     let mask = if is_frag1 {
         lowpan_frag::FRAG1_HDR
     } else {
@@ -284,6 +287,7 @@ fn set_frag_hdr(
     }
 }
 
+#[flux_rs::trusted(reason = "Cascade: needs hdr.len() >= 5 precondition; bounds on hdr[0]/hdr[4] + the [0..2]/[2..4] sub-slices into network_slice_to_u16. Local proof obligation similar to set_frag_hdr's sig but caller-side discharge unknown.")]
 fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     let is_frag1 = match hdr[0] & lowpan_frag::FRAGN_HDR {
         lowpan_frag::FRAG1_HDR => true,
@@ -296,6 +300,7 @@ fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     (is_frag1, dgram_size, dgram_tag, (dgram_offset as usize) * 8)
 }
 
+#[flux_rs::trusted(reason = "Cascade: needs packet.len() >= 1 precondition for packet[0].")]
 fn is_fragment(packet: &[u8]) -> bool {
     let mask = packet[0] & lowpan_frag::FRAGN_HDR;
     (mask == lowpan_frag::FRAGN_HDR) || (mask == lowpan_frag::FRAG1_HDR)
@@ -529,6 +534,7 @@ impl<'a> TxState<'a> {
         Ok(frame)
     }
 
+    #[flux_rs::trusted(reason = "IP6Packet refinement (kind != 1) + slice-output gap on `packet[written..written + remaining]`")]
     fn prepare_next_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -564,6 +570,7 @@ impl<'a> TxState<'a> {
 
     // NOTE: This function will not work for headers that span past the first
     // frame.
+    #[flux_rs::trusted(reason = "IP6Packet refinement (kind != 1) for `get_total_hdr_size`/`encode` calls")]
     fn write_additional_headers<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -589,6 +596,7 @@ impl<'a> TxState<'a> {
         (payload_len, dgram_offset)
     }
 
+    #[flux_rs::trusted(reason = "cascade from set_frag_hdr precondition `hdr.len() >= 5`")]
     fn write_frag_hdr(&self, frame: &mut Frame, first_frag: bool) -> usize {
         if first_frag {
             let mut frag_header = [0_u8; lowpan_frag::FRAG1_HDR_SIZE];
@@ -716,6 +724,7 @@ impl<'a> RxState<'a> {
     // This function assumes that the payload is a slice starting from the
     // actual payload (no 802.15.4 headers, no fragmentation headers), and
     // returns true if the packet is completely reassembled.
+    #[flux_rs::trusted(reason = "slice-output gap on `packet[written..written + remaining]` and `packet[dgram_offset..]`")]
     fn receive_next_frame(
         &self,
         payload: &[u8],
@@ -916,6 +925,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         }
     }
 
+    #[flux_rs::trusted(reason = "slice-output gap on `packet[written..written + remaining]`")]
     fn receive_single_packet(
         &self,
         payload: &[u8],
