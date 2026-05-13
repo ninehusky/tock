@@ -228,16 +228,28 @@ impl FrameInfo {
     }
 }
 
+// Helper extracted from `get_ccm_nonce`'s closure so we can give it a Flux sig.
+// The CCM nonce layout is fixed: 8-byte device_addr + 4-byte frame_counter +
+// 1-byte level = 13 bytes total. With buf.len() >= 13, every `enc_consume!`
+// step returns Done and the closure returns Done.
+#[flux_rs::trusted(reason = "Body uses `encode_bytes(buf, &device_addr[..])` which works in principle, but the chain of `enc_consume!` macros + the `[u8; N] -> &[u8]` coercion drop length info similar to IP6Header::encode's gap. Sig captures the Done-iff-buf-fits invariant; the panic site at the call site is locally proven via this sig.")]
+#[flux_rs::sig(fn(buf: &mut [u8][@n], _, _, _) -> SResult{r: (r.is_done <=> n >= 13) && (r.is_done => r.offset == 13)})]
+fn encode_ccm_nonce_buf(
+    buf: &mut [u8],
+    device_addr: &[u8; 8],
+    frame_counter: u32,
+    level: SecurityLevel,
+) -> SResult {
+    let off = enc_consume!(buf; encode_bytes, &device_addr[..]);
+    let off = enc_consume!(buf, off; encode_u32, frame_counter);
+    let off = enc_consume!(buf, off; encode_u8, level as u8);
+    stream_done!(off);
+}
+
 /// Generate a 15.4 CCM nonce from the device address, frame counter, and SecurityLevel
 pub fn get_ccm_nonce(device_addr: &[u8; 8], frame_counter: u32, level: SecurityLevel) -> [u8; 13] {
     let mut nonce = [0u8; 13];
-    let encode_ccm_nonce = |buf: &mut [u8]| {
-        let off = enc_consume!(buf; encode_bytes, device_addr.as_ref());
-        let off = enc_consume!(buf, off; encode_u32, frame_counter);
-        let off = enc_consume!(buf, off; encode_u8, level as u8);
-        stream_done!(off);
-    };
-    match encode_ccm_nonce(&mut nonce).done() {
+    match encode_ccm_nonce_buf(&mut nonce, device_addr, frame_counter, level).done() {
         None => {
             // This should not be possible
             panic!("Failed to produce ccm nonce");
