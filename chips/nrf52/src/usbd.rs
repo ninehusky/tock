@@ -2188,6 +2188,7 @@ fn inter_endepout(ep: usize) -> Field<u32, Interrupt::Register> {
 }
 
 // Debugging functions.
+#[flux_rs::sig(fn(packet: &[VolatileCell<u8>][@p], packet_hex: &mut [u8][@h]) requires 2 * p <= h)]
 fn packet_to_hex(packet: &[VolatileCell<u8>], packet_hex: &mut [u8]) {
     let hex_char = |x: u8| {
         if x < 10 {
@@ -2197,10 +2198,15 @@ fn packet_to_hex(packet: &[VolatileCell<u8>], packet_hex: &mut [u8]) {
         }
     };
 
-    for (i, x) in packet.iter().enumerate() {
-        let x = x.get();
+    // While-loop instead of `for (i, x) in packet.iter().enumerate()` so Flux
+    // can bound `i` against `packet.len()` without an Iterator extern_spec
+    // (see feedback_iterator_extern_spec_conflicts.md).
+    let mut i = 0;
+    while i < packet.len() {
+        let x = packet[i].get();
         packet_hex[2 * i] = hex_char(x >> 4);
         packet_hex[2 * i + 1] = hex_char(x & 0x0f);
+        i += 1;
     }
 }
 

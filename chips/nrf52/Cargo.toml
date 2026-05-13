@@ -17,6 +17,7 @@ include = [
     "def:ctrl_state",
     "def:bulk_state",
     "def:start_dma_in",
+    "def:packet_to_hex",
 ]
 
 [dependencies]
