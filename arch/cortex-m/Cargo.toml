@@ -13,6 +13,8 @@ enabled = true
 check_overflow = "lazy"
 include = [
     "def:get_remaining_us",
+    "def:write_usize_to_u8_slice",
+    "def:usize_byte_range",
 ]
 
 [dependencies]

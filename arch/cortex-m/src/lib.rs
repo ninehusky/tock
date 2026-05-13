@@ -26,7 +26,6 @@ pub mod nvic;
 pub mod scb;
 #[flux_rs::ignore]
 pub mod support;
-#[flux_rs::ignore]
 pub mod syscall;
 pub mod systick;
 
