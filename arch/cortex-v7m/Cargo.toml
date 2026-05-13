@@ -8,8 +8,16 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [
+    "def:hard_fault_handler_arm_v7m_kernel",
+]
+
 [dependencies]
 kernel = { path = "../../kernel" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
 
 [lints]
