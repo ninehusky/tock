@@ -338,6 +338,15 @@ pub struct IPPayload<'a> {
     pub payload: &'a mut [u8],
 }
 
+#[flux_rs::sig(fn(dst: &mut [u8][@n], src: &SubSliceMut<u8>[@p]) requires p.hi - p.lo <= n)]
+fn copy_subslice_into(dst: &mut [u8], src: &SubSliceMut<'_, u8>) {
+    let mut i = 0;
+    while i < src.len() {
+        dst[i] = src[i];
+        i += 1;
+    }
+}
+
 impl<'a> IPPayload<'a> {
     /// This function constructs a new `IPPayload` struct
     ///
@@ -363,15 +372,13 @@ impl<'a> IPPayload<'a> {
     /// `(u8, u16)` - Returns a tuple of the `ip6_nh` type of the
     /// `transport_header` and the total length of the `IPPayload`
     /// (when serialized)
-    #[flux_rs::trusted(reason = "Two remaining gaps after the SubSliceMut refinement landed: (1) Flux can't discharge the for-loop slice op `self.payload[i] = payload[i]` even with `payload.len() <= self.payload.payload_buf_len` as a precondition — needs further investigation. (2) The match arms appear (unverified) to follow Copy semantics: `mut udp_header` destructured from `Copy` `transport_header` may mutate a copy that doesn't propagate back, so `self.header = transport_header` writes the ORIGINAL `l`, and the struct invariant maintenance there needs a precondition on the input header's `l`. Worth tracing whether this is a real Tock bug or whether something else propagates the length.")]
+    #[flux_rs::trusted(reason = "Gap (2): match arms do `udp_header.set_len(length)` on a destructured `mut` binding from a `Copy` enum variant — the mutation is lost — then `self.header = transport_header` writes the ORIGINAL length back. Likely a real Tock bug: the computed `length` returned in the tuple doesn't match the length stored in `self.header`. Maintaining the IPPayload invariant after the assignment would require a precondition on `transport_header.len`, but the bug itself stays. Gap (1) — the bytewise-copy loop's bounds — is now discharged separately in `copy_subslice_into`.")]
     pub fn set_payload(
         &mut self,
         transport_header: TransportHeader,
         payload: &SubSliceMut<'static, u8>,
     ) -> (u8, u16) {
-        for i in 0..payload.len() {
-            self.payload[i] = payload[i];
-        }
+        copy_subslice_into(self.payload, payload);
         match transport_header {
             TransportHeader::UDP(mut udp_header) => {
                 let length = (payload.len() + udp_header.get_hdr_size()) as u16;

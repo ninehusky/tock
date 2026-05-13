@@ -517,6 +517,11 @@ impl<'a> TxState<'a> {
         // Write the 6lowpan header
         if written <= remaining_capacity {
             // TODO: Check success
+            // `sixlowpan_compression::compress` cannot be sigged in Flux today: its
+            // `&dyn ContextStore` parameter ICEs `flux-fhir-analysis/conv/struct_compat`.
+            // The intended surface invariant — `written <= buf.len()` — is asserted here
+            // via `assume` so the slice op verifies locally.
+            flux_support::assume(written <= lowpan_packet.len());
             let _ = frame.append_payload(&lowpan_packet[0..written]);
             remaining_capacity -= written;
         } else {
