@@ -481,6 +481,7 @@ impl<'a> IP6Packet<'a> {
         40 + self.header.get_payload_len()
     }
 
+    #[flux_rs::sig(fn(self: &Self[@p]) -> &[u8][p.payload_buf_len])]
     pub fn get_payload(&self) -> &[u8] {
         self.payload.payload
     }
