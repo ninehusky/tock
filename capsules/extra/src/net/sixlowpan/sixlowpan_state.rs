@@ -424,6 +424,7 @@ impl<'a> TxState<'a> {
     /// `Err(Result<(), ErrorCode>, &'static mut [u8])` - If `Err`, then `Result<(), ErrorCode>`
     /// is the reason for the error, and the return buffer is the (non-consumed)
     /// `frag_buf` passed in as an argument
+    #[flux_rs::trusted(reason = "Takes `radio: &dyn MacDevice` — Flux ICEs on dyn-in-sig (feedback_flux_dyn_sig_ice.md), so we can't express `ip.kind != 1` as a sig precondition here to propagate to `prepare_next_fragment`. Trust this caller-level wrapper instead; the panic-bearing inner functions (`prepare_next_fragment`, etc.) are verified independently.")]
     pub fn next_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -539,12 +540,20 @@ impl<'a> TxState<'a> {
         let (payload_len, consumed) =
             self.write_additional_headers(ip6_packet, &mut frame, consumed, payload_len);
 
+        // Underlying invariant: `payload_len <= ip6_packet.get_payload().len()` —
+        // payload_len is `min(remaining_payload, ...)` after `write_additional_headers`,
+        // and `remaining_payload = get_total_len() - consumed` which is bounded by
+        // `payload_buf_len` semantically (wire-packet length fits the allocated buf).
+        // Proving this requires sigs on `min`, `write_additional_headers` (currently
+        // trusted), and an invariant connecting `get_total_len() - 40 <= payload_buf_len`.
+        // TODO — use `assume` here for now.
+        flux_support::assume(payload_len <= ip6_packet.get_payload().len());
         let _ = frame.append_payload(&ip6_packet.get_payload()[0..payload_len]);
         self.dgram_offset.set(consumed + payload_len);
         Ok(frame)
     }
 
-    #[flux_rs::trusted(reason = "IP6Packet refinement (kind != 1) + slice-output gap on `packet[written..written + remaining]`")]
+    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _) -> _ requires ip.kind != 1)]
     fn prepare_next_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -734,7 +743,7 @@ impl<'a> RxState<'a> {
     // This function assumes that the payload is a slice starting from the
     // actual payload (no 802.15.4 headers, no fragmentation headers), and
     // returns true if the packet is completely reassembled.
-    #[flux_rs::trusted(reason = "slice-output gap on `packet[written..written + remaining]` and `packet[dgram_offset..]`")]
+    #[flux_rs::trusted(reason = "Old `slice-output gap` half is stale (output_pred infra landed). Distinct remaining blockers: (a) for the `payload[..]` panic sites (rows 731/745 are on payload, not packet), need a sig precondition `payload.len() >= payload_len` — blocked by `ctx_store: &dyn ContextStore` (dyn-in-sig ICE). (b) for the `packet[..]` panic sites (not in current buffet), need a TakeCell length invariant on `self.packet`. Independent blockers.")]
     fn receive_next_frame(
         &self,
         payload: &[u8],
@@ -822,8 +831,14 @@ pub struct Sixlowpan<'a, A: time::Alarm<'a>, C: ContextStore> {
     rx_states: List<'a, RxState<'a>>,
 }
 
+#[flux_rs::sig(fn(buf: &[u8][@n], off: usize, len: usize) -> &[u8][len] requires off + len <= n)]
+fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
+    &buf[off..off + len]
+}
+
 // This function is called after receiving a frame
 impl<'a, A: time::Alarm<'a>, C: ContextStore> RxClient for Sixlowpan<'a, A, C> {
+    #[flux_rs::trusted(reason = "TODO: to verify `slice_view`, we need assoc reft on `RxClient::receive`")]
     fn receive<'b>(
         &self,
         buf: &'b [u8],
@@ -840,7 +855,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> RxClient for Sixlowpan<'a, A, C> {
         let dst_mac_addr = header.dst_addr.unwrap_or(MacAddress::Short(0));
 
         let (rx_state, returncode) = self.receive_frame(
-            &buf[data_offset..data_offset + data_len],
+            slice_view(buf, data_offset, data_len),
             data_len,
             src_mac_addr,
             dst_mac_addr,
@@ -907,6 +922,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         }
     }
 
+    #[flux_rs::sig(fn(self: &Self, packet: &[u8][@n], packet_len: usize, src_mac_addr: MacAddress, dst_mac_addr: MacAddress) -> (Option<&RxState>, Result<(), ErrorCode>) requires n >= 5)]
     fn receive_frame(
         &self,
         packet: &[u8],
@@ -915,6 +931,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         dst_mac_addr: MacAddress,
     ) -> (Option<&RxState<'a>>, Result<(), ErrorCode>) {
         if is_fragment(packet) {
+            flux_support::assert(packet.len() >= 5);
             let (is_frag1, dgram_size, dgram_tag, dgram_offset) = get_frag_hdr(&packet[0..5]);
             let offset_to_payload = if is_frag1 {
                 lowpan_frag::FRAG1_HDR_SIZE
@@ -935,7 +952,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         }
     }
 
-    #[flux_rs::trusted(reason = "slice-output gap on `packet[written..written + remaining]`")]
+    #[flux_rs::trusted(reason = "Two panicking rows. (1) is the cell unwrap. (2) is the slice op on `payload`, which needs some sort of assoc reft for `payload` being in bounds.")]
     fn receive_single_packet(
         &self,
         payload: &[u8],
