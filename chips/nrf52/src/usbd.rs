@@ -1877,6 +1877,7 @@ impl<'a> Usbd<'a> {
         ));
     }
 
+    #[flux_rs::trusted(reason = "To prove `slice[..size]` safe, we need to prove that `self.descriptors[endpoint].slice_in.is_some()`, and something about the length of its contents.")]
     fn start_dma_in(&self, endpoint: usize, size: usize) {
         let slice = self.descriptors[endpoint].slice_in.unwrap_or_panic(); // Unwrap fail = No IN slice set for this descriptor
         self.debug_in_packet(size, endpoint);

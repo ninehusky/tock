@@ -16,6 +16,7 @@ include = [
     "def:inter_endepout",
     "def:ctrl_state",
     "def:bulk_state",
+    "def:start_dma_in",
 ]
 
 [dependencies]
