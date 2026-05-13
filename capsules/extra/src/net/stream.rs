@@ -280,11 +280,16 @@ pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
-#[flux_rs::trusted(reason = "missing spec: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `bs.len()`")]
 pub fn encode_bytes_be(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
-    for (i, b) in bs.iter().rev().enumerate() {
-        buf[i] = *b;
+    // While-loop instead of `for (i, b) in bs.iter().rev().enumerate()` so Flux
+    // can bound `i` against `bs.len()` without needing Iterator/Rev/Enumerate
+    // extern_specs (the trait-level spec conflicts with other Iterator impls in
+    // the workspace — see attempt in the iter.rs extern spec).
+    let mut i = 0;
+    while i < bs.len() {
+        buf[i] = bs[bs.len() - 1 - i];
+        i += 1;
     }
     stream_done!(bs.len());
 }
