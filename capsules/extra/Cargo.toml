@@ -34,6 +34,7 @@ include = [
     "def:decompress_iid_link_local",
     "def:decompress_udp_ports",
     "def:decompress_iid_context",
+    "def:decompress_multicast",
     "def:result_to_errorcode",
 ]
 

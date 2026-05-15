@@ -958,6 +958,20 @@ fn decompress_dst(
     Ok(())
 }
 
+#[flux_rs::sig(
+    fn(
+        ip6_header: &mut IP6Header,
+        iphc_header: u8,
+        ctx: &Context,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        // Worst-case buf read is DAC=0 DAM_INLINE (+16); all other arms read
+        // strictly less. `dam_mode = iphc_header & 0x03` exhausts {0,1,2,3} so
+        // the `_ => panic!` arm is mathematically unreachable.
+        requires con + 16 <= buf_len
+        ensures consumed: usize
+)]
 fn decompress_multicast(
     ip6_header: &mut IP6Header,
     iphc_header: u8,
@@ -984,8 +998,16 @@ fn decompress_multicast(
                 ip_addr.0[1] = buf[*consumed];
                 ip_addr.0[2] = buf[*consumed + 1];
                 ip_addr.0[3] = ctx.prefix_len;
-                ip_addr.0[4..4 + prefix_bytes].copy_from_slice(&ctx.prefix[0..prefix_bytes]);
-                ip_addr.0[12..16].copy_from_slice(&buf[*consumed + 2..*consumed + 6]);
+                // FLUX-TODO: see flux-rs#1567.
+                let dst = &mut ip_addr.0[4..4 + prefix_bytes];
+                flux_support::assume(dst.len() == prefix_bytes);
+                flux_support::assume(ctx.prefix.len() == 16);
+                let src = &ctx.prefix[0..prefix_bytes];
+                flux_support::assume(src.len() == prefix_bytes);
+                dst.copy_from_slice(src);
+                let dst = &mut ip_addr.0[12..16];
+                flux_support::assume(dst.len() == 4);
+                dst.copy_from_slice(&buf[*consumed + 2..*consumed + 6]);
                 *consumed += 6;
             }
             _ => {
@@ -1006,7 +1028,10 @@ fn decompress_multicast(
                 ip_addr.0[0] = 0xff;
                 ip_addr.0[1] = buf[*consumed];
                 *consumed += 1;
-                ip_addr.0[11..16].copy_from_slice(&buf[*consumed..*consumed + 5]);
+                // FLUX-TODO: see flux-rs#1567.
+                let dst = &mut ip_addr.0[11..16];
+                flux_support::assume(dst.len() == 5);
+                dst.copy_from_slice(&buf[*consumed..*consumed + 5]);
                 *consumed += 5;
             }
             // DAC = 0, DAM = 10: 32 bits
@@ -1015,7 +1040,10 @@ fn decompress_multicast(
                 ip_addr.0[0] = 0xff;
                 ip_addr.0[1] = buf[*consumed];
                 *consumed += 1;
-                ip_addr.0[13..16].copy_from_slice(&buf[*consumed..*consumed + 3]);
+                // FLUX-TODO: see flux-rs#1567.
+                let dst = &mut ip_addr.0[13..16];
+                flux_support::assume(dst.len() == 3);
+                dst.copy_from_slice(&buf[*consumed..*consumed + 3]);
                 *consumed += 3;
             }
             // DAC = 0, DAM = 11: 8 bits
