@@ -1032,6 +1032,25 @@ fn decompress_multicast(
     Ok(())
 }
 
+#[flux_rs::sig(
+    fn(
+        addr_mode: u8[@am],
+        ip_addr: &mut IPAddr,
+        mac_addr: &MacAddress,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        // SAM_MASK | DAM_MASK == 0x33, so `mode = addr_mode & 0x33` is in
+        // {0x00, 0x11, 0x22, 0x33} for the four well-formed cases; this rules
+        // out the `_ => panic!("Unreachable case")` arm.
+        // Buf preconditions cover the longest read path (INLINE, +16).
+        requires (bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x00)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x11)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x22)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x33))
+              && con + 16 <= buf_len
+        ensures consumed: usize
+)]
 fn decompress_iid_link_local(
     addr_mode: u8,
     ip_addr: &mut IPAddr,
@@ -1051,22 +1070,39 @@ fn decompress_iid_link_local(
         // Link-local prefix (64 bits) + 64 bits carried inline
         iphc::SAM_MODE1 | iphc::DAM_MODE1 => {
             ip_addr.set_unicast_link_local();
-            ip_addr.0[8..16].copy_from_slice(&buf[*consumed..*consumed + 8]);
+            // FLUX-TODO: Flux loses array length through Range indexing on
+            // `[T; N]` (slice→subslice works, array→subslice doesn't). Drop
+            // the `assume`s and the let-bindings once
+            // https://github.com/flux-rs/flux/pull/1567 (or follow-up) lands
+            // in our checkout.
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
         }
         // SAM, DAM = 11: 16 bits
         // Link-local prefix (112 bits) + 0000:00ff:fe00:XXXX
         iphc::SAM_MODE2 | iphc::DAM_MODE2 => {
             ip_addr.set_unicast_link_local();
-            ip_addr.0[11..13].copy_from_slice(&iphc::MAC_BASE[3..5]);
-            ip_addr.0[14..16].copy_from_slice(&buf[*consumed..*consumed + 2]);
+            // FLUX-TODO: see note above re: flux-rs#1567.
+            let dst = &mut ip_addr.0[11..13];
+            flux_support::assume(dst.len() == 2);
+            let src = &iphc::MAC_BASE[3..5];
+            flux_support::assume(src.len() == 2);
+            dst.copy_from_slice(src);
+            let dst = &mut ip_addr.0[14..16];
+            flux_support::assume(dst.len() == 2);
+            dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
         }
         // SAM, DAM = 11: 0 bits
         // Linx-local prefix (64 bits) + IID from outer header (64 bits)
         iphc::SAM_MODE3 | iphc::DAM_MODE3 => {
             ip_addr.set_unicast_link_local();
-            ip_addr.0[8..16].copy_from_slice(&compute_iid(mac_addr));
+            // FLUX-TODO: see note above re: flux-rs#1567.
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            dst.copy_from_slice(&compute_iid(mac_addr));
         }
         _ => panic!("Unreachable case"),
     }
@@ -1151,6 +1187,23 @@ fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, 
 }
 
 // Returns the UDP checksum in host byte-order
+#[flux_rs::sig(
+    fn(
+        udp_nhc: u8,
+        udp_header: &[u8][@header_len],
+        udp_length: u16[@udp_len],
+        ip6_header: &IP6Header,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+        is_fragment: bool,
+    ) -> u16
+        // 1. header_len must be 8 -- see `copy_from_slice` call where first arg has size 8.
+        // 2. `consumed_len + 2 <= buf_len` due to the slicing index in the `else`.
+        // 3. `udp_len >= 8` -- a bubbled-up precondition from `compute_udp_checksum`.
+        // 4. `udp_len + consumed <= buf_len + 8` -- ???
+        requires header_len == 8 && con + 2 <= buf_len && udp_len >= 8 && udp_len + con <= buf_len + 8
+        ensures consumed: usize
+)]
 fn decompress_udp_checksum(
     udp_nhc: u8,
     udp_header: &[u8],
@@ -1178,6 +1231,11 @@ fn decompress_udp_checksum(
             None => 0, //Will be dropped  by IP layer
         }
     } else {
+        // Decorative: anchors the discharge of the original panic site
+        // (0xadc2, slice_order) and the companion slice_end obligation.
+        // Both are implied by the sig precondition `con + 2 <= buf_len`.
+        flux_support::assert(*consumed <= *consumed + 2);
+        flux_support::assert(*consumed + 2 <= buf.len());
         let checksum = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         *consumed += 2;
         checksum

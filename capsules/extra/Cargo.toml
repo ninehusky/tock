@@ -28,6 +28,10 @@ include = [
     "src/sip_hash.rs",
     "src/net/ipv6/ipv6.rs",
     "src/net/sixlowpan/sixlowpan_state.rs",
+    # sixlowpan_compression.rs: per-fn while we work through it; flip to
+    # "src/net/sixlowpan/sixlowpan_compression.rs" once all fns are clean.
+    "def:decompress_udp_checksum",
+    "def:decompress_iid_link_local",
     "def:result_to_errorcode",
 ]
 
