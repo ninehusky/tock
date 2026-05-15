@@ -32,6 +32,7 @@ include = [
     # "src/net/sixlowpan/sixlowpan_compression.rs" once all fns are clean.
     "def:decompress_udp_checksum",
     "def:decompress_iid_link_local",
+    "def:decompress_udp_ports",
     "def:result_to_errorcode",
 ]
 

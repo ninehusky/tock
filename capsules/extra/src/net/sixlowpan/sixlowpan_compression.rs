@@ -1152,6 +1152,17 @@ fn decompress_iid_context(
 }
 
 // Returns the UDP ports in host byte-order
+#[flux_rs::sig(
+    fn(
+        udp_nhc: u8,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> (u16, u16)
+        // Worst-case path (both uncompressed) reads 4 bytes from `*consumed`;
+        // tighter paths only read 1 or 3 bytes, all subsumed by `con + 4 <= buf_len`.
+        requires con + 4 <= buf_len
+        ensures consumed: usize
+)]
 fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, u16) {
     let src_compressed = (udp_nhc & nhc::UDP_SRC_PORT_FLAG) != 0;
     let dst_compressed = (udp_nhc & nhc::UDP_DST_PORT_FLAG) != 0;
@@ -1169,17 +1180,27 @@ fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, 
         // Source port is compressed to 8 bits
         src_port = nhc::UDP_8BIT_PORT | (buf[*consumed] as u16);
         // Destination port is uncompressed
+        // Decorative: anchors a slice_order/slice_end discharge (panic 0xb4e8
+        // routes through this fn's slice ops). Implied by sig `con + 4 <= buf_len`.
+        flux_support::assert(*consumed + 1 <= *consumed + 3);
+        flux_support::assert(*consumed + 3 <= buf.len());
         dst_port = u16::from_be(network_slice_to_u16(&buf[*consumed + 1..*consumed + 3]));
         *consumed += 3;
     } else if dst_compressed {
         // Source port is uncompressed
+        flux_support::assert(*consumed <= *consumed + 2);
+        flux_support::assert(*consumed + 2 <= buf.len());
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         // Destination port is compressed to 8 bits
         dst_port = nhc::UDP_8BIT_PORT | (buf[*consumed + 2] as u16);
         *consumed += 3;
     } else {
         // Both ports are uncompressed
+        flux_support::assert(*consumed <= *consumed + 2);
+        flux_support::assert(*consumed + 2 <= buf.len());
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
+        flux_support::assert(*consumed + 2 <= *consumed + 4);
+        flux_support::assert(*consumed + 4 <= buf.len());
         dst_port = u16::from_be(network_slice_to_u16(&buf[*consumed + 2..*consumed + 4]));
         *consumed += 4;
     }
