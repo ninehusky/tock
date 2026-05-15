@@ -33,6 +33,7 @@ include = [
     "def:decompress_udp_checksum",
     "def:decompress_iid_link_local",
     "def:decompress_udp_ports",
+    "def:decompress_iid_context",
     "def:result_to_errorcode",
 ]
 

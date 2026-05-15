@@ -1109,6 +1109,25 @@ fn decompress_iid_link_local(
     Ok(())
 }
 
+#[flux_rs::sig(
+    fn(
+        addr_mode: u8[@am],
+        ip_addr: &mut IPAddr,
+        mac_addr: &MacAddress,
+        ctx: &Context,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        // Same shape as decompress_iid_link_local: mode = addr_mode & 0x33 must
+        // be in {0x00, 0x11, 0x22, 0x33} to rule out the unreachable arm.
+        // Worst-case buf read is MODE1 (+8); DAM_INLINE and MODE3 do no buf read.
+        requires (bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x00)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x11)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x22)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x33))
+              && con + 8 <= buf_len
+        ensures consumed: usize
+)]
 fn decompress_iid_context(
     addr_mode: u8,
     ip_addr: &mut IPAddr,
@@ -1127,26 +1146,49 @@ fn decompress_iid_context(
         // SAM, DAM = 01: 64 bits
         // Suffix is the 64 bits carried inline
         iphc::SAM_MODE1 | iphc::DAM_MODE1 => {
-            ip_addr.0[8..16].copy_from_slice(&buf[*consumed..*consumed + 8]);
+            // FLUX-TODO: see flux-rs#1567 (array→subslice loses length).
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            // Decorative: anchors a buf slice_end discharge (panic 0xb26c routes
+            // through this fn's slice ops). Implied by sig `con + 8 <= buf_len`.
+            flux_support::assert(*consumed + 8 <= buf.len());
+            dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
         }
         // SAM, DAM = 10: 16 bits
         // Suffix is 0000:00ff:fe00:XXXX
         iphc::SAM_MODE2 | iphc::DAM_MODE2 => {
-            ip_addr.0[8..16].copy_from_slice(&iphc::MAC_BASE);
-            ip_addr.0[14..16].copy_from_slice(&buf[*consumed..*consumed + 2]);
+            // FLUX-TODO: see flux-rs#1567.
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            dst.copy_from_slice(&iphc::MAC_BASE);
+            let dst = &mut ip_addr.0[14..16];
+            flux_support::assume(dst.len() == 2);
+            // Decorative: see note above on MODE1.
+            flux_support::assert(*consumed + 2 <= buf.len());
+            dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
         }
         // SAM, DAM = 11: 0 bits
         // Suffix is the IID computed from the encapsulating header
         iphc::SAM_MODE3 | iphc::DAM_MODE3 => {
             let iid = compute_iid(mac_addr);
-            ip_addr.0[8..16].copy_from_slice(&iid[0..8]);
+            // FLUX-TODO: see flux-rs#1567.
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            let src = &iid[0..8];
+            flux_support::assume(src.len() == 8);
+            dst.copy_from_slice(src);
         }
         _ => panic!("Unreachable case"),
     }
     // The bits covered by the provided context are always used, so we copy
     // the context bits into the address after the non-context bits are set.
+    // FLUX-TODO: `Context` has no Flux refinement yet, so `prefix_len <= 128`
+    // and `prefix.len() == 16` aren't visible here. Assume both at the call
+    // site; promote to a Context invariant when we annotate that type.
+    flux_support::assume(ctx.prefix_len <= 128);
+    flux_support::assume(ctx.prefix.len() == 16);
     ip_addr.set_prefix(&ctx.prefix, ctx.prefix_len);
     Ok(())
 }
