@@ -682,12 +682,17 @@ impl<'a> Radio<'a> {
         self.registers.intenclr.set(0xffffffff);
     }
 
+    #[flux_rs::sig(fn(self: &Self, buf: &mut [u8][@n]) -> &mut [u8] requires n <= 255)]
     fn replace_radio_buffer(&self, buf: &'static mut [u8]) -> &'static mut [u8] {
-        // set payload
-        for (i, c) in buf.as_ref().iter().enumerate() {
+        // set payload (while loop rather than for/enumerate to keep the bound
+        // visible to Flux without a workspace-wide Iterator extern spec).
+        let n = buf.len();
+        let mut i = 0;
+        while i < n {
             unsafe {
-                PAYLOAD[i] = *c;
+                PAYLOAD[i] = buf[i];
             }
+            i += 1;
         }
         buf
     }
