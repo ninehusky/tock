@@ -18,6 +18,7 @@ include = [
     "def:bulk_state",
     "def:start_dma_in",
     "def:packet_to_hex",
+    "def:replace_radio_buffer",
 ]
 
 [dependencies]
