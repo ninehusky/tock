@@ -265,8 +265,9 @@ pub fn compute_ipv6_ph_sum(ip6_header: &IP6Header) -> u32 {
     // sum over src/dest addresses
     let mut i = 0;
     while i < 16 {
-        #[flux::defs{ invariant qualifier ParityIpv6PhSum(i: int) { i % 2 == 0 } }]
-        const _: () = ();
+        flux_rs::defs! {
+            invariant qualifier ParityIpv6PhSum(i: int) { i % 2 == 0 }
+        }
         let msb_src = (ip6_header.src_addr.0[i] as u32) << 8;
         let lsb_src = ip6_header.src_addr.0[i + 1] as u32;
         sum += msb_src + lsb_src;
@@ -292,8 +293,9 @@ pub fn compute_sum(buf: &[u8], len: u16) -> u32 {
 
     let mut i: usize = 0;
     while i < (len as usize) {
-        #[flux::defs{ invariant qualifier ParityComputeSum(i: int) { i % 2 == 0 } }]
-        const _: () = ();
+        flux_rs::defs! {
+            invariant qualifier ParityComputeSum(i: int) { i % 2 == 0 }
+        }
         let msb = (buf[i] as u32) << 8;
         let lsb = buf[i + 1] as u32;
         sum += msb + lsb;
