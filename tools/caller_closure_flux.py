@@ -42,7 +42,7 @@ import argparse
 import json
 import re
 import sys
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from pathlib import Path
 
 
@@ -314,17 +314,45 @@ def flux_status_for_path(def_path: str, span: str, flux_inventory):
 # ---------------------------------------------------------------------------
 
 TRUSTED_ATTR_RE = re.compile(r"#\[flux_rs::trusted(?:_impl)?\b")
+TRUST_REASON_RE = re.compile(r'reason\s*=\s*"((?:[^"\\]|\\.)*)"')
 FLUX_ASSUME_RE = re.compile(r"flux_support::assume\s*\(")
 BARE_ASSUME_RE = re.compile(r"(?:^|[^.\w])assume\s*\(")
 USE_FLUX_ASSUME_RE = re.compile(r"use\s+flux_support::(?:\{[^}]*\b)?assume\b")
 
+# Structured reason prefixes. `caller_audit_skip` is the workflow tag for
+# "stopped the audit balloon here, not a permanent boundary" — see
+# docs/panic_stats/caller_proven_handoff.md §6.
+KNOWN_REASON_TAGS = (
+    "blocked_cell",
+    "blocked_dyn",
+    "blocked_ice",
+    "blocked_reentrancy",
+    "blocked_stdlib",
+    "blocked_hw_trust",
+    "caller_audit_skip",
+)
+
+
+def classify_reason(reason: str) -> str:
+    """Return the structured tag prefix (e.g. `blocked_cell`) from a trust
+    reason string, or `unstructured` if no known prefix matches, or
+    `no_reason` if the reason is empty."""
+    if not reason:
+        return "no_reason"
+    head = reason.split(":", 1)[0].strip()
+    if head in KNOWN_REASON_TAGS:
+        return head
+    return "unstructured"
+
 
 def find_trusted_fns(workspace: Path):
-    """Scan the workspace and return a set of (resolved_file_str, fn_simple_name)
-    pairs that are marked trusted via `#[flux_rs::trusted]` (or `_impl` on the
-    enclosing impl block). Approximate: brace-tracked impl propagation, no full
-    parse, so unusual layouts may be missed."""
-    trusted = set()
+    """Scan the workspace and return a dict mapping
+        (resolved_file_str, fn_simple_name) -> reason_string
+    for every fn marked `#[flux_rs::trusted(reason = ...)]`, or sitting inside
+    a `#[flux_rs::trusted_impl(reason = ...)]` block. Reason is "" when the
+    attribute didn't carry one. Approximate: brace-tracked impl propagation,
+    no full parse."""
+    trusted = {}
     for rs in workspace.rglob("*.rs"):
         if "target" in rs.parts:
             continue
@@ -342,6 +370,8 @@ def find_trusted_fns(workspace: Path):
         while i < n:
             if TRUSTED_ATTR_RE.search(lines[i]):
                 is_impl_attr = "trusted_impl" in lines[i]
+                m_reason = TRUST_REASON_RE.search(lines[i])
+                reason = m_reason.group(1) if m_reason else ""
                 j = i + 1
                 while j < n:
                     s = lines[j].strip()
@@ -355,7 +385,7 @@ def find_trusted_fns(workspace: Path):
                 target = lines[j]
                 m = FN_DECL_RE.match(target)
                 if m and not is_impl_attr:
-                    trusted.add((file_key, m.group(1)))
+                    trusted[(file_key, m.group(1))] = reason
                     i = j + 1
                     continue
                 head = target.split("{", 1)[0]
@@ -378,7 +408,7 @@ def find_trusted_fns(workspace: Path):
                     for k in range(j, end_line + 1):
                         mm = FN_DECL_RE.match(lines[k])
                         if mm:
-                            trusted.add((file_key, mm.group(1)))
+                            trusted[(file_key, mm.group(1))] = reason
                     i = end_line + 1
                     continue
                 i = j + 1
@@ -539,7 +569,13 @@ def apply_strict_rules(row, closure, workspace, forward, trusted_set, assume_map
             rel = src_file
             if src_file.startswith(workspace_resolved + "/"):
                 rel = src_file[len(workspace_resolved) + 1:]
-            trusted_nodes.append({"def_path": node, "file": rel})
+            reason = trusted_set[(src_file, name)]
+            trusted_nodes.append({
+                "def_path": node,
+                "file": rel,
+                "reason": reason,
+                "reason_tag": classify_reason(reason),
+            })
     if trusted_nodes:
         blockers["trusted_nodes"] = trusted_nodes
 
@@ -776,7 +812,10 @@ def write_summary_md(results, edges_by_crate, path):
             L.append("- trusted callers:")
             for t in bl["trusted_nodes"]:
                 short = t["def_path"][:90] + "…" if len(t["def_path"]) > 90 else t["def_path"]
+                tag = t.get("reason_tag", "no_reason")
+                reason = t.get("reason") or "(no reason)"
                 L.append(f"  - `{short}` (in `{t['file']}`)")
+                L.append(f"    - tag: `{tag}` — {reason}")
         if bl.get("caller_assumes"):
             L.append("- caller-site assumes:")
             for ca in bl["caller_assumes"]:
@@ -784,6 +823,52 @@ def write_summary_md(results, edges_by_crate, path):
                 L.append(f"  - `{short}` at `{ca['call_site']}` "
                          f"(assumes at lines {ca['assume_lines']})")
         L.append("")
+    L += [
+        "",
+        "## Trust-marker leverage report",
+        "",
+        "For each `#[flux_rs::trusted(reason = \"<tag>: ...\")]` marker hit during",
+        "audits, this section aggregates by tag and by individual marker. Sort key:",
+        "how many `blocked_trust_boundary` rows would unblock if the marker were",
+        "discharged. Highest-leverage infrastructure work surfaces at the top.",
+        "",
+    ]
+    tag_counter = Counter()
+    marker_rows = defaultdict(set)
+    marker_tag = {}
+    marker_reason = {}
+    for r in results:
+        if r["coverage"] != "blocked_trust_boundary":
+            continue
+        bl = r.get("blockers") or {}
+        for t in bl.get("trusted_nodes", []):
+            tag = t.get("reason_tag", "no_reason")
+            tag_counter[tag] += 1
+            key = (t.get("file", ""), t["def_path"])
+            marker_rows[key].add(r["addr"])
+            marker_tag[key] = tag
+            marker_reason[key] = t.get("reason") or ""
+    if not tag_counter:
+        L.append("_No `blocked_trust_boundary` rows present._")
+    else:
+        L.append("### Rows blocked, grouped by reason tag")
+        L.append("")
+        L.append("| Tag | Blocked rows (count) |")
+        L.append("|---|---:|")
+        for tag, n in sorted(tag_counter.items(), key=lambda kv: -kv[1]):
+            L.append(f"| `{tag}` | {n} |")
+        L += ["", "### Individual markers, sorted by impact", ""]
+        for key, addrs in sorted(marker_rows.items(), key=lambda kv: -len(kv[1])):
+            file_path, def_path = key
+            tag = marker_tag.get(key, "no_reason")
+            reason = marker_reason.get(key, "") or "(no reason)"
+            addr_list = sorted(addrs)
+            shown = ", ".join(f"`{a}`" for a in addr_list[:8])
+            if len(addr_list) > 8:
+                shown += f", … (+{len(addr_list) - 8})"
+            L.append(f"- **`{def_path}`** ({file_path})")
+            L.append(f"  - tag: `{tag}` — {reason}")
+            L.append(f"  - unblocks {len(addr_list)} row(s): {shown}")
     L += [
         "",
         "## Worklist: `partial_no_flux` rows — Flux-coverage gaps to fill",

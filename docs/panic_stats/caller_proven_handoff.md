@@ -224,9 +224,54 @@ row would fail multiple rules: body > trust > caller-assume.
 4. **Run `cargo flux clean && cargo flux --package <crate>`** (per-crate, per
    [[feedback_flux_scoped_runs]]). Make sure no new `error[E0999]` errors are
    introduced by the additional sigs.
-5. **Flip the row's `Status` to `caller proven`** in `panic_sites.md`
-   (this requires extending the status enum and the
-   `tools/panic_stats_md.py` color palette to recognize it — see §9 step 2).
+5. **Flip the row's `Status` to `caller proven`** in `panic_sites.md`.
+
+### When to give up mid-audit (trust + move on)
+
+Sometimes the caller-closure "balloons" — you walk upward and hit a caller
+that's genuinely hard (Cell-state invariant, `&dyn` in sig that ICEs Flux,
+re-entrancy pattern, missing extern spec, etc.). Forcing it through is
+expensive and may cascade into unrelated work. The right move is to mark
+that caller `#[flux_rs::trusted]` and move on — but with a **structured
+breadcrumb** so we can prioritize the unblocking infrastructure later.
+
+**Convention.** The `reason = "..."` argument must start with one of the
+recognized tags below, followed by `:` and a one-line context. Don't write
+unstructured prose reasons — `caller_closure_flux.py` aggregates by tag for
+the leverage report, and prose reasons bucket as `unstructured` (useless
+for prioritization):
+
+| Tag | Meaning |
+|---|---|
+| `blocked_cell` | needs Cell-state invariant (TakeCell/MapCell length, content, occupancy) |
+| `blocked_dyn` | `&dyn Trait` in sig — Flux ICEs (see [[feedback_flux_dyn_sig_ice]]) |
+| `blocked_ice` | Flux internal compiler error — include the ICE location |
+| `blocked_reentrancy` | kernel re-entry pattern (typically `apps.enter` inside callbacks) |
+| `blocked_stdlib` | needs an extern spec for a stdlib item we don't yet model |
+| `blocked_hw_trust` | hardware-entered function (interrupt handler, MMIO read result) — `requires false` would be wrong here |
+| `caller_audit_skip` | "stopped the audit balloon here, not a permanent boundary" — back-reference the panic addr in the message |
+
+**Examples.**
+
+```rust
+#[flux_rs::trusted(reason = "blocked_cell: TakeCell::map closure precondition on payload length")]
+#[flux_rs::trusted(reason = "blocked_ice: flux-infer/src/projections.rs:382")]
+#[flux_rs::trusted(reason = "blocked_dyn: &dyn ContextStore in sig — feedback_flux_dyn_sig_ice")]
+#[flux_rs::trusted(reason = "caller_audit_skip: hit during 0xadbc audit; deferring receive_next_frame verification")]
+```
+
+**Mirror the tag into `panic_sites.md`.** When a row demotes to
+`blocked_trust_boundary`, populate its `Blockers` column with the same tag(s)
+that the trust markers in its closure carry. This way
+`panic_stats_status.png` (the heat map) reflects the *real* infrastructure
+burden — not just the direct row-level blockers — and you can see at a
+glance which infrastructure work would unlock the most rows.
+
+**Reading the leverage report.** `tools/caller_closure_flux.md` has a
+"Trust-marker leverage report" section that ranks every trust marker hit
+by impact (number of `blocked_trust_boundary` rows that would unblock if
+the marker were discharged). Use this to pick infrastructure tasks: fix
+the marker at the top of the list and N rows flip in one move.
 
 ### Cautionary example: row `0xadbc` (decompress, sixlowpan)
 
@@ -325,13 +370,21 @@ Memory entries in `/Users/andrew/.claude/projects/-Users-andrew-research-tock/me
    Each assume is a documented protocol invariant — tightening the sig to
    establish it statically is the unit of work. Start with whichever
    `blocked_body_assume` row has the fewest assumes.
-7. **(Stretch) Replace a fully caller-proven panic with its `_unchecked`
+7. **Read the "Trust-marker leverage report" in `caller_closure_flux.md`.**
+   Pick the highest-impact trust marker (currently
+   `receive_next_frame` — 8 rows would unblock) and either (a) un-trust
+   it by verifying its body under a Flux sig, or (b) retroactively retag
+   its `reason = "..."` with a structured tag so the report can attribute
+   the impact to the right infrastructure task. As audits accumulate
+   `caller_audit_skip` markers, this report becomes the strategic plan:
+   pick the tag with the largest row-count, fix it, watch the batch flip.
+8. **(Stretch) Replace a fully caller-proven panic with its `_unchecked`
    variant.** Pick a row that's been `caller proven` for a while, swap
    `unwrap()` → `unwrap_unchecked()` (or `[i]` → `get_unchecked(i)`),
    rebuild the release binary, and confirm the panic disappears from the
    survey output. This is the payoff of the strict definition — and the
    sanity check that the proof chain is actually load-bearing.
-8. **Investigate the new-flux refinement regressions** at
+9. **Investigate the new-flux refinement regressions** at
    `sixlowpan_state.rs:494` and `framer.rs:252`. Are these real
    tightenings (the OLD flux had unsoundness) or new flux regressions?
 
