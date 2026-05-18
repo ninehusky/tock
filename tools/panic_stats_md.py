@@ -34,14 +34,14 @@ DEFAULT_OUT_DIR = HERE.parent / "docs" / "panic_stats"
 
 # Color palette
 COLORS = {
+    "caller proven":       "#1a6e1a",  # deep green — strongest verification verdict
     "locally proven":      "#2ca02c",  # green
     "blocked_cell":        "#1f77b4",  # blue
     "blocked_reentrancy":  "#ff7f0e",  # orange
     "blocked_stdlib":      "#9467bd",  # purple
     "blocked_dyn":         "#d62728",  # red
-    "blocked_chips":       "#8c564b",  # brown
-    "blocked_arch":        "#e377c2",  # pink
     "blocked_ice":         "#7f7f7f",  # grey
+    "blocked_hw_trust":    "#e377c2",  # pink
     "actionable":          "#17becf",  # cyan — empty blocker, not started
     "other":               "#bcbd22",
 }
@@ -104,7 +104,9 @@ def primary_blocker(b: str):
 
 
 def category(row):
-    """Coarse bucket: locally proven / each blocker tag / actionable / other."""
+    """Coarse bucket: caller proven / locally proven / each blocker tag / actionable / other."""
+    if row["status"] == "caller proven":
+        return "caller proven"
     if row["status"] == "locally proven":
         return "locally proven"
     pb = primary_blocker(row["blockers"])
@@ -144,17 +146,10 @@ def remaining_bucket(row):
 # Plot 1: overall status / blocker distribution
 # ---------------------------------------------------------------------------
 def plot_status(rows, out_path):
+    """All rows, bucketed by category()."""
     cats = Counter(category(r) for r in rows)
-    # Order: proven first, then blockers by count, then actionable/other
-    order = ["locally proven"]
-    blocker_keys = sorted(
-        [k for k in cats if k.startswith("blocked_")],
-        key=lambda k: -cats[k],
-    )
-    order.extend(blocker_keys)
-    if "actionable" in cats: order.append("actionable")
-    if "other" in cats: order.append("other")
-
+    # Order by count, largest at top.
+    order = sorted(cats.keys(), key=lambda k: -cats[k])
     labels = order
     counts = [cats[k] for k in order]
     colors = [COLORS.get(k, "#999") for k in order]
@@ -228,9 +223,8 @@ def plot_files(rows, out_path, top_n=25):
 # Plot 3: of actionable rows, what we're stuck on
 # ---------------------------------------------------------------------------
 def plot_remaining(rows, out_path):
-    """Filtered to unassigned (our work) — Cole's open rows excluded."""
-    actionable = [r for r in rows
-                  if category(r) == "actionable" and r["assignee"] == ""]
+    """Of actionable rows, classify by what their Notes say is needed."""
+    actionable = [r for r in rows if category(r) == "actionable"]
     cats = Counter(remaining_bucket(r) for r in actionable)
     items = sorted(cats.items(), key=lambda kv: -kv[1])
     labels = [k for k, _ in items]

@@ -5,8 +5,8 @@ Generated from `tools/panic_survey.json` (binary `nrf52840dk`, 342 sites). Perma
 Each panic site has a verification status (orthogonal to `Blockers`; ownership lives in `Assignee`):
 - `not started`: no verification work has begun.
 - `locally proven`: the panic site is proven _locally_, i.e., the enclosing function is annotated with some precondition indicating that the panic won't hit. The precondition has not yet been discharged at call sites.
-- `caller-proven`: every transitive caller in the linked binary (`nrf52840dk`) has been checked to ensure the precondition holds, so the panic won't hit in this build.
-- `callee-proven` (a.k.a. `no-panic`): the enclosing function provably cannot panic — no caller obligation needed.
+- `caller proven`: every transitive caller in the linked binary (`nrf52840dk`) has been checked to ensure the precondition holds, so the panic won't hit in this build. Strict definition: no `flux_support::assume(...)` in the panic-bearing fn body, no `#[flux_rs::trusted]` in the closure, no caller-site `assume` discharging the precondition. See `docs/panic_stats/caller_proven_handoff.md` for the audit workflow.
+- `callee proven` (a.k.a. `no-panic`): the enclosing function provably cannot panic — no caller obligation needed.
 
 **Columns:**  `Addr` is the panic-site address in the linked binary. `Flavor` is the panic kind (explicit panic, slice OOB, div by zero, …). `Location` links to the deepest user-code frame (sites that bottom out in libcore are shown unlinked). `Source` is the offending line, when available. `Blockers` are tags from the survey indicating what stops removal today (e.g. `blocked_cell` = needs Cell-state invariant). `Status` is one of the verification states above. Fill in `Assignee` to claim a row.
 
