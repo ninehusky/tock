@@ -35,7 +35,16 @@ include = [
     "def:decompress_udp_ports",
     "def:decompress_iid_context",
     "def:decompress_multicast",
+    "def:decompress_cie",
+    "def:decompress_tf",
+    "def:decompress_nh",
+    "def:decompress_hl",
+    "def:decompress_src",
+    "def:decompress_dst",
+    "def:nhc_to_ip6_nh",
+    "def:decompress_ext_hdr",
     "def:result_to_errorcode",
+    "def:decompress",
 ]
 
 [lints]
