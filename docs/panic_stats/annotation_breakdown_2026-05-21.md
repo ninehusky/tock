@@ -27,19 +27,55 @@ single-addr marker AND in an enclosing multi-addr block). They're
 harmless for the verification check (every annotatable address is
 mapped) but worth a deduping pass later.
 
-## Survey-side counts (against the PAP build with chain-walk patch)
+## Survey-side counts
+
+Two surveys matter:
+
+- **Committed `tools/panic_survey.json`** — generated against the
+  April-21 master ELF. **342 sites total.** This is the number on the
+  historical `panic_sites.md` and the existing bar graphs.
+- **PAP build** (May-21 ELF, including `ninehusky-full-tock-proof`
+  scaffolding) — **355 sites total.** This is what the in-source
+  markers in this session were placed against.
+
+### Committed survey (342 total)
 
 | Bucket | Count |
 |---|---:|
-| Total panic-survey rows | 355 |
-| Pure stdlib helpers (cannot directly annotate) | 14 |
-| Misattributed user-crate monomorphs (depth=0 lives at user-caller) | 8 |
-| No-line attribution (no source line anywhere in the inline chain) | 25 |
-| Annotatable (effective_frame in user code, has source line) | 308 |
+| Pure stdlib helpers (panic plumbing every panic flows through) | 14 |
+| Misattributed user-crate monomorphs (stdlib generic instantiated for user crate) | 8 |
+| No-line attribution (no source line anywhere in inline chain) | 39 |
+| Annotatable (`effective_frame` in user code with a source line) | 281 |
+| **Sum** | **342** |
 
-Note: the committed `tools/panic_survey.json` is older (April-21 build,
-342 sites). The numbers above are from the May-21 PAP build via the
-chain-walk-patched `panic_survey.py` (see commit `bee46b42d`).
+`14 + 8 + 39 + 281 = 342` ✓ — matches `panic_survey.json`'s
+`meta.total_sites`.
+
+### PAP build (355 total — what was annotated)
+
+| Bucket | Count |
+|---|---:|
+| Pure stdlib helpers | 14 |
+| Misattributed user-crate monomorphs | 8 |
+| No-line attribution (post-chain-walk patch) | 25 |
+| Annotatable | 308 |
+| **Sum** | **355** |
+
+`14 + 8 + 25 + 308 = 355` ✓.
+
+### Delta between the two surveys (355 − 342 = 13)
+
+| Source of delta | Δ |
+|---|---:|
+| `master` toolchain drift (April-21 → May-21 master gave 343 instead of 342) | +1 |
+| `ninehusky-full-tock-proof` scaffolding (extern_specs, flux_support extra calls, etc.) over master | +12 |
+| **Total** | **+13** |
+
+The chain-walk patch (commit `bee46b42d` in `tools/panic_survey.py`)
+doesn't change the *total*; it moves rows from the "no-line" bucket to
+the "annotatable" bucket. PAP's annotatable went from 286 (pre-patch)
+to 308 (post-patch); no-line went from 47 to 25. `308 − 286 = 22 ≈
+47 − 25 = 22` ✓.
 
 ## How counts reconcile (user-facing)
 
