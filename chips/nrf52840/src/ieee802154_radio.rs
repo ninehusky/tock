@@ -912,8 +912,9 @@ impl<'a> Radio<'a> {
                                 // and reset radio to receiving.
                                 self.rx_client.map(|client| {
                                     start_task = true;
+                                    // FLUX-TODO addr=0x12b42 line=910 flavor=unwrap_option
+                                    flux_support::assert(false);
                                     client.receive(
-                                        // FLUX-TODO addr=0x12b42 line=910
                                         self.rx_buf.take().unwrap(),
                                         frame_len,
                                         lqi,

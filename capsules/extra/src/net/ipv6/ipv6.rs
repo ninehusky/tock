@@ -493,7 +493,6 @@ impl<'a> IP6Packet<'a> {
     #[flux_rs::sig(fn(self: &Self[@p]) -> &[u8][p.payload_buf_len])]
     pub fn get_payload(&self) -> &[u8] {
         self.payload.payload
-    // FLUX-TODO addr=0xdb52 line=494
     }
 
     #[flux_rs::sig(fn(self: &Self[@p]) -> usize requires p.kind != 1)]
@@ -523,7 +522,6 @@ impl<'a> IP6Packet<'a> {
                     udp_header,
                     udp_header.get_len(),
                     self.payload.payload,
-                // FLUX-TODO addr=0x19d8c line=523
                 );
                 udp_header.set_cksum(cksum);
             }
@@ -561,7 +559,6 @@ impl<'a> IP6Packet<'a> {
         let (next_header, payload_len) = self.payload.set_payload(transport_header, payload);
         self.header.set_next_header(next_header);
         self.header.set_payload_len(payload_len);
-    // FLUX-TODO addr=0xdaf4 line=560
     }
 
     // TODO: Do we need a decode equivalent? I don't think so, but we might

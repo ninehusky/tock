@@ -79,10 +79,11 @@ impl<'a, T: Copy> RingBuffer<'a, T> {
 impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
     #[flux_rs::sig(fn(&RingBuffer<T>[@rb]) -> bool[!empty(rb)]) ]
     fn has_elements(&self) -> bool {
+        // FLUX-TODO line=83 flavor=rem_by_zero addrs=[
+        //     0x7ecc, 0x1064a,
+        // ]
+        flux_support::assert(false);
         self.head != self.tail
-    // FLUX-TODO line=83 addrs=[
-    //     0x7ecc, 0x1064a,
-    // ]
     }
 
     #[flux_rs::sig(fn(&RingBuffer<T>[@rb]) -> bool[full(rb)]) ]
@@ -153,11 +154,8 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
         result
     }
 
-    // FLUX-TODO line=153 addrs=[
-    //     0x10aac, 0x2c26,
-    // ]
     #[flux_rs::sig(
-        fn(self: &strg RingBuffer<T>[@old]) -> Option<T> 
+        fn(self: &strg RingBuffer<T>[@old]) -> Option<T>
             ensures self: RingBuffer<T>{ new: 
                 (empty(old) => (new == old))
                 &&

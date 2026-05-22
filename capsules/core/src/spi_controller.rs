@@ -135,8 +135,9 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
         // TODO verify SPI return value
         let _ = if rlen == 0 {
+            // FLUX-TODO addr=0x15308 line=139 flavor=unwrap_option
+            flux_support::assert(false);
             self.spi_master
-                // FLUX-TODO addr=0x15308 line=139
                 .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
         } else if write_len == 0 {
             let read_len = self
@@ -173,7 +174,6 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                 self.kernel_read.take(),
                 read_len,
             )
-        // FLUX-TODO addr=0x1530e line=175
         } else {
             // FLUX-TODO addr=0x1530e line=175 flavor=unwrap_option
             flux_support::assert(false);

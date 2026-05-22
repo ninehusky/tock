@@ -851,9 +851,10 @@ pub fn decompress(
                 let udp_length_usize: usize = udp_length as usize;
                 let upper: usize = buf.len() + 8;
                 flux_support::assume(udp_length_usize <= upper && consumed <= upper - udp_length_usize);
+                // FLUX-TODO addr=0xd0fa line=853 flavor=slice_end
+                flux_support::assert(false);
                 let udp_checksum = decompress_udp_checksum(
                     nhc_header,
-                    // FLUX-TODO addr=0xd0fa line=853
                     &next_headers[0..8],
                     udp_length,
                     &ip6_header,
@@ -971,7 +972,9 @@ fn decompress_tf(ip6_header: &mut IP6Header, iphc_header: u8, buf: &[u8], consum
     if fl_compressed {
         ip6_header.set_flow_label(0);
     } else {
-        // FLUX-TODO addr=0xd1a6 line=969
+        // FLUX-TODO line=969 flavor=bounds addrs=[
+        //     0xd1a6, 0xd1ae, 0xd1ba,
+        // ]
         flux_support::assert(false);
         let flow = (((buf[*consumed] & 0x0f) as u32) << 16)
             | ((buf[*consumed + 1] as u32) << 8)

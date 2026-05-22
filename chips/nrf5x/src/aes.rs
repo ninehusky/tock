@@ -508,10 +508,11 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             self.crypt();
             None
         } else {
+            // FLUX-TODO addr=0x220a2 line=498 flavor=unwrap_option
+            flux_support::assert(false);
             Some((
                 Err(ErrorCode::INVAL),
                 self.input.take(),
-                // FLUX-TODO addr=0x220a2 line=498
                 self.output.take().unwrap(),
             ))
         }

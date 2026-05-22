@@ -531,7 +531,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                         buf[m_end..m_end + mic_len]
                             .copy_from_slice(&cbuf[tag_off..tag_off + mic_len]);
                         true
-                    // FLUX-TODO addr=0x1d818 line=532
                     } else {
                         // Compare the computed encrypted tag to the received
                         // FLUX-TODO addr=0x1d82a line=534
@@ -582,7 +581,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
 
                     // Compare the computed encrypted tag to the received
                     // encrypted tag
-                    // FLUX-TODO addr=0x1d848 line=571 flavor=slice_order
+                    // FLUX-TODO line=571 flavor=slice_order addrs=[
+                    //     0x1d848, 0x1d868,
+                    // ]
                     flux_support::assert(false);
                     buf[m_off + m_len..m_off + m_len + mic_len]
                         .iter()
@@ -600,7 +601,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                 client.crypt_done(buf, Ok(()), tag_valid);
             });
         });
-    // FLUX-TODO addr=0x132de line=596
     }
 
     #[flux_rs::trusted(reason = "blocked-cell")]
@@ -656,7 +656,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
         if !(a_off <= m_off && m_off + m_len + mic_len <= buf.len()) {
             return Err((ErrorCode::INVAL, buf));
-        // FLUX-TODO addr=0x132ca line=651
         }
 
         self.confidential.set(confidential);

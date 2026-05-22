@@ -632,8 +632,9 @@ impl<'a> Radio<'a> {
                 | nrf5x::constants::RADIO_STATE_TXDISABLE
                 | nrf5x::constants::RADIO_STATE_TX => {
                     self.radio_off();
+                    // FLUX-TODO addr=0x11bae line=636 flavor=unwrap_option
+                    flux_support::assert(false);
                     self.tx_client
-                        // FLUX-TODO addr=0x11bae line=636
                         .map(|client| client.transmit_event(self.buffer.take().unwrap(), result));
                 }
                 nrf5x::constants::RADIO_STATE_RXRU

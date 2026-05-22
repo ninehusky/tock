@@ -528,7 +528,6 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             }
         });
     }
-// FLUX-TODO addr=0x463a line=531
 
     fn setup_mpu(&self) -> MpuConfiguredCapability {
         // FLUX-TODO addr=0x463a line=531 flavor=unwrap_result

@@ -1065,9 +1065,10 @@ impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
 
                         // Copy the entire frame over to userland, preceded by three metadata bytes:
                         // the header length, the data length, and the MIC length.
+                        // FLUX-TODO addr=0x1c154 line=1062 flavor=slice_end
+                        flux_support::assert(false);
                         rbuf[(offset + USER_FRAME_METADATA_SIZE)
                             ..(offset + frame_len + USER_FRAME_METADATA_SIZE)]
-                            // FLUX-TODO addr=0x1c154 line=1062
                             .copy_from_slice(&buf[..frame_len]);
 
                         rbuf[offset].set(data_offset as u8);

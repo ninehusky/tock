@@ -351,7 +351,6 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///    Length usize:
     ///        The number of valid bytes in the buffer. 0 if Buf is None.
     /// The buffers will only be returned on a non async error or on success.
-    // FLUX-TODO addr=0x1881e line=354
     #[flux_rs::trusted(reason = "TODO: hash comes from `self.key.get().unwrap()` (Cell). Need cell-state refinement to discharge `hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF` from get_key/invalidate_key/zeroise_key.")]
     pub fn continue_operation(&self) -> ContinueReturn {
         // FLUX-TODO addr=0x18812 line=356

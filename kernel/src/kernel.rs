@@ -686,7 +686,6 @@ impl Kernel {
                                             ccb.argument3,
                                         );
                                     }
-                                    // FLUX-TODO addr=0x1d92 line=689
                                     (ccb.argument0, ccb.argument1, ccb.argument2)
                                 }
                                 // FLUX-TODO addr=0x1d92 line=689 flavor=explicit_panic

@@ -98,6 +98,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                         break;
                     }
                     // FLUX-TODO addr=0x1dcc line=100 flavor=unwrap_option
+                    flux_support::assert(false);
                     self.processes.push_tail(self.processes.pop_head().unwrap());
                 }
                 None => {
@@ -130,7 +131,6 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         SchedulingDecision::RunProcess((next, Some(timeslice)))
     }
 
-    // FLUX-TODO addr=0x1d7e line=132
     #[flux_rs::trusted_impl(reason = "TODO: we would need to push a refinement up to the `Scheduler` trait to discharge the precondition, which elicits more proofs about callers.")]
     #[flux_rs::sig(fn (&Self, StoppedExecutingReason, execution_time_us: Option<u32>[true]) -> ())]
     fn result(&self, result: StoppedExecutingReason, execution_time_us: Option<u32>) {
@@ -146,7 +146,6 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                 } else {
                     false
                 }
-            // FLUX-TODO addr=0x1e7a line=147
             }
             _ => false,
         };

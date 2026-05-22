@@ -500,8 +500,9 @@ where
                         .get_readwrite_processbuffer(rw_allow::SCAN_BUFFER)
                         .and_then(|scan_buffer| {
                             scan_buffer.mut_enter(|userland| {
+                                // FLUX-TODO addr=0x1e784 line=504 flavor=slice_end
+                                flux_support::assert(false);
                                 userland[0..len as usize]
-                                    // FLUX-TODO addr=0x1e784 line=504
                                     .copy_from_slice_or_err(&buf[0..len as usize])
                                     .is_ok()
                             })

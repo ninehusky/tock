@@ -181,7 +181,6 @@ fn u8to64_le(buf: &[u8], start: usize, len: usize) -> u64 {
     if i + 1 < len {
         out |= (read_le_u16(&buf[start + i..]) as u64) << (i * 8);
         i += 2
-    // FLUX-TODO addr=0xa3aa line=184
     }
     if i < len {
         // FLUX-TODO addr=0xa3aa line=184 flavor=bounds

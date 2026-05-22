@@ -559,7 +559,6 @@ impl<'a> Adc<'a> {
             .result_maxcnt
             .write(RESULT_MAXCNT::MAXCNT.val(count as u32));
     }
-// FLUX-TODO addr=0x11a34 line=562
 
     fn setup_frequency(&self, frequency: u32) {
         // FLUX-TODO addr=0x11a34 line=562 flavor=div_by_zero

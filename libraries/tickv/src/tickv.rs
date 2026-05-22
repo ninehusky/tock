@@ -149,7 +149,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             State::Init(state) => match state {
                 InitState::GetKeyReadRegion(_) => self.get_key(hashed_main_key, &mut buf),
                 _ => Err(ErrorCode::EraseNotReady(0)),
-            // FLUX-TODO addr=0x183cc line=152
             },
             // FLUX-TODO addr=0x183cc line=152 flavor=explicit_panic
             _ => { flux_support::assert(false); unreachable!() },
@@ -439,11 +438,9 @@ flux_support::assert(false);
                             (region as isize + region_offset) as usize
                         }
                     }
-                // FLUX-TODO addr=0x16b3e line=439
                 }
                 State::AppendKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
-                // FLUX-TODO addr=0x16b2a line=442
                 },
                 // FLUX-TODO addr=0x16b3e line=439 flavor=explicit_panic
                 _ => { flux_support::assert(false); unreachable!() },
@@ -940,7 +937,6 @@ flux_support::assert(false);
     ///
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
-    // FLUX-TODO addr=0x187fc line=931
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn zeroise_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
@@ -1021,7 +1017,6 @@ flux_support::assert(false);
                             }
                             None => {
                                 return Err(e);
-                            // FLUX-TODO addr=0x1852c line=1009
                             }
                         }
                     } else {
@@ -1150,7 +1145,6 @@ flux_support::assert(false);
 
     /// Perform a garbage collection on TicKV
     ///
-    // FLUX-TODO addr=0x18536 line=1137
     /// On success the number of bytes freed will be returned.
     /// On error a `ErrorCode` will be returned.
     pub fn garbage_collect(&self) -> Result<usize, ErrorCode> {

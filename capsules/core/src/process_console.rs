@@ -1023,7 +1023,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                     }
                 }
             }
-        // FLUX-TODO addr=0x1b3a6 line=1026
         });
         self.command_buffer.map(|command| {
             // FLUX-TODO addr=0x1b3a6 line=1026 flavor=bounds
@@ -1053,7 +1052,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         self.create_state_buffer(self.writer_state.get());
     }
 
-    // FLUX-TODO addr=0x14058 line=1055
     #[flux_rs::trusted(reason = "blocked_cell: bounds inside MapCell/TakeCell closures require Cell-state invariants")]
     fn write_byte(&self, byte: u8) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
@@ -1200,7 +1198,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         rx_len: usize,
         _rcode: Result<(), ErrorCode>,
         error: uart::Error,
-    // FLUX-TODO addr=0x1a9a2 line=1201
     ) {
         if error == uart::Error::None {
             match rx_len {
@@ -1236,7 +1233,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                             for _ in cursor..index {
                                                 let _ = self.write_byte(SPACE);
                                             }
-// FLUX-TODO addr=0x1a98c line=1234
 
                                             // Clear the displayed command
                                             for _ in 0..index {
@@ -1399,7 +1395,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                             && read_buf[0] < ASCII_LIMIT
                             && !esc_state.has_started()
                             && !esc_state.in_progress()
-                        // FLUX-TODO addr=0x1a9b2 line=1394
                         {
                             // For some reason, sometimes reads return > 127 but no error,
                             // which causes utf-8 decoding failure, so check byte is < 128. -pal

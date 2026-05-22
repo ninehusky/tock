@@ -537,7 +537,6 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
         self.gpiote_registers.intenset.set(1 << channel);
     }
 
-    // FLUX-TODO addr=0x1ba34 line=540
     fn disable_interrupts(&self) {
         if let Some(channel) = self.allocated_channel.get() {
             // FLUX-TODO addr=0x1ba34 line=540 flavor=bounds

@@ -243,11 +243,12 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
         region_number: usize,
         _buf: &mut [u8; PAGE_SIZE],
     ) -> Result<(), tickv::error_codes::ErrorCode> {
+        // FLUX-TODO addr=0x164a8 line=250 flavor=unwrap_option
+        flux_support::assert(false);
         if self
             .flash
             .read_page(
                 self.region_offset + region_number,
-                // FLUX-TODO addr=0x164a8 line=250
                 self.flash_read_buffer.take().unwrap(),
             )
             .is_err()
@@ -348,10 +349,12 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
         match self.next_operation.get() {
             Operation::None | Operation::Init => {}
             Operation::GetKey => {
+                // FLUX-TODO addr=0x18cc2 line=347 flavor=unwrap_option
+                flux_support::assert(false);
+                // FLUX-TODO addr=0x18cd4 line=348 flavor=unwrap_option
+                flux_support::assert(false);
                 match self.get_value(
-                    // FLUX-TODO addr=0x18cc2 line=347
                     self.key_buffer.take().unwrap(),
-                    // FLUX-TODO addr=0x18cd4 line=348
                     self.value_buffer.take().unwrap(),
                 ) {
                     Err((key, value, error)) => {
@@ -363,10 +366,12 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
                 }
             }
             Operation::AppendKey => {
+                // FLUX-TODO addr=0x18cbc line=360 flavor=unwrap_option
+                flux_support::assert(false);
+                // FLUX-TODO addr=0x18cce line=361 flavor=unwrap_option
+                flux_support::assert(false);
                 match self.append_key(
-                    // FLUX-TODO addr=0x18cbc line=360
                     self.key_buffer.take().unwrap(),
-                    // FLUX-TODO addr=0x18cce line=361
                     self.value_buffer.take().unwrap(),
                 ) {
                     Err((key, value, error)) => {
@@ -464,11 +469,13 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         // call the callback with the retrieved value.
                         self.operation.set(Operation::None);
                         self.client.map(|cb| {
+                            // FLUX-TODO addr=0x1d214 line=454 flavor=unwrap_option
+                            flux_support::assert(false);
+                            // FLUX-TODO addr=0x1d22c line=455 flavor=unwrap_option
+                            flux_support::assert(false);
                             cb.get_value_complete(
                                 Ok(()),
-                                // FLUX-TODO addr=0x1d214 line=454
                                 self.key_buffer.take().unwrap(),
-                                // FLUX-TODO addr=0x1d22c line=455
                                 self.value_buffer.take().unwrap(),
                             );
                         });
@@ -481,11 +488,13 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         // that would fit.
                         self.operation.set(Operation::None);
                         self.client.map(|cb| {
+                            // FLUX-TODO addr=0x1d1fc line=469 flavor=unwrap_option
+                            flux_support::assert(false);
+                            // FLUX-TODO addr=0x1d21a line=470 flavor=unwrap_option
+                            flux_support::assert(false);
                             cb.get_value_complete(
                                 Err(ErrorCode::SIZE),
-                                // FLUX-TODO addr=0x1d1fc line=469
                                 self.key_buffer.take().unwrap(),
-                                // FLUX-TODO addr=0x1d21a line=470
                                 self.value_buffer.take().unwrap(),
                             );
                         });
@@ -504,11 +513,13 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         };
                         self.operation.set(Operation::None);
                         self.client.map(|cb| {
+                            // FLUX-TODO addr=0x1d202 line=490 flavor=unwrap_option
+                            flux_support::assert(false);
+                            // FLUX-TODO addr=0x1d220 line=491 flavor=unwrap_option
+                            flux_support::assert(false);
                             cb.get_value_complete(
                                 Err(get_tock_err),
-                                // FLUX-TODO addr=0x1d202 line=490
                                 self.key_buffer.take().unwrap(),
-                                // FLUX-TODO addr=0x1d220 line=491
                                 self.value_buffer.take().unwrap(),
                             );
                         });
@@ -539,11 +550,13 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                             _ => ErrorCode::FAIL,
                         };
                         self.client.map(|cb| {
+                            // FLUX-TODO addr=0x1d20e line=523 flavor=unwrap_option
+                            flux_support::assert(false);
+                            // FLUX-TODO addr=0x1d226 line=524 flavor=unwrap_option
+                            flux_support::assert(false);
                             cb.append_key_complete(
                                 Err(tock_hil_error),
-                                // FLUX-TODO addr=0x1d20e line=523
                                 self.key_buffer.take().unwrap(),
-                                // FLUX-TODO addr=0x1d226 line=524
                                 self.value_buffer.take().unwrap(),
                             );
                         });
@@ -570,9 +583,10 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         _ => ErrorCode::FAIL,
                     };
                     self.client.map(|cb| {
+                        // FLUX-TODO addr=0x1d208 line=552 flavor=unwrap_option
+                        flux_support::assert(false);
                         cb.invalidate_key_complete(
                             Err(tock_hil_error),
-                            // FLUX-TODO addr=0x1d208 line=552
                             self.key_buffer.take().unwrap(),
                         );
                     });
@@ -607,11 +621,13 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
             Operation::AppendKey => {
                 self.operation.set(Operation::None);
                 self.client.map(|cb| {
+                    // FLUX-TODO addr=0x1d308 line=587 flavor=unwrap_option
+                    flux_support::assert(false);
+                    // FLUX-TODO addr=0x1d314 line=588 flavor=unwrap_option
+                    flux_support::assert(false);
                     cb.append_key_complete(
                         Ok(()),
-                        // FLUX-TODO addr=0x1d308 line=587
                         self.key_buffer.take().unwrap(),
-                        // FLUX-TODO addr=0x1d314 line=588
                         self.value_buffer.take().unwrap(),
                     );
                 });

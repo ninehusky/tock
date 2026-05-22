@@ -1007,6 +1007,10 @@ impl<'a> Usbd<'a> {
     fn set_pending_dma(&self) {
         debug_packets!("set_pending_dma()");
         if self.dma_pending.get() {
+            // FLUX-TODO line=1010 flavor=explicit_panic addrs=[
+            //     0x1174e, 0x11864,
+            // ]
+            flux_support::assert(false);
             internal_err!("Pending DMA already in flight");
         }
         self.apply_errata_199(0x82);

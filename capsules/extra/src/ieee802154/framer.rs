@@ -726,8 +726,9 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
                     // Hence, we can only use the unsecured length from the
                     // frame info, but not the offsets.
                     let frame_len = info.unsecured_length();
+                    // FLUX-TODO addr=0x18b70 line=719 flavor=slice_end
+                    flux_support::assert(false);
                     if let Some((data_offset, (header, _))) = Header::decode(
-                        // FLUX-TODO addr=0x18b70 line=719
                         &buf[radio::PSDU_OFFSET..(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)],
                         true,
                     )

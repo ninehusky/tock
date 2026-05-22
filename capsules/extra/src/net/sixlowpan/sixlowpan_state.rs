@@ -582,8 +582,9 @@ impl<'a> TxState<'a> {
 
         if payload_len > 0 {
             let payload_offset = dgram_offset - ip6_packet.get_total_hdr_size();
+            // FLUX-TODO addr=0x1995c line=581 flavor=slice_order
+            flux_support::assert(false);
             let _ = frame.append_payload(
-                // FLUX-TODO addr=0x1995c line=581
                 &ip6_packet.get_payload()[payload_offset..payload_offset + payload_len],
             );
         }
@@ -760,9 +761,10 @@ impl<'a> RxState<'a> {
     ) -> Result<bool, Result<(), ErrorCode>> {
         let packet = self.packet.take().ok_or(Err(ErrorCode::NOMEM))?;
         let uncompressed_len = if dgram_offset == 0 {
+            // FLUX-TODO addr=0x1e0c6 line=759 flavor=slice_end
+            flux_support::assert(false);
             let (consumed, written) = sixlowpan_compression::decompress(
                 ctx_store,
-                // FLUX-TODO addr=0x1e0c6 line=759
                 &payload[0..payload_len],
                 self.src_mac_addr.get(),
                 self.dst_mac_addr.get(),
@@ -776,8 +778,9 @@ impl<'a> RxState<'a> {
                 .copy_from_slice(&payload[consumed..consumed + remaining]);
             written + remaining
         } else {
+            // FLUX-TODO addr=0x1e0b4 line=773 flavor=slice_end
+            flux_support::assert(false);
             packet[dgram_offset..dgram_offset + payload_len]
-                // FLUX-TODO addr=0x1e0b4 line=773
                 .copy_from_slice(&payload[0..payload_len]);
             payload_len
         };
@@ -1009,8 +1012,9 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             match decompressed {
                 Ok((consumed, written)) => {
                     let remaining = payload_len - consumed;
+                    // FLUX-TODO addr=0x1e0be line=998 flavor=slice_order
+                    flux_support::assert(false);
                     packet[written..written + remaining]
-                        // FLUX-TODO addr=0x1e0be line=998
                         .copy_from_slice(&payload[consumed..consumed + remaining]);
                     // Want dgram_size to contain decompressed size of packet
                     state.dgram_size.set((written + remaining) as u16);
