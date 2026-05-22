@@ -68,8 +68,20 @@ Two surveys matter:
 | Source of delta | Δ |
 |---|---:|
 | `master` toolchain drift (April-21 → May-21 master gave 343 instead of 342) | +1 |
-| `ninehusky-full-tock-proof` scaffolding (extern_specs, flux_support extra calls, etc.) over master | +12 |
+| `ninehusky-full-tock-proof` scaffolding + net-new code over master (see note below) | +12 |
 | **Total** | **+13** |
+
+**Note on the +12:** investigated 2026-05-21 — only 1 of the 12 is the
+`panic!("assume fails")` inside `flux_support::assume`. The other 11
+are mostly from net-new code on `ninehusky-full-tock-proof` (not
+purely from verification annotations): `sixlowpan_compression.rs` got
+a 503-line rewrite that added 3 new functions
+(`decompress_ext_hdr`, `mask_dam`, `mask_sam`) and ~9 new slice
+operations, accounting for +8 of the 11. Smaller refactors in
+`gpio.rs`, `ipv6.rs`, `framer.rs`, `ip_utils.rs`, `stream.rs`,
+`take_cell.rs`, etc. contribute the rest. So `ninehusky-full-tock-proof`
+was used for both verification scaffolding *and* code rewrites —
+worth knowing when measuring annotation progress.
 
 The chain-walk patch (commit `bee46b42d` in `tools/panic_survey.py`)
 doesn't change the *total*; it moves rows from the "no-line" bucket to
