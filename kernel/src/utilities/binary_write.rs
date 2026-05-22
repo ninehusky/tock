@@ -121,7 +121,7 @@ impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
             // Actually do the write. This will return how many bytes it was
             // able to print.
             // FLUX-TODO addr=0x110a4 line=125 flavor=slice_order
-            flux_support::assert(false);
+            flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
             let ret = self
                 .binary_writer
                 .write_buffer(&(s).as_bytes()[start..string_len]);

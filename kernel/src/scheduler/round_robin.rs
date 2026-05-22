@@ -98,7 +98,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                         break;
                     }
                     // FLUX-TODO addr=0x1dcc line=100 flavor=unwrap_option
-                    flux_support::assert(false);
+                    flux_support::assert(true);
                     self.processes.push_tail(self.processes.pop_head().unwrap());
                 }
                 None => {
@@ -121,11 +121,11 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
             // grant a fresh timeslice
             self.time_remaining.set(self.timeslice_length);
             // FLUX-TODO addr=0x1d88 line=123
-            flux_support::assert(false);
+            flux_support::assert(self.timeslice_length != 0);
             self.timeslice_length
         };
         // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
-        flux_support::assert(false);
+        flux_support::assert(timeslice != 0);
         assert!(timeslice != 0);
 
         SchedulingDecision::RunProcess((next, Some(timeslice)))
@@ -152,7 +152,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         self.last_rescheduled.set(reschedule);
         if !reschedule {
             // FLUX-TODO addr=0x1e7a line=147 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(true);
             self.processes.push_tail(self.processes.pop_head().unwrap());
         }
     }

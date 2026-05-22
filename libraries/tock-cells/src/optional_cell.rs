@@ -197,7 +197,7 @@ impl<T: Copy> OptionalCell<T> {
         // FLUX-TODO line=197 flavor=unwrap_option addrs=[
         //     0x1251a, 0x116cc, 0x127b6, 0x12cfe, 0x12d04,
         // ]
-        flux_support::assert(false);
+        flux_support::assert(self.value.get().is_some());
         self.value.get().unwrap()
     }
 

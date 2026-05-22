@@ -151,7 +151,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 _ => Err(ErrorCode::EraseNotReady(0)),
             },
             // FLUX-TODO addr=0x183cc line=152 flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => { flux_support::assert(matches!(self.state.get(), State::None | State::Init(_))); unreachable!() },
         };
 
         match key_ret {
@@ -227,11 +227,11 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
         // Determine the number of regions
         let num_region = self.flash_size / S;
 // FLUX-TODO addr=0x16238 line=229
-flux_support::assert(false);
+flux_support::assert(num_region != 0);
 
         // Determine the block where the data should be
         // FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
-        flux_support::assert(false);
+        flux_support::assert(num_region != 0);
         (hash as usize & 0xFFFF) % num_region
     }
 
@@ -443,11 +443,11 @@ flux_support::assert(false);
                     KeyState::ReadRegion(reg) => reg,
                 },
                 // FLUX-TODO addr=0x16b3e line=439 flavor=explicit_panic
-                _ => { flux_support::assert(false); unreachable!() },
+                _ => { flux_support::assert(matches!(self.state.get(), State::None | State::Init(_) | State::AppendKey(_))); unreachable!() },
             };
 
             // FLUX-TODO addr=0x16b2a line=442 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(true);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::AppendKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::AppendKeyReadRegion(new_region))
@@ -703,22 +703,22 @@ flux_support::assert(false);
                         _ => {
                             // Get the data from that region
                             // FLUX-TODO addr=0x16e1e line=703
-                            flux_support::assert(false);
+                            flux_support::assert(true);
                             (region as isize + region_offset) as usize
                         }
                     }
                 }
                 // FLUX-TODO addr=0x16e14 line=707
-                State::GetKey(key_state) => { flux_support::assert(false); match key_state {
+                State::GetKey(key_state) => { flux_support::assert(true); match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 } },
                 // FLUX-TODO addr=0x16e1e line=703 flavor=explicit_panic
-                _ => { flux_support::assert(false); unreachable!() },
+                _ => { flux_support::assert(matches!(self.state.get(), State::None | State::Init(_) | State::GetKey(_))); unreachable!() },
             };
 
             // Get the data from that region
             // FLUX-TODO addr=0x16e14 line=707 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(true);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::GetKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::GetKeyReadRegion(new_region))
@@ -834,13 +834,13 @@ flux_support::assert(false);
     pub fn invalidate_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
 // FLUX-TODO addr=0x161f6 line=831
-flux_support::assert(false);
+flux_support::assert(matches!(self.state.get(), State::None | State::InvalidateKey(_)));
 
         let mut region_offset: isize = 0;
 
         loop {
             // FLUX-TODO addr=0x161ec line=835
-            flux_support::assert(false);
+            flux_support::assert(true);
             // Get the data from that region
             let new_region = match self.state.get() {
                 State::None => (region as isize + region_offset) as usize,
@@ -848,12 +848,12 @@ flux_support::assert(false);
                     KeyState::ReadRegion(reg) => reg,
                 },
                 // FLUX-TODO addr=0x161f6 line=831 flavor=explicit_panic
-                _ => { flux_support::assert(false); unreachable!() },
+                _ => { flux_support::assert(matches!(self.state.get(), State::None | State::InvalidateKey(_))); unreachable!() },
             };
 
             // Get the data from that region
             // FLUX-TODO addr=0x161ec line=835 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(true);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::InvalidateKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
@@ -942,7 +942,7 @@ flux_support::assert(false);
         let region = self.get_region(hash);
 
         // FLUX-TODO addr=0x187f2 line=935
-        flux_support::assert(false);
+        flux_support::assert(true);
         let mut region_offset: isize = 0;
 
         loop {
@@ -953,12 +953,12 @@ flux_support::assert(false);
                     KeyState::ReadRegion(reg) => reg,
                 },
                 // FLUX-TODO addr=0x187fc line=931 flavor=explicit_panic
-                _ => { flux_support::assert(false); unreachable!() },
+                _ => { flux_support::assert(matches!(self.state.get(), State::None | State::ZeroiseKey(_))); unreachable!() },
             };
 
             // Get the data from that region
             // FLUX-TODO addr=0x187f2 line=935 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(true);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::ZeroiseKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
@@ -1034,7 +1034,7 @@ flux_support::assert(false);
     ) -> Result<usize, ErrorCode> {
         // Get the data from that region
         // FLUX-TODO addr=0x1852c line=1009 flavor=unwrap_option
-        flux_support::assert(false);
+        flux_support::assert(true);
         let region_data = self.read_buffer.take().unwrap();
         if self.state.get() != State::GarbageCollect(RubbishState::ReadRegion(region, flash_freed))
         {
@@ -1164,7 +1164,7 @@ flux_support::assert(false);
                 }
             },
             // FLUX-TODO addr=0x18536 line=1137 flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => { flux_support::assert(matches!(self.state.get(), State::None | State::GarbageCollect(_))); unreachable!() },
         };
 
         for i in start..num_region {

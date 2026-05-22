@@ -179,7 +179,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> MuxAES128CCM<'a, A> 
             mnode.map(|node| {
                 self.inflight.set(node);
                 // FLUX-TODO addr=0x1322e line=181 flavor=unwrap_option
-                flux_support::assert(false);
+                flux_support::assert(node.queued_up.is_some());
                 let parameters: CryptFunctionParameters = node.queued_up.take().unwrap();
                 // now, eat the parameters
                 let _ = node.crypt_r(parameters).map_err(|(ecode, _)| {
@@ -486,11 +486,11 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
 
         // FLUX-TODO addr=0x134c2 line=488
-        flux_support::assert(false);
+        flux_support::assert(self.crypt_buf.is_some());
         self.aes.start_message();
         let crypt_buf = match self.crypt_buf.take() {
             // FLUX-TODO addr=0x134c2 line=488 flavor=explicit_panic
-            None => { flux_support::assert(false); panic!("Cannot perform CCM* encrypt because crypt_buf is not present.") },
+            None => { flux_support::assert(self.crypt_buf.is_some()); panic!("Cannot perform CCM* encrypt because crypt_buf is not present.") },
             Some(buf) => buf,
         };
 
@@ -534,10 +534,10 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     } else {
                         // Compare the computed encrypted tag to the received
                         // FLUX-TODO addr=0x1d82a line=534
-                        flux_support::assert(false);
+                        flux_support::assert(m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
                         // encrypted tag
                         // FLUX-TODO addr=0x1d818 line=532 flavor=slice_order
-                        flux_support::assert(false);
+                        flux_support::assert(m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
                         buf[m_end..m_end + mic_len]
                             .iter()
                             .zip(cbuf[tag_off..tag_off + mic_len].iter())
@@ -566,14 +566,14 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                 },
                 |cbuf| {
                     // FLUX-TODO addr=0x1d838 line=564
-                    flux_support::assert(false);
+                    flux_support::assert(true);
                     let (_, m_off, m_len, mic_len) = self.pos.get();
 
                     // Combine unencrypted tag at end of crypt_buf with saved
                     // CTR-encrypted block to obtain encrypted tag
                     let tag_off = self.crypt_enc_len.get() - AES128_BLOCK_SIZE;
                     // FLUX-TODO addr=0x1d838 line=564 flavor=slice_end
-                    flux_support::assert(false);
+                    flux_support::assert(mic_len <= self.saved_tag.get().len() && tag_off + mic_len <= cbuf.len());
                     self.saved_tag.get()[..mic_len]
                         .iter()
                         .zip(cbuf[tag_off..tag_off + mic_len].iter_mut())
@@ -584,7 +584,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     // FLUX-TODO line=571 flavor=slice_order addrs=[
                     //     0x1d848, 0x1d868,
                     // ]
-                    flux_support::assert(false);
+                    flux_support::assert(m_off + m_len + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
                     buf[m_off + m_len..m_off + m_len + mic_len]
                         .iter()
                         .zip(cbuf[tag_off..tag_off + mic_len].iter())
@@ -611,7 +611,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         self.crypt_buf.map(|cbuf| {
             let mut cbuf_block = [0u8; AES128_BLOCK_SIZE];
             // FLUX-TODO addr=0x132de line=596 flavor=slice_order
-            flux_support::assert(false);
+            flux_support::assert(AES128_BLOCK_SIZE <= auth_len && auth_len <= cbuf.len());
             cbuf_block.copy_from_slice(&cbuf[auth_len - AES128_BLOCK_SIZE..auth_len]);
             self.saved_tag.set(cbuf_block);
             cbuf[auth_len - AES128_BLOCK_SIZE..auth_len]
@@ -664,7 +664,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         flux_support::assert(a_off <= m_off);
         flux_support::assert(m_off + m_len <= buf.len());
         // FLUX-TODO addr=0x132ca line=651 flavor=slice_order
-        flux_support::assert(false);
+        flux_support::assert(a_off <= m_off && m_off + m_len <= buf.len());
         let res = self.prepare_ccm_buffer(
             &self.nonce.get(),
             mic_len,
@@ -859,7 +859,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
         match self.state.get() {
             CCMState::Idle => {}
             // FLUX-TODO addr=0x1d884 line=853
-            CCMState::Auth => { flux_support::assert(false); { }
+            CCMState::Auth => { flux_support::assert(true); { }
                 if !self.reversed() {
                     if self.confidential.get() {
                         let (_, m_off, m_len, _) = self.pos.get();
@@ -868,7 +868,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
                         // FLUX-TODO line=859 addrs=[
                         //     0x1d842, 0x1d852,
                         // ]
-                        flux_support::assert(false);
+                        flux_support::assert(AES128_BLOCK_SIZE <= auth_len && AES128_BLOCK_SIZE <= enc_len);
                         self.crypt_buf.map(|cbuf| {
                             // If we authenticated over the plaintext, copy the last
                             // block over to the beginning again so that it becomes
@@ -877,7 +877,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
                             let enc_last = enc_len - AES128_BLOCK_SIZE;
                             for i in 0..AES128_BLOCK_SIZE {
                                 // FLUX-TODO addr=0x1d884 line=853 flavor=bounds
-                                flux_support::assert(false);
+                                flux_support::assert(auth_last + i < cbuf.len() && enc_last + i < cbuf.len());
                                 cbuf[auth_last + i] = cbuf[enc_last + i];
                             }
 
@@ -886,7 +886,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
                                 // FLUX-TODO line=859 flavor=slice_order addrs=[
                                 //     0x1d842, 0x1d852,
                                 // ]
-                                flux_support::assert(false);
+                                flux_support::assert(auth_len + m_len <= cbuf.len() && m_off + m_len <= buf.len());
                                 cbuf[auth_len..auth_len + m_len]
                                     .copy_from_slice(&buf[m_off..m_off + m_len]);
                             });

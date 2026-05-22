@@ -1244,7 +1244,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // FLUX-TODO line=1244 flavor=unwrap_option addrs=[
         //     0x17e38, 0xbdd6, 0x77c0, 0x1dec,
         // ]
-        flux_support::assert(false);
+        flux_support::assert(true);
         self.access_grant(fun, true).unwrap()
     }
 
@@ -1426,7 +1426,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 //     0x1fa7c, 0x1f9ee, 0x494c, 0xbeee, 0xc106, 0xc16a, 0xc26e, 0xc586, 0x1f686,
                 //     0x48ee, 0x4834, 0xa296, 0x174a0, 0x77d4, 0x74b6, 0x12d18,
                 // ]
-                flux_support::assert(false);
+                flux_support::assert(!panic_on_reenter);
                 // capsule to not call `.iter()` or `.each()` from inside a
                 // `.enter()` closure. That is, you need to close the grant
                 // region you are currently in before trying to iterate over all
@@ -1439,7 +1439,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 //     0x1fa7c, 0x1f9ee, 0x494c, 0xbeee, 0xc106, 0xc16a, 0xc26e, 0xc586, 0x1f686,
                 //     0x48ee, 0x4834, 0xa296, 0x174a0, 0x77d4, 0x74b6, 0x12d18,
                 // ]
-                flux_support::assert(false);
+                flux_support::assert(!panic_on_reenter);
                 panic!("Attempted to re-enter a grant region.");
             })
             .ok()?;

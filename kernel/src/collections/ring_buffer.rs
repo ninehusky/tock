@@ -54,13 +54,13 @@ impl<'a, T: Copy> RingBuffer<'a, T> {
     pub fn as_slices(&'a self) -> (Option<&'a [T]>, Option<&'a [T]>) {
         if self.head < self.tail {
             // FLUX-TODO addr=0x1371e line=56 flavor=slice_end
-            flux_support::assert(false);
+            flux_support::assert(self.tail <= self.ring.len());
             (Some(&self.ring[self.head..self.tail]), None)
         } else if self.head > self.tail {
             // The extern spec for split_at requires
             // in-boundsness.
             // FLUX-TODO addr=0x13732 line=60 flavor=explicit_panic
-            flux_support::assert(false);
+            flux_support::assert(self.head <= self.ring.len());
             let (left, right) = self.ring.split_at(self.head);
             (
                 Some(right),
@@ -82,7 +82,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
         // FLUX-TODO line=83 flavor=rem_by_zero addrs=[
         //     0x7ecc, 0x1064a,
         // ]
-        flux_support::assert(false);
+        flux_support::assert(self.ring.len() != 0);
         self.head != self.tail
     }
 
@@ -91,7 +91,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
         // FLUX-TODO line=83 flavor=rem_by_zero addrs=[
         //     0x7ecc, 0x1064a,
         // ]
-        flux_support::assert(false);
+        flux_support::assert(self.ring.len() != 0);
         self.head == ((self.tail + 1) % self.ring.len())
     }
 
@@ -123,7 +123,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
             false
         } else {
             // FLUX-TODO addr=0x10652 line=113 flavor=bounds
-            flux_support::assert(false);
+            flux_support::assert(self.tail < self.ring.len());
             self.ring[self.tail] = val;
             self.tail = (self.tail + 1) % self.ring.len();
             true
@@ -167,7 +167,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
             // FLUX-TODO line=153 flavor=bounds addrs=[
             //     0x10aac, 0x2c26,
             // ]
-            flux_support::assert(false);
+            flux_support::assert(self.head < self.ring.len());
             let val = self.ring[self.head];
             self.head = (self.head + 1) % self.ring.len();
             Some(val)
