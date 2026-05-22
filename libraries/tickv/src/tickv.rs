@@ -226,11 +226,11 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
 
         // Determine the number of regions
         let num_region = self.flash_size / S;
-// FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
+// FLUX-OPT addr=0x16238 line=229 flavor=rem_by_zero
 flux_support::assert(num_region != 0);
 
         // Determine the block where the data should be
-        // FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
+        // FLUX-OPT addr=0x16238 line=229 flavor=rem_by_zero
         flux_support::assert(num_region != 0);
         (hash as usize & 0xFFFF) % num_region
     }
