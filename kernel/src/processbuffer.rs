@@ -758,7 +758,7 @@ impl ReadableProcessSlice {
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
             // FLUX-TODO addr=0x11434 line=760 flavor=explicit_panic
-            flux_support::assert(dst_len == src_len);
+            flux_support::assert(false);
             panic!(
                 "source slice length ({}) does not match destination slice length ({})",
                 src_len, dst_len,
@@ -766,7 +766,7 @@ impl ReadableProcessSlice {
         }
 
         if self.copy_to_slice_or_err(dest).is_err() {
-            flux_support::assert(self.len() == dest.len());
+            flux_support::assert(false);
             len_mismatch_fail(dest.len(), self.len());
         }
     }
@@ -1007,8 +1007,8 @@ impl WriteableProcessSlice {
         // core::slice::copy_from_slice method implementation:
         // https://doc.rust-lang.org/src/core/slice/mod.rs.html#3034-3036
 
-        // FLUX-TODO addr=0x114b8 line=1010
-        flux_support::assert(self.len() == src.len());
+        // FLUX-TODO addr=0x114b8 line=1010 flavor=explicit_panic
+        flux_support::assert(false);
         // The panic code path was put into a cold function to not
         // bloat the call site.
         #[inline(never)]
@@ -1016,7 +1016,7 @@ impl WriteableProcessSlice {
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
             // FLUX-TODO addr=0x114b8 line=1010 flavor=explicit_panic
-            flux_support::assert(dst_len == src_len);
+            flux_support::assert(false);
             panic!(
                 "src slice len ({}) != dest slice len ({})",
                 src_len, dst_len,
@@ -1024,7 +1024,7 @@ impl WriteableProcessSlice {
         }
 
         if self.copy_from_slice_or_err(src).is_err() {
-            flux_support::assert(self.len() == src.len());
+            flux_support::assert(false);
             len_mismatch_fail(self.len(), src.len());
         }
     }

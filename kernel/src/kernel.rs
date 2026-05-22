@@ -279,7 +279,7 @@ impl Kernel {
     ) -> Grant<T, Upcalls, AllowROs, AllowRWs> {
         if self.grants_finalized.get() {
             // FLUX-TODO addr=0x134f2 line=281 flavor=explicit_panic
-            flux_support::assert(!self.grants_finalized.get());
+            flux_support::assert(false);
             panic!("Grants finalized. Cannot create a new grant.");
         }
 
@@ -689,7 +689,7 @@ impl Kernel {
                                     (ccb.argument0, ccb.argument1, ccb.argument2)
                                 }
                                 // FLUX-TODO addr=0x1d92 line=689 flavor=explicit_panic
-                                Task::IPC(_) => { flux_support::assert(!matches!(task, Task::IPC(_))); todo!() },
+                                Task::IPC(_) => { flux_support::assert(false); todo!() },
                             };
                             process
                                 .set_syscall_return_value(SyscallReturn::YieldWaitFor(a0, a1, a2));

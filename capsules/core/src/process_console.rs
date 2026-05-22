@@ -1006,7 +1006,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                             );
                         } else if clean_str.starts_with("panic") {
                             // FLUX-TODO addr=0x1b3c0 line=1008 flavor=explicit_panic
-                            flux_support::assert(!clean_str.starts_with("panic"));
+                            flux_support::assert(false);
                             panic!("Process Console forced a kernel panic.");
                         } else {
                             let _ = self.write_bytes(b"Valid commands are: ");
@@ -1216,8 +1216,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                         let cursor = self.cursor.get();
 
                         if let EscState::Complete(key) = esc_state {
-                            // FLUX-TODO addr=0x1a9ee line=1219
-                            flux_support::assert(true);
+                            // FLUX-TODO addr=0x1a9ee line=1219 flavor=bounds
+                            flux_support::assert(false);
                             match key {
                                 EscKey::Up | EscKey::Down if COMMAND_HISTORY_LEN >= 1 => {
                                     self.command_history.map(|ht| {
@@ -1241,10 +1241,12 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
 
                                             // Display the new command
                                             for i in 0..next_command_len {
+                                                // FLUX-TODO addr=0x1a98c line=1234 flavor=bounds
+                                                flux_support::assert(next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len());
                                                 let byte = ht.cmds[next_index].buf[i];
                                                 let _ = self.write_byte(byte);
                                                 // FLUX-TODO addr=0x1a98c line=1234 flavor=bounds
-                                                flux_support::assert(i < command.len() && next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len());
+                                                flux_support::assert(i < command.len());
                                                 command[i] = byte;
                                             }
 
@@ -1341,8 +1343,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 }
                             }
                         } else if read_buf[0] == BS {
-                            // FLUX-TODO addr=0x1a9c4 line=1342
-                            flux_support::assert(true);
+                            // FLUX-TODO addr=0x1a9c4 line=1342 flavor=div_by_zero
+                            flux_support::assert(false);
                             if cursor > 0 {
                                 // Backspace, echo and remove the byte
                                 // preceding the cursor

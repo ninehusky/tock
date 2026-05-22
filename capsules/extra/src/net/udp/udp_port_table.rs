@@ -222,7 +222,7 @@ impl UdpPortManager {
         let ret = self
             .port_array
             .map(|table| {
-                // FLUX-TODO addr=0xbdf8 line=225
+                // FLUX-TODO addr=0xbdf8 line=225 flavor=bounds
                 flux_support::assert(MAX_NUM_BOUND_PORTS <= table.len());
                 let mut port_exists = false;
                 for i in 0..MAX_NUM_BOUND_PORTS {

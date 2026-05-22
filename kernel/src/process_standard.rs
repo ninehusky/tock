@@ -368,7 +368,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
                 // process faulted. Panic and print status
                 self.state.set(State::Faulted);
                 // FLUX-TODO addr=0x3206 line=370 flavor=explicit_panic
-                flux_support::assert(!matches!(action, FaultAction::Panic));
+                flux_support::assert(false);
                 panic!("Process {} had a fault", self.get_process_name());
             }
             FaultAction::Restart => {
@@ -1572,7 +1572,7 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
         //   4. kernel-reserved memory, growing downward starting at
         //      `app_memory_padding`.
         //
-        // FLUX-TODO addr=0x9074 line=1575
+        // FLUX-TODO addr=0x9074 line=1575 flavor=div_by_zero
         flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
         // - `unused_memory`: the rest of the `remaining_memory`, not assigned
         //   to this app.

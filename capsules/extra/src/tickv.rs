@@ -260,12 +260,12 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
     }
 
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> {
-        // FLUX-TODO addr=0x16542 line=261
+        // FLUX-TODO addr=0x16542 line=261 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());
         let data_buf = self.flash_read_buffer.take().unwrap();
 
         for (i, d) in buf.iter().enumerate() {
-            // FLUX-TODO addr=0x1654e line=264
+            // FLUX-TODO addr=0x1654e line=264 flavor=unwrap_result
             flux_support::assert(i + (address % PAGE_SIZE) < data_buf.as_mut().len());
             data_buf.as_mut()[i + (address % PAGE_SIZE)] = *d;
         }
@@ -383,7 +383,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
                 }
             }
             Operation::InvalidateKey => {
-                // FLUX-TODO addr=0x18cc8 line=372
+                // FLUX-TODO addr=0x18cc8 line=372 flavor=unwrap_option
                 flux_support::assert(self.key_buffer.is_some());
                 match self.invalidate_key(self.key_buffer.take().unwrap()) {
                     Err((key, error)) => {
@@ -412,7 +412,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
 {
     fn add_mut_data_done(&self, _result: Result<(), ErrorCode>, data: SubSliceMut<'static, u8>) {
         self.unhashed_key_buffer.replace(data);
-        // FLUX-TODO addr=0x1ceec line=399
+        // FLUX-TODO addr=0x1ceec line=399 flavor=unwrap_option
         flux_support::assert(self.key_buffer.is_some());
         self.hasher.run(self.key_buffer.take().unwrap()).unwrap();
     }
@@ -421,7 +421,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
 
     fn hash_done(&self, _result: Result<(), ErrorCode>, digest: &'static mut [u8; 8]) {
         self.client.map(move |cb| {
-            // FLUX-TODO addr=0x1cf82 line=406
+            // FLUX-TODO addr=0x1cf82 line=406 flavor=unwrap_option
             flux_support::assert(self.unhashed_key_buffer.is_some());
             cb.generate_key_complete(Ok(()), self.unhashed_key_buffer.take().unwrap(), digest);
         });
@@ -602,8 +602,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                 }
                 _ => {}
             },
-            // FLUX-TODO addr=0x1d1f6 line=567
-            _ => { flux_support::assert(matches!(self.operation.get(), Operation::Init | Operation::GetKey | Operation::AppendKey | Operation::InvalidateKey | Operation::GarbageCollect)); unreachable!() },
+            // FLUX-TODO addr=0x1d1f6 line=567 flavor=explicit_panic
+            _ => { flux_support::assert(false); unreachable!() },
         }
     }
 
@@ -635,13 +635,13 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
             Operation::InvalidateKey => {
                 self.operation.set(Operation::None);
                 self.client.map(|cb| {
-                    // FLUX-TODO addr=0x1d30e line=595
+                    // FLUX-TODO addr=0x1d30e line=595 flavor=explicit_panic
                     flux_support::assert(self.key_buffer.is_some());
                     cb.invalidate_key_complete(Ok(()), self.key_buffer.take().unwrap());
                 });
             }
-            // FLUX-TODO addr=0x1d302 line=598
-            _ => { flux_support::assert(matches!(self.operation.get(), Operation::Init | Operation::AppendKey | Operation::InvalidateKey)); unreachable!() },
+            // FLUX-TODO addr=0x1d302 line=598 flavor=explicit_panic
+            _ => { flux_support::assert(false); unreachable!() },
         }
     }
 
@@ -677,8 +677,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                 }
                 _ => {}
             },
-            // FLUX-TODO addr=0x1d3bc line=634
-            _ => { flux_support::assert(matches!(self.operation.get(), Operation::Init | Operation::GarbageCollect)); unreachable!() },
+            // FLUX-TODO addr=0x1d3bc line=634 flavor=explicit_panic
+            _ => { flux_support::assert(false); unreachable!() },
         }
     }
 }

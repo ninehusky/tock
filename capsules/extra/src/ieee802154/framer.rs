@@ -196,14 +196,14 @@ impl FrameInfo {
         let private_payload_offset = match self.frame_type {
             FrameType::Beacon => {
                 // Beginning of beacon payload field
-                // FLUX-TODO addr=0xdc1a line=199
-                flux_support::assert(!matches!(self.frame_type, FrameType::Beacon));
+                // FLUX-TODO addr=0xdc1a line=199 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!()
             }
             FrameType::MACCommand => {
                 // Beginning of MAC command content field
-                // FLUX-TODO addr=0xdc24 line=203
-                flux_support::assert(!matches!(self.frame_type, FrameType::MACCommand));
+                // FLUX-TODO addr=0xdc24 line=203 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!()
             }
             _ => {
@@ -256,8 +256,8 @@ pub fn get_ccm_nonce(device_addr: &[u8; 8], frame_counter: u32, level: SecurityL
     match encode_ccm_nonce_buf(&mut nonce, device_addr, frame_counter, level).done() {
         None => {
             // This should not be possible
-            // FLUX-TODO addr=0xc650 line=255
-            flux_support::assert(true);
+            // FLUX-TODO addr=0xc650 line=255 flavor=explicit_panic
+            flux_support::assert(false);
             panic!("Failed to produce ccm nonce");
         }
         Some(_) => nonce,
@@ -554,7 +554,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     /// Advances the transmission pipeline if it can be advanced.
     #[flux_rs::trusted(reason = "need to prove precondition about cell so that ccm_encrypt_ranges won't panic")]
     fn step_transmit_state(&self) -> Result<(), (ErrorCode, &'static mut [u8])> {
-        // FLUX-TODO addr=0x15fa2 line=548
+        // FLUX-TODO addr=0x15fa2 line=548 flavor=explicit_panic
         flux_support::assert(self.tx_state.is_some());
         self.tx_state.take().map_or_else(
             || panic!("missing tx_state"),

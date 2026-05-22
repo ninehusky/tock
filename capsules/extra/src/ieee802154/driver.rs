@@ -313,7 +313,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     fn add_neighbor(&self, new_neighbor: DeviceDescriptor) -> Option<usize> {
         self.neighbors.and_then(|neighbors| {
             let num_neighbors = self.num_neighbors.get();
-            // FLUX-TODO addr=0x724c line=316
+            // FLUX-TODO addr=0x724c line=316 flavor=slice_end
             flux_support::assert(num_neighbors <= neighbors.len());
             let position = neighbors[..num_neighbors]
                 .iter()
@@ -371,7 +371,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     fn add_key(&self, new_key: KeyDescriptor) -> Option<usize> {
         self.keys.and_then(|keys| {
             let num_keys = self.num_keys.get();
-            // FLUX-TODO addr=0x727e line=372
+            // FLUX-TODO addr=0x727e line=372 flavor=slice_end
             flux_support::assert(num_keys <= keys.len());
             let position = keys[..num_keys].iter().position(|key| *key == new_key);
             match position {
@@ -568,7 +568,7 @@ impl<'a, M: device::MacDevice<'a>> framer::DeviceProcedure for RadioDriver<'a, M
     fn lookup_addr_long(&self, addr: MacAddress) -> Option<[u8; 8]> {
         self.neighbors
             .and_then(|neighbors| {
-                // FLUX-TODO addr=0x1c362 line=567
+                // FLUX-TODO addr=0x1c362 line=567 flavor=slice_end
                 flux_support::assert(self.num_neighbors.get() <= neighbors.len());
                 neighbors[..self.num_neighbors.get()]
                     .iter()
@@ -598,7 +598,7 @@ impl<'a, M: device::MacDevice<'a>> framer::KeyProcedure for RadioDriver<'a, M> {
     fn lookup_key(&self, level: SecurityLevel, key_id: KeyId) -> Option<[u8; 16]> {
         self.keys
             .and_then(|keys| {
-                // FLUX-TODO addr=0x1c42c line=595
+                // FLUX-TODO addr=0x1c42c line=595 flavor=div_by_zero
                 flux_support::assert(self.num_keys.get() <= keys.len());
                 keys[..self.num_keys.get()]
                     .iter()

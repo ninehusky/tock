@@ -415,18 +415,26 @@ impl<'a> IPPayload<'a> {
             // The `unwrap` is safe because we require that `buf >= 8 + offset`, which is the
             // exact condition under which `.encode()` returns a `Done`.
             // FLUX-TODO addr=0xdae8 line=415 flavor=unwrap_option
-            TransportHeader::UDP(udp_header) => { flux_support::assert(true); udp_header.encode(buf, offset).done().unwrap() },
+            TransportHeader::UDP(udp_header) => {
+                let done = udp_header.encode(buf, offset).done();
+                flux_support::assert(done.is_some());
+                done.unwrap()
+            }
             // FLUX-TODO addr=0xdaee line=416 flavor=unwrap_option
-            TransportHeader::ICMP(icmp_header) => { flux_support::assert(true); icmp_header.encode(buf, offset).done().unwrap() },
+            TransportHeader::ICMP(icmp_header) => {
+                let done = icmp_header.encode(buf, offset).done();
+                flux_support::assert(done.is_some());
+                done.unwrap()
+            }
             _ => {
                 // FLUX-TODO addr=0xdae2 line=418 flavor=explicit_panic
-                flux_support::assert(matches!(self.header, TransportHeader::UDP(_) | TransportHeader::ICMP(_)));
+                flux_support::assert(false);
                 unimplemented!();
             }
         };
         let payload_length = self.get_payload_length();
-        // FLUX-TODO addr=0xdad8 line=428
-        flux_support::assert(payload_length <= self.payload.len());
+        // FLUX-TODO addr=0xdad8 line=428 flavor=slice_end
+        flux_support::assert(false);
         // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
         // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
         // Explicit assert is load-bearing: `flux_support`'s `Index::index` extern_spec puts `in_bounds` in
@@ -501,7 +509,7 @@ impl<'a> IP6Packet<'a> {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),
             TransportHeader::ICMP(icmp_header) => icmp_header.get_hdr_size(),
             // FLUX-TODO addr=0xdb52 line=494 flavor=explicit_panic
-            _ => { flux_support::assert(matches!(self.payload.header, TransportHeader::UDP(_) | TransportHeader::ICMP(_))); unimplemented!() },
+            _ => { flux_support::assert(false); unimplemented!() },
         };
         40 + transport_hdr_size
     }
@@ -531,7 +539,7 @@ impl<'a> IP6Packet<'a> {
             }
             _ => {
                 // FLUX-TODO addr=0x19d8c line=523 flavor=explicit_panic
-                flux_support::assert(matches!(self.payload.header, TransportHeader::UDP(_) | TransportHeader::ICMP(_)));
+                flux_support::assert(false);
                 unimplemented!();
             }
         }

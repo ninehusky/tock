@@ -129,7 +129,7 @@ pub trait CortexMVariant {
     unsafe fn print_cortexm_state(writer: &mut dyn Write);
 }
 
-// FLUX-TODO: `requires false` says no rust caller can invoke this. Chip vector
+// FLUX-TODO: `requires false` says no rust caller can invoke this. Chip vector flavor=div_by_zero
 // tables (e.g. chips/stm32f303xc/src/lib.rs BASE_VECTORS) still install this
 // function as a hardware exception handler via fn-pointer coercion (which
 // doesn't trigger Flux's precondition check). Outstanding proof debt: for every
@@ -151,7 +151,7 @@ pub unsafe extern "C" fn unhandled_interrupt() {
     interrupt_number &= 0x1ff;
 
     // FLUX-TODO addr=0xf978 line=153 flavor=explicit_panic
-    flux_support::assert(true);
+    flux_support::assert(false);
     panic!("Unhandled Interrupt. ISR {} is active.", interrupt_number);
 }
 

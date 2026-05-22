@@ -524,7 +524,7 @@ impl<'a> TxState<'a> {
             // The intended surface invariant — `written <= buf.len()` — is asserted here
             // via `assume` so the slice op verifies locally.
             flux_support::assume(written <= lowpan_packet.len());
-            // FLUX-TODO addr=0x1994c line=526
+            // FLUX-TODO addr=0x1994c line=526 flavor=slice_end
             flux_support::assert(written <= lowpan_packet.len());
             let _ = frame.append_payload(&lowpan_packet[0..written]);
             remaining_capacity -= written;
@@ -551,7 +551,7 @@ impl<'a> TxState<'a> {
         // trusted), and an invariant connecting `get_total_len() - 40 <= payload_buf_len`.
         // TODO — use `assume` here for now.
         flux_support::assume(payload_len <= ip6_packet.get_payload().len());
-        // FLUX-TODO addr=0x19956 line=551
+        // FLUX-TODO addr=0x19956 line=551 flavor=slice_end
         flux_support::assert(payload_len <= ip6_packet.get_payload().len());
         let _ = frame.append_payload(&ip6_packet.get_payload()[0..payload_len]);
         self.dgram_offset.set(consumed + payload_len);
@@ -811,7 +811,7 @@ impl<'a> RxState<'a> {
             // in the callback represents a significant error that should never
             // occur - all other calls to `packet.take()` replace the packet,
             // and thus the packet should always be here.
-            // FLUX-TODO addr=0xa6b8 line=803
+            // FLUX-TODO addr=0xa6b8 line=803 flavor=div_by_zero
             flux_support::assert(self.packet.is_some());
             self.packet
                 .map(|packet| {
@@ -846,7 +846,7 @@ pub struct Sixlowpan<'a, A: time::Alarm<'a>, C: ContextStore> {
 
 #[flux_rs::sig(fn(buf: &[u8][@n], off: usize, len: usize) -> &[u8][len] requires off + len <= n)]
 fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
-    // FLUX-TODO addr=0x1e092 line=836
+    // FLUX-TODO addr=0x1e092 line=836 flavor=div_by_zero
     flux_support::assert(off + len <= buf.len());
     &buf[off..off + len]
 }
@@ -991,7 +991,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             // The packet buffer should *always* be there; in particular,
             // since this state is not busy, it must have the packet buffer.
             // Otherwise, we are in an inconsistent state and can fail.
-            // FLUX-TODO addr=0x1e0aa line=978
+            // FLUX-TODO addr=0x1e0aa line=978 flavor=unwrap_option
             flux_support::assert(state.packet.is_some());
             let packet = state.packet.take().unwrap();
 
