@@ -228,11 +228,16 @@ def effective_frame(frames: list[dict]) -> dict:
     addr2line -i reports stdlib helpers (e.g. /rustc/.../slice/index.rs) as the
     deepest frame when the panic is an inlined slice-index check. The useful
     "where does the panic live" frame for categorization is the first non-stdlib
-    frame from the bottom. Falls back to the deepest frame when all frames are
-    stdlib.
+    frame from the bottom. We prefer frames that have a source line attached;
+    falls back to a non-stdlib frame without a line, then to the deepest frame.
     """
     if not frames:
         return {"func": "", "file": "", "line": None}
+    # Pass 1: deepest non-stdlib frame WITH a source line
+    for f in frames:
+        if classify_module(f.get("file") or "") != "stdlib" and f.get("line") is not None:
+            return f
+    # Pass 2: deepest non-stdlib frame (even without a line)
     for f in frames:
         if classify_module(f.get("file") or "") != "stdlib":
             return f
