@@ -85,6 +85,7 @@ impl ObjectHeader {
     #[flux_rs::sig(fn(hashed_key: u64, len: u16{len < 0xFFF}) -> Self)]
     fn new(hashed_key: u64, len: u16) -> Self {
         flux_support::assert(len < 0xFFF);
+        // FLUX-OPT addr=0x16b34 line=88 flavor=explicit_panic
         assert!(len < 0xFFF);
         Self {
             version: VERSION,
@@ -148,8 +149,10 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             State::Init(state) => match state {
                 InitState::GetKeyReadRegion(_) => self.get_key(hashed_main_key, &mut buf),
                 _ => Err(ErrorCode::EraseNotReady(0)),
+            // FLUX-TODO addr=0x183cc line=152
             },
-            _ => unreachable!(),
+            // FLUX-TODO addr=0x183cc line=152 flavor=explicit_panic
+            _ => { flux_support::assert(false); unreachable!() },
         };
 
         match key_ret {
@@ -224,8 +227,12 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
 
         // Determine the number of regions
         let num_region = self.flash_size / S;
+// FLUX-TODO addr=0x16238 line=229
+flux_support::assert(false);
 
         // Determine the block where the data should be
+        // FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
+        flux_support::assert(false);
         (hash as usize & 0xFFFF) % num_region
     }
 
@@ -432,13 +439,18 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                             (region as isize + region_offset) as usize
                         }
                     }
+                // FLUX-TODO addr=0x16b3e line=439
                 }
                 State::AppendKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
+                // FLUX-TODO addr=0x16b2a line=442
                 },
-                _ => unreachable!(),
+                // FLUX-TODO addr=0x16b3e line=439 flavor=explicit_panic
+                _ => { flux_support::assert(false); unreachable!() },
             };
 
+            // FLUX-TODO addr=0x16b2a line=442 flavor=unwrap_option
+            flux_support::assert(false);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::AppendKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::AppendKeyReadRegion(new_region))
@@ -693,17 +705,23 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                         InitState::GetKeyReadRegion(reg) => reg,
                         _ => {
                             // Get the data from that region
+                            // FLUX-TODO addr=0x16e1e line=703
+                            flux_support::assert(false);
                             (region as isize + region_offset) as usize
                         }
                     }
                 }
-                State::GetKey(key_state) => match key_state {
+                // FLUX-TODO addr=0x16e14 line=707
+                State::GetKey(key_state) => { flux_support::assert(false); match key_state {
                     KeyState::ReadRegion(reg) => reg,
-                },
-                _ => unreachable!(),
+                } },
+                // FLUX-TODO addr=0x16e1e line=703 flavor=explicit_panic
+                _ => { flux_support::assert(false); unreachable!() },
             };
 
             // Get the data from that region
+            // FLUX-TODO addr=0x16e14 line=707 flavor=unwrap_option
+            flux_support::assert(false);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::GetKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::GetKeyReadRegion(new_region))
@@ -818,20 +836,27 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn invalidate_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
+// FLUX-TODO addr=0x161f6 line=831
+flux_support::assert(false);
 
         let mut region_offset: isize = 0;
 
         loop {
+            // FLUX-TODO addr=0x161ec line=835
+            flux_support::assert(false);
             // Get the data from that region
             let new_region = match self.state.get() {
                 State::None => (region as isize + region_offset) as usize,
                 State::InvalidateKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 },
-                _ => unreachable!(),
+                // FLUX-TODO addr=0x161f6 line=831 flavor=explicit_panic
+                _ => { flux_support::assert(false); unreachable!() },
             };
 
             // Get the data from that region
+            // FLUX-TODO addr=0x161ec line=835 flavor=unwrap_option
+            flux_support::assert(false);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::InvalidateKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
@@ -915,10 +940,13 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
+    // FLUX-TODO addr=0x187fc line=931
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn zeroise_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
 
+        // FLUX-TODO addr=0x187f2 line=935
+        flux_support::assert(false);
         let mut region_offset: isize = 0;
 
         loop {
@@ -928,10 +956,13 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 State::ZeroiseKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 },
-                _ => unreachable!(),
+                // FLUX-TODO addr=0x187fc line=931 flavor=explicit_panic
+                _ => { flux_support::assert(false); unreachable!() },
             };
 
             // Get the data from that region
+            // FLUX-TODO addr=0x187f2 line=935 flavor=unwrap_option
+            flux_support::assert(false);
             let region_data = self.read_buffer.take().unwrap();
             if self.state.get() != State::ZeroiseKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
@@ -990,6 +1021,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                             }
                             None => {
                                 return Err(e);
+                            // FLUX-TODO addr=0x1852c line=1009
                             }
                         }
                     } else {
@@ -1006,6 +1038,8 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
         flash_freed: usize,
     ) -> Result<usize, ErrorCode> {
         // Get the data from that region
+        // FLUX-TODO addr=0x1852c line=1009 flavor=unwrap_option
+        flux_support::assert(false);
         let region_data = self.read_buffer.take().unwrap();
         if self.state.get() != State::GarbageCollect(RubbishState::ReadRegion(region, flash_freed))
         {
@@ -1116,6 +1150,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
 
     /// Perform a garbage collection on TicKV
     ///
+    // FLUX-TODO addr=0x18536 line=1137
     /// On success the number of bytes freed will be returned.
     /// On error a `ErrorCode` will be returned.
     pub fn garbage_collect(&self) -> Result<usize, ErrorCode> {
@@ -1134,7 +1169,8 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                     reg + 1
                 }
             },
-            _ => unreachable!(),
+            // FLUX-TODO addr=0x18536 line=1137 flavor=explicit_panic
+            _ => { flux_support::assert(false); unreachable!() },
         };
 
         for i in start..num_region {

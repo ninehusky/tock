@@ -47,6 +47,8 @@ pub fn static_buf_check_used(used: &mut bool) {
         // panic, this buf has already been declared and initialized.
         // NOTE: To save 144 bytes of code size, use loop {} instead of this
         // panic.
+        // FLUX-TODO addr=0x114e6 line=50 flavor=explicit_panic
+        flux_support::assert(false);
         panic!("Error! Single static_buf!() called twice.");
     } else {
         // Otherwise, mark our uninitialized buffer as used.

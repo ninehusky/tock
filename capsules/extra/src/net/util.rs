@@ -69,6 +69,8 @@ pub fn matches_prefix(buf1: &[u8], buf2: &[u8], prefix_len: u8) -> bool {
     }
 
     // Ensure that the prefix bytes before that match
+    // FLUX-TODO addr=0xa496 line=72 flavor=slice_end
+    flux_support::assert(false);
     buf1[..full_bytes].iter().eq(buf2[..full_bytes].iter())
 }
 

@@ -65,6 +65,8 @@ impl AddrRange {
                     // doesn't carry the modular-arithmetic step, so we assume the
                     // (mathematically derivable) bound directly.
                     flux_support::assume(full_bytes < 16);
+                    // FLUX-TODO addr=0x19daa line=68 flavor=bounds
+                    flux_support::assert(false);
                     addr.0[full_bytes] >> (8 - remainder_bits)
                         == allowed_addr.0[full_bytes] >> (8 - remainder_bits)
                 }

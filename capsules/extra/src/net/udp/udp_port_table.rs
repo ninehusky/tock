@@ -217,11 +217,17 @@ impl UdpPortManager {
         if user_bound {
             return Ok(true);
         };
+        // FLUX-TODO addr=0xbdfe line=220 flavor=unwrap_option
+        flux_support::assert(false);
         let ret = self
             .port_array
             .map(|table| {
+                // FLUX-TODO addr=0xbdf8 line=225
+                flux_support::assert(false);
                 let mut port_exists = false;
                 for i in 0..MAX_NUM_BOUND_PORTS {
+                    // FLUX-TODO addr=0xbdf8 line=225 flavor=bounds
+                    flux_support::assert(false);
                     match table[i] {
                         Some(SocketBindingEntry::Port(p)) => {
                             if p == port {

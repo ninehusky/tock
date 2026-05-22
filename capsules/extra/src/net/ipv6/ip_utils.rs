@@ -115,11 +115,16 @@ impl IPAddr {
         // Because this `assert` goes through, we can change the 
         // following `assert!` to `assert_unchecked` at a later stage.
         flux_support::assert(bytes <= prefix.len() && bytes <= 16);
+        // FLUX-OPT addr=0xd6a0 line=118 flavor=explicit_panic
         assert!(bytes <= prefix.len() && bytes <= 16);
 
         self.0[0..full_bytes].copy_from_slice(&prefix[0..full_bytes]);
         if remaining != 0 {
+            // FLUX-TODO addr=0xd6de line=123
+            flux_support::assert(false);
             let mask = 0xff_u8 << (8 - remaining);
+            // FLUX-TODO addr=0xd6de line=123 flavor=bounds
+            flux_support::assert(false);
             self.0[full_bytes] &= !mask;
             self.0[full_bytes] |= mask & prefix[full_bytes];
         }
@@ -179,12 +184,18 @@ pub fn compute_udp_checksum(
     sum += udp_header.get_len() as u32;
     sum += udp_header.get_cksum() as u32;
     //Now just need to iterate thru data and add it to the sum
+    // FLUX-TODO addr=0xb604 line=185
+    flux_support::assert(false);
     {
         let mut i: usize = 0;
         while i < ((udp_length - 8) as usize) {
+            // FLUX-TODO addr=0xb604 line=185 flavor=bounds
+            flux_support::assert(false);
             let msb_dat: u16 = ((payload[i]) as u16) << 8;
             let mut lsb_dat: u16 = 0;
             if i + 1 < udp_length as usize - 8 {
+                // FLUX-TODO addr=0xb60c line=188 flavor=bounds
+                flux_support::assert(false);
                 lsb_dat = payload[i + 1] as u16;
             }
             let temp_dat: u16 = msb_dat + lsb_dat;

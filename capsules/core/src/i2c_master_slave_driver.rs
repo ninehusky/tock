@@ -139,6 +139,8 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
                                 master_rx.mut_enter(move |app_buffer| {
                                     let len = cmp::min(app_buffer.len(), read_len as usize);
 
+                                    // FLUX-TODO addr=0x1ea64 line=142 flavor=slice_end
+                                    flux_support::assert(false);
                                     for (i, c) in buffer[0..len].iter().enumerate() {
                                         app_buffer[i].set(*c);
                                     }

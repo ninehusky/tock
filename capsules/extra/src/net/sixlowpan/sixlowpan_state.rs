@@ -288,6 +288,7 @@ fn set_frag_hdr(
     u16_to_network_slice(dgram_tag, &mut hdr[2..4]);
     if !is_frag1 {
         flux_support::assert(4 < hdr.len());
+        // FLUX-OPT addr=0xdbd6 line=291
         hdr[4] = (dgram_offset / 8) as u8;
     }
 }
@@ -523,6 +524,8 @@ impl<'a> TxState<'a> {
             // The intended surface invariant — `written <= buf.len()` — is asserted here
             // via `assume` so the slice op verifies locally.
             flux_support::assume(written <= lowpan_packet.len());
+            // FLUX-TODO addr=0x1994c line=526
+            flux_support::assert(false);
             let _ = frame.append_payload(&lowpan_packet[0..written]);
             remaining_capacity -= written;
         } else {
@@ -548,6 +551,8 @@ impl<'a> TxState<'a> {
         // trusted), and an invariant connecting `get_total_len() - 40 <= payload_buf_len`.
         // TODO — use `assume` here for now.
         flux_support::assume(payload_len <= ip6_packet.get_payload().len());
+        // FLUX-TODO addr=0x19956 line=551
+        flux_support::assert(false);
         let _ = frame.append_payload(&ip6_packet.get_payload()[0..payload_len]);
         self.dgram_offset.set(consumed + payload_len);
         Ok(frame)
@@ -578,6 +583,7 @@ impl<'a> TxState<'a> {
         if payload_len > 0 {
             let payload_offset = dgram_offset - ip6_packet.get_total_hdr_size();
             let _ = frame.append_payload(
+                // FLUX-TODO addr=0x1995c line=581
                 &ip6_packet.get_payload()[payload_offset..payload_offset + payload_len],
             );
         }
@@ -756,6 +762,7 @@ impl<'a> RxState<'a> {
         let uncompressed_len = if dgram_offset == 0 {
             let (consumed, written) = sixlowpan_compression::decompress(
                 ctx_store,
+                // FLUX-TODO addr=0x1e0c6 line=759
                 &payload[0..payload_len],
                 self.src_mac_addr.get(),
                 self.dst_mac_addr.get(),
@@ -770,6 +777,7 @@ impl<'a> RxState<'a> {
             written + remaining
         } else {
             packet[dgram_offset..dgram_offset + payload_len]
+                // FLUX-TODO addr=0x1e0b4 line=773
                 .copy_from_slice(&payload[0..payload_len]);
             payload_len
         };
@@ -800,6 +808,8 @@ impl<'a> RxState<'a> {
             // in the callback represents a significant error that should never
             // occur - all other calls to `packet.take()` replace the packet,
             // and thus the packet should always be here.
+            // FLUX-TODO addr=0xa6b8 line=803
+            flux_support::assert(false);
             self.packet
                 .map(|packet| {
                     client.receive(packet, self.dgram_size.get() as usize, result);
@@ -833,6 +843,8 @@ pub struct Sixlowpan<'a, A: time::Alarm<'a>, C: ContextStore> {
 
 #[flux_rs::sig(fn(buf: &[u8][@n], off: usize, len: usize) -> &[u8][len] requires off + len <= n)]
 fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
+    // FLUX-TODO addr=0x1e092 line=836
+    flux_support::assert(false);
     &buf[off..off + len]
 }
 
@@ -932,6 +944,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
     ) -> (Option<&RxState<'a>>, Result<(), ErrorCode>) {
         if is_fragment(packet) {
             flux_support::assert(packet.len() >= 5);
+            // FLUX-OPT addr=0x1e0a4 line=935
             let (is_frag1, dgram_size, dgram_tag, dgram_offset) = get_frag_hdr(&packet[0..5]);
             let offset_to_payload = if is_frag1 {
                 lowpan_frag::FRAG1_HDR_SIZE
@@ -975,6 +988,8 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             // The packet buffer should *always* be there; in particular,
             // since this state is not busy, it must have the packet buffer.
             // Otherwise, we are in an inconsistent state and can fail.
+            // FLUX-TODO addr=0x1e0aa line=978
+            flux_support::assert(false);
             let packet = state.packet.take().unwrap();
 
             // Filter non 6LoWPAN packets and return
@@ -995,6 +1010,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
                 Ok((consumed, written)) => {
                     let remaining = payload_len - consumed;
                     packet[written..written + remaining]
+                        // FLUX-TODO addr=0x1e0be line=998
                         .copy_from_slice(&payload[consumed..consumed + remaining]);
                     // Want dgram_size to contain decompressed size of packet
                     state.dgram_size.set((written + remaining) as u16);

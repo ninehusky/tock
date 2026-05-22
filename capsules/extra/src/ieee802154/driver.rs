@@ -313,6 +313,8 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     fn add_neighbor(&self, new_neighbor: DeviceDescriptor) -> Option<usize> {
         self.neighbors.and_then(|neighbors| {
             let num_neighbors = self.num_neighbors.get();
+            // FLUX-TODO addr=0x724c line=316
+            flux_support::assert(false);
             let position = neighbors[..num_neighbors]
                 .iter()
                 .position(|neighbor| *neighbor == new_neighbor);
@@ -369,6 +371,8 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     fn add_key(&self, new_key: KeyDescriptor) -> Option<usize> {
         self.keys.and_then(|keys| {
             let num_keys = self.num_keys.get();
+            // FLUX-TODO addr=0x727e line=372
+            flux_support::assert(false);
             let position = keys[..num_keys].iter().position(|key| *key == new_key);
             match position {
                 Some(index) => Some(index),
@@ -564,6 +568,8 @@ impl<'a, M: device::MacDevice<'a>> framer::DeviceProcedure for RadioDriver<'a, M
     fn lookup_addr_long(&self, addr: MacAddress) -> Option<[u8; 8]> {
         self.neighbors
             .and_then(|neighbors| {
+                // FLUX-TODO addr=0x1c362 line=567
+                flux_support::assert(false);
                 neighbors[..self.num_neighbors.get()]
                     .iter()
                     .find(|neighbor| match addr {
@@ -592,6 +598,8 @@ impl<'a, M: device::MacDevice<'a>> framer::KeyProcedure for RadioDriver<'a, M> {
     fn lookup_key(&self, level: SecurityLevel, key_id: KeyId) -> Option<[u8; 16]> {
         self.keys
             .and_then(|keys| {
+                // FLUX-TODO addr=0x1c42c line=595
+                flux_support::assert(false);
                 keys[..self.num_keys.get()]
                     .iter()
                     .find(|key| key.level == level && key.key_id == key_id)
@@ -1059,6 +1067,7 @@ impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
                         // the header length, the data length, and the MIC length.
                         rbuf[(offset + USER_FRAME_METADATA_SIZE)
                             ..(offset + frame_len + USER_FRAME_METADATA_SIZE)]
+                            // FLUX-TODO addr=0x1c154 line=1062
                             .copy_from_slice(&buf[..frame_len]);
 
                         rbuf[offset].set(data_offset as u8);

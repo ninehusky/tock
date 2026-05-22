@@ -207,7 +207,7 @@ impl kernel::platform::scheduler_timer::SchedulerTimer for SysTick {
             None
         } else {
             let hertz = self.hertz() as u64;
-            // FLUX-OPT addr=0xf6e6 line=211
+            // FLUX-OPT addr=0xf6e6 line=211 flavor=div_by_zero
             flux_support::assert(hertz > 0);
             Some(((tics * 1_000_000) / hertz) as u32)
         }

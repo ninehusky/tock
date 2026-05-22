@@ -75,6 +75,8 @@ impl IoWrite for Writer {
                 let mut write_position = up_buffer.write_position.get();
 
                 for &c in buf {
+                    // FLUX-TODO addr=0x13804 line=78 flavor=bounds
+                    flux_support::assert(false);
                     buffer[write_position as usize] = c;
                     write_position = (write_position + 1) % buffer_len;
                     up_buffer.write_position.set(write_position);

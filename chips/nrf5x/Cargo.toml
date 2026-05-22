@@ -11,6 +11,7 @@ edition.workspace = true
 [dependencies]
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
+flux_support = { path = "../../flux_support" }
 
 [features]
 default = []

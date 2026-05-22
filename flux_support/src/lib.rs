@@ -30,6 +30,8 @@ pub const fn assert(_x: bool) {}
 #[flux_rs::sig(fn(b:bool) ensures b)]
 pub const fn assume(b: bool) {
     if !b {
+        // FLUX-TODO addr=0x10584 line=33 flavor=explicit_panic
+        crate::assert(false);
         panic!("assume fails")
     }
 }

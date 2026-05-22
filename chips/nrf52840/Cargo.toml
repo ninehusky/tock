@@ -12,6 +12,7 @@ edition.workspace = true
 cortexm4 = { path = "../../arch/cortex-m4" }
 kernel = { path = "../../kernel" }
 nrf52 = { path = "../nrf52" }
+flux_support = { path = "../../flux_support" }
 
 [lints]
 workspace = true

@@ -1241,6 +1241,10 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // `access_grant()` can only return `None` if the grant is already
         // entered. Since we are asking for a panic!() if the grant is entered,
         // `access_grant()` function will never return `None`.
+        // FLUX-TODO line=1244 flavor=unwrap_option addrs=[
+        //     0x17e38, 0xbdd6, 0x77c0, 0x1dec,
+        // ]
+        flux_support::assert(false);
         self.access_grant(fun, true).unwrap()
     }
 
@@ -1414,10 +1418,28 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 // ## How to fix this error
                 //
                 // If you are seeing this panic, you need to refactor your
+                // FLUX-TODO line=1421 addrs=[
+                //     0x58ce, 0x4d52, 0x4c34, 0x7ca2, 0x1b9ec, 0x982a, 0x988a, 0x9bd8, 0x1fd42,
+                //     0x5436, 0x1b6dc, 0x4db0, 0x1fc4e, 0x4bd8, 0x4b00, 0x7830, 0x1b630, 0x7452,
+                //     0x7306, 0x1a478, 0x170a6, 0x1e43c, 0x1e79a, 0x1f404, 0x60cc, 0x18dc4,
+                //     0x63f0, 0x1c2a6, 0x1c16e, 0x18286, 0x17d64, 0x1f8c4, 0x1f958, 0x1f718,
+                //     0x1fa7c, 0x1f9ee, 0x494c, 0xbeee, 0xc106, 0xc16a, 0xc26e, 0xc586, 0x1f686,
+                //     0x48ee, 0x4834, 0xa296, 0x174a0, 0x77d4, 0x74b6, 0x12d18,
+                // ]
+                flux_support::assert(false);
                 // capsule to not call `.iter()` or `.each()` from inside a
                 // `.enter()` closure. That is, you need to close the grant
                 // region you are currently in before trying to iterate over all
                 // grant regions.
+                // FLUX-TODO line=1421 flavor=explicit_panic addrs=[
+                //     0x58ce, 0x4d52, 0x4c34, 0x7ca2, 0x1b9ec, 0x982a, 0x988a, 0x9bd8, 0x1fd42,
+                //     0x5436, 0x1b6dc, 0x4db0, 0x1fc4e, 0x4bd8, 0x4b00, 0x7830, 0x1b630, 0x7452,
+                //     0x7306, 0x1a478, 0x170a6, 0x1e43c, 0x1e79a, 0x1f404, 0x60cc, 0x18dc4,
+                //     0x63f0, 0x1c2a6, 0x1c16e, 0x18286, 0x17d64, 0x1f8c4, 0x1f958, 0x1f718,
+                //     0x1fa7c, 0x1f9ee, 0x494c, 0xbeee, 0xc106, 0xc16a, 0xc26e, 0xc586, 0x1f686,
+                //     0x48ee, 0x4834, 0xa296, 0x174a0, 0x77d4, 0x74b6, 0x12d18,
+                // ]
+                flux_support::assert(false);
                 panic!("Attempted to re-enter a grant region.");
             })
             .ok()?;

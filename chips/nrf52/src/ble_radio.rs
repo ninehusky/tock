@@ -633,6 +633,7 @@ impl<'a> Radio<'a> {
                 | nrf5x::constants::RADIO_STATE_TX => {
                     self.radio_off();
                     self.tx_client
+                        // FLUX-TODO addr=0x11bae line=636
                         .map(|client| client.transmit_event(self.buffer.take().unwrap(), result));
                 }
                 nrf5x::constants::RADIO_STATE_RXRU
@@ -690,6 +691,8 @@ impl<'a> Radio<'a> {
         let mut i = 0;
         while i < n {
             unsafe {
+                // FLUX-TODO addr=0x14222 line=693 flavor=bounds
+                flux_support::assert(false);
                 PAYLOAD[i] = buf[i];
             }
             i += 1;

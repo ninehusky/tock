@@ -1005,6 +1005,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 },
                             );
                         } else if clean_str.starts_with("panic") {
+                            // FLUX-TODO addr=0x1b3c0 line=1008 flavor=explicit_panic
+                            flux_support::assert(false);
                             panic!("Process Console forced a kernel panic.");
                         } else {
                             let _ = self.write_bytes(b"Valid commands are: ");
@@ -1021,8 +1023,11 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                     }
                 }
             }
+        // FLUX-TODO addr=0x1b3a6 line=1026
         });
         self.command_buffer.map(|command| {
+            // FLUX-TODO addr=0x1b3a6 line=1026 flavor=bounds
+            flux_support::assert(false);
             command[0] = 0;
         });
         self.command_index.set(0);
@@ -1048,10 +1053,13 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         self.create_state_buffer(self.writer_state.get());
     }
 
+    // FLUX-TODO addr=0x14058 line=1055
     #[flux_rs::trusted(reason = "blocked_cell: bounds inside MapCell/TakeCell closures require Cell-state invariants")]
     fn write_byte(&self, byte: u8) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
+                // FLUX-TODO addr=0x14058 line=1055 flavor=bounds
+                flux_support::assert(false);
                 buf[self.queue_size.get()] = byte;
                 self.queue_size.set(self.queue_size.get() + 1);
             });
@@ -1192,12 +1200,15 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         rx_len: usize,
         _rcode: Result<(), ErrorCode>,
         error: uart::Error,
+    // FLUX-TODO addr=0x1a9a2 line=1201
     ) {
         if error == uart::Error::None {
             match rx_len {
                 0 => debug!("ProcessConsole had read of 0 bytes"),
                 1 => {
                     self.command_buffer.map(|command| {
+                        // FLUX-TODO addr=0x1a9a2 line=1201 flavor=bounds
+                        flux_support::assert(false);
                         let esc_state = self.esc_state.get().next_state(read_buf[0]);
                         self.esc_state.set(esc_state);
 
@@ -1208,6 +1219,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                         let cursor = self.cursor.get();
 
                         if let EscState::Complete(key) = esc_state {
+                            // FLUX-TODO addr=0x1a9ee line=1219
+                            flux_support::assert(false);
                             match key {
                                 EscKey::Up | EscKey::Down if COMMAND_HISTORY_LEN >= 1 => {
                                     self.command_history.map(|ht| {
@@ -1216,11 +1229,14 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                         } else {
                                             ht.prev_cmd_idx()
                                         } {
+                                            // FLUX-TODO addr=0x1a9ee line=1219 flavor=bounds
+                                            flux_support::assert(false);
                                             let next_command_len = ht.cmds[next_index].len;
 
                                             for _ in cursor..index {
                                                 let _ = self.write_byte(SPACE);
                                             }
+// FLUX-TODO addr=0x1a98c line=1234
 
                                             // Clear the displayed command
                                             for _ in 0..index {
@@ -1231,6 +1247,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                             for i in 0..next_command_len {
                                                 let byte = ht.cmds[next_index].buf[i];
                                                 let _ = self.write_byte(byte);
+                                                // FLUX-TODO addr=0x1a98c line=1234 flavor=bounds
+                                                flux_support::assert(false);
                                                 command[i] = byte;
                                             }
 
@@ -1327,6 +1345,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 }
                             }
                         } else if read_buf[0] == BS {
+                            // FLUX-TODO addr=0x1a9c4 line=1342
+                            flux_support::assert(false);
                             if cursor > 0 {
                                 // Backspace, echo and remove the byte
                                 // preceding the cursor
@@ -1339,6 +1359,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                     let _ = self.write_byte(command[i]);
                                 }
                                 // We don't want to write the EOL byte, but we want to copy it to the left
+                                // FLUX-TODO addr=0x1a9c4 line=1342 flavor=bounds
+                                flux_support::assert(false);
                                 command[index - 1] = command[index];
 
                                 // Now that we copied all bytes to the left, we are left over with
@@ -1377,6 +1399,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                             && read_buf[0] < ASCII_LIMIT
                             && !esc_state.has_started()
                             && !esc_state.in_progress()
+                        // FLUX-TODO addr=0x1a9b2 line=1394
                         {
                             // For some reason, sometimes reads return > 127 but no error,
                             // which causes utf-8 decoding failure, so check byte is < 128. -pal
@@ -1391,6 +1414,8 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
 
                             // Make space for the newest byte
                             for i in (cursor..(index + 1)).rev() {
+                                // FLUX-TODO addr=0x1a9b2 line=1394 flavor=bounds
+                                flux_support::assert(false);
                                 command[i + 1] = command[i];
                             }
 

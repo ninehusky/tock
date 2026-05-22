@@ -342,6 +342,8 @@ pub struct IPPayload<'a> {
 fn copy_subslice_into(dst: &mut [u8], src: &SubSliceMut<'_, u8>) {
     let mut i = 0;
     while i < src.len() {
+        // FLUX-TODO addr=0x19d96 line=345 flavor=bounds
+        flux_support::assert(false);
         dst[i] = src[i];
         i += 1;
     }
@@ -412,19 +414,26 @@ impl<'a> IPPayload<'a> {
         let (offset, _) = match self.header {
             // The `unwrap` is safe because we require that `buf >= 8 + offset`, which is the
             // exact condition under which `.encode()` returns a `Done`.
-            TransportHeader::UDP(udp_header) => udp_header.encode(buf, offset).done().unwrap(),
-            TransportHeader::ICMP(icmp_header) => icmp_header.encode(buf, offset).done().unwrap(),
+            // FLUX-TODO addr=0xdae8 line=415 flavor=unwrap_option
+            TransportHeader::UDP(udp_header) => { flux_support::assert(false); udp_header.encode(buf, offset).done().unwrap() },
+            // FLUX-TODO addr=0xdaee line=416 flavor=unwrap_option
+            TransportHeader::ICMP(icmp_header) => { flux_support::assert(false); icmp_header.encode(buf, offset).done().unwrap() },
             _ => {
+                // FLUX-TODO addr=0xdae2 line=418 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!();
             }
         };
         let payload_length = self.get_payload_length();
+        // FLUX-TODO addr=0xdad8 line=428
+        flux_support::assert(false);
         // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
         // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
         // Explicit assert is load-bearing: `flux_support`'s `Index::index` extern_spec puts `in_bounds` in
         // `#[no_panic_if]` (opt-in per call-site), not in the sig's `requires`. Since this function isn't
         // marked `#[flux_rs::no_panic]`, the slice-op bounds check wouldn't fire without this explicit assert.
         flux_support::assert(payload_length <= self.payload.len());
+        // FLUX-OPT addr=0xdad8 line=428 flavor=slice_end
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)
     }
@@ -484,6 +493,7 @@ impl<'a> IP6Packet<'a> {
     #[flux_rs::sig(fn(self: &Self[@p]) -> &[u8][p.payload_buf_len])]
     pub fn get_payload(&self) -> &[u8] {
         self.payload.payload
+    // FLUX-TODO addr=0xdb52 line=494
     }
 
     #[flux_rs::sig(fn(self: &Self[@p]) -> usize requires p.kind != 1)]
@@ -491,7 +501,8 @@ impl<'a> IP6Packet<'a> {
         let transport_hdr_size = match self.payload.header {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),
             TransportHeader::ICMP(icmp_header) => icmp_header.get_hdr_size(),
-            _ => unimplemented!(),
+            // FLUX-TODO addr=0xdb52 line=494 flavor=explicit_panic
+            _ => { flux_support::assert(false); unimplemented!() },
         };
         40 + transport_hdr_size
     }
@@ -512,6 +523,7 @@ impl<'a> IP6Packet<'a> {
                     udp_header,
                     udp_header.get_len(),
                     self.payload.payload,
+                // FLUX-TODO addr=0x19d8c line=523
                 );
                 udp_header.set_cksum(cksum);
             }
@@ -520,6 +532,8 @@ impl<'a> IP6Packet<'a> {
                 icmp_header.set_cksum(cksum);
             }
             _ => {
+                // FLUX-TODO addr=0x19d8c line=523 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!();
             }
         }
@@ -547,6 +561,7 @@ impl<'a> IP6Packet<'a> {
         let (next_header, payload_len) = self.payload.set_payload(transport_header, payload);
         self.header.set_next_header(next_header);
         self.header.set_payload_len(payload_len);
+    // FLUX-TODO addr=0xdaf4 line=560
     }
 
     // TODO: Do we need a decode equivalent? I don't think so, but we might
@@ -557,6 +572,7 @@ impl<'a> IP6Packet<'a> {
         let ip6_header = self.header;
         let done = ip6_header.encode(buf).done();
         flux_support::assert(done.is_some());
+        // FLUX-OPT addr=0xdaf4 line=560 flavor=unwrap_option
         let (off, _) = done.unwrap();
         self.payload.encode(buf, off)
     }

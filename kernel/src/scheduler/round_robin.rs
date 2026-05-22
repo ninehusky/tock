@@ -97,6 +97,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                         next = Some(proc.processid());
                         break;
                     }
+                    // FLUX-TODO addr=0x1dcc line=100 flavor=unwrap_option
                     self.processes.push_tail(self.processes.pop_head().unwrap());
                 }
                 None => {
@@ -118,17 +119,23 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         } else {
             // grant a fresh timeslice
             self.time_remaining.set(self.timeslice_length);
+            // FLUX-TODO addr=0x1d88 line=123
+            flux_support::assert(false);
             self.timeslice_length
         };
+        // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
+        flux_support::assert(false);
         assert!(timeslice != 0);
 
         SchedulingDecision::RunProcess((next, Some(timeslice)))
     }
 
+    // FLUX-TODO addr=0x1d7e line=132
     #[flux_rs::trusted_impl(reason = "TODO: we would need to push a refinement up to the `Scheduler` trait to discharge the precondition, which elicits more proofs about callers.")]
     #[flux_rs::sig(fn (&Self, StoppedExecutingReason, execution_time_us: Option<u32>[true]) -> ())]
     fn result(&self, result: StoppedExecutingReason, execution_time_us: Option<u32>) {
         flux_support::assert(execution_time_us.is_some());
+        // FLUX-OPT addr=0x1d7e line=132 flavor=unwrap_option
         let execution_time_us = execution_time_us.unwrap(); // should never fail
         let reschedule = match result {
             StoppedExecutingReason::KernelPreemption => {
@@ -139,11 +146,14 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                 } else {
                     false
                 }
+            // FLUX-TODO addr=0x1e7a line=147
             }
             _ => false,
         };
         self.last_rescheduled.set(reschedule);
         if !reschedule {
+            // FLUX-TODO addr=0x1e7a line=147 flavor=unwrap_option
+            flux_support::assert(false);
             self.processes.push_tail(self.processes.pop_head().unwrap());
         }
     }

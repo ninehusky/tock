@@ -501,6 +501,7 @@ where
                         .and_then(|scan_buffer| {
                             scan_buffer.mut_enter(|userland| {
                                 userland[0..len as usize]
+                                    // FLUX-TODO addr=0x1e784 line=504
                                     .copy_from_slice_or_err(&buf[0..len as usize])
                                     .is_ok()
                             })

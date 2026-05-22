@@ -492,6 +492,8 @@ impl<'a> Adc<'a> {
                 } else if self.registers.events_end.is_set(EVENT::EVENT) {
                     self.registers.events_end.write(EVENT::EVENT::CLEAR);
 
+                    // FLUX-TODO addr=0x1dd2 line=495 flavor=unwrap_option
+                    flux_support::assert(false);
                     let ret_buf = self.buffer.take().unwrap();
 
                     // Left shift all samples to the MSB. This handles
@@ -557,8 +559,11 @@ impl<'a> Adc<'a> {
             .result_maxcnt
             .write(RESULT_MAXCNT::MAXCNT.val(count as u32));
     }
+// FLUX-TODO addr=0x11a34 line=562
 
     fn setup_frequency(&self, frequency: u32) {
+        // FLUX-TODO addr=0x11a34 line=562 flavor=div_by_zero
+        flux_support::assert(false);
         let raw_cc = 16000000 / frequency;
         let cc = if raw_cc > 2047 {
             2047

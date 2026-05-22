@@ -118,6 +118,8 @@ impl<'a> uart::ReceiveClient for MuxUart<'a> {
                         || state == UartDeviceReceiveState::Aborting
                     {
                         // debug!("Have {} bytes, copying in bytes {}-{}, {} remain", rx_len, position, position + len, remaining);
+                        // FLUX-TODO addr=0x9dc2 line=121 flavor=slice_end
+                        flux_support::assert(false);
                         rxbuf[position..(len + position)].copy_from_slice(&buffer[..len]);
                     }
                     device.rx_position.set(position + len);

@@ -412,6 +412,8 @@ unsafe fn try_get_debug_writer() -> Option<&'static mut DebugWriterWrapper> {
 }
 
 unsafe fn get_debug_writer() -> &'static mut DebugWriterWrapper {
+    // FLUX-TODO addr=0x10aea line=415 flavor=unwrap_option
+    flux_support::assert(false);
     try_get_debug_writer().unwrap() // Unwrap fail = Must call `set_debug_writer_wrapper` in board initialization.
 }
 

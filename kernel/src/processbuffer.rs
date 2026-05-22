@@ -757,6 +757,8 @@ impl ReadableProcessSlice {
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
+            // FLUX-TODO addr=0x11434 line=760 flavor=explicit_panic
+            flux_support::assert(false);
             panic!(
                 "source slice length ({}) does not match destination slice length ({})",
                 src_len, dst_len,
@@ -857,6 +859,10 @@ impl Index<Range<usize>> for ReadableProcessSlice {
     type Output = Self;
 
     fn index(&self, idx: Range<usize>) -> &Self::Output {
+        // FLUX-TODO line=860 flavor=slice_end addrs=[
+        //     0x10fd4, 0x10fdc,
+        // ]
+        flux_support::assert(false);
         cast_byte_slice_to_process_slice(&self.slice[idx])
     }
 }
@@ -1001,12 +1007,16 @@ impl WriteableProcessSlice {
         // core::slice::copy_from_slice method implementation:
         // https://doc.rust-lang.org/src/core/slice/mod.rs.html#3034-3036
 
+        // FLUX-TODO addr=0x114b8 line=1010
+        flux_support::assert(false);
         // The panic code path was put into a cold function to not
         // bloat the call site.
         #[inline(never)]
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
+            // FLUX-TODO addr=0x114b8 line=1010 flavor=explicit_panic
+            flux_support::assert(false);
             panic!(
                 "src slice len ({}) != dest slice len ({})",
                 src_len, dst_len,
