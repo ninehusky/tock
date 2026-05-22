@@ -11,9 +11,16 @@ edition = "2021"
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
-include = ["src/optional_cell.rs"]
+include = [
+    "src/map_cell.rs",
+    "src/numeric_cell_ext.rs",
+    "src/optional_cell.rs",
+    "src/take_cell.rs",
+    "src/volatile_cell.rs",
+]
 
 [dependencies]
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
 
 [lints]
