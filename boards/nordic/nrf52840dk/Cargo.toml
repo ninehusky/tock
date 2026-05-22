@@ -16,6 +16,11 @@ name = "nrf52840dk_lib"
 name = "nrf52840dk"
 path = "src/main.rs"
 
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = ["src/io.rs"]
+
 [dependencies]
 components = { path = "../../components" }
 cortexm4 = { path = "../../../arch/cortex-m4" }

@@ -20,14 +20,22 @@ flux_support = { path = "../../flux_support" }
 enabled = true
 check_overflow = "lazy"
 include = [
-    "src/net/ipv6/ip_utils.rs",
+    "src/ble_advertising_driver.rs",
+    "src/ieee802154/driver.rs",
     "src/ieee802154/framer.rs",
-    "src/net/network_capabilities.rs",
     "src/ieee802154/mac.rs",
-    "src/net/stream.rs",
-    "src/sip_hash.rs",
+    "src/mx25r6435f.rs",
+    "src/net/ipv6/ip_utils.rs",
     "src/net/ipv6/ipv6.rs",
+    "src/net/network_capabilities.rs",
     "src/net/sixlowpan/sixlowpan_state.rs",
+    "src/net/stream.rs",
+    "src/net/udp/udp_port_table.rs",
+    "src/net/udp/udp_send.rs",
+    "src/net/util.rs",
+    "src/sip_hash.rs",
+    "src/tickv.rs",
+    "src/virtual_kv.rs",
     # sixlowpan_compression.rs: per-fn while we work through it; flip to
     # "src/net/sixlowpan/sixlowpan_compression.rs" once all fns are clean.
     "def:decompress_udp_checksum",
@@ -45,6 +53,7 @@ include = [
     "def:decompress_ext_hdr",
     "def:result_to_errorcode",
     "def:decompress",
+    "def:get_context_0",
 ]
 
 [lints]

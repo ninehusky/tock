@@ -16,6 +16,7 @@ include = [
     "def:write_usize_to_u8_slice",
     "def:usize_byte_range",
     "def:unhandled_interrupt",
+    "def:print_cortexm_state",
 ]
 
 [dependencies]
