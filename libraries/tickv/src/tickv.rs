@@ -226,12 +226,12 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
 
         // Determine the number of regions
         let num_region = self.flash_size / S;
-// FLUX-TODO addr=0x16238 line=229
-flux_support::assert(false);
+// FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
+flux_support::assert(num_region != 0);
 
         // Determine the block where the data should be
         // FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
-        flux_support::assert(false);
+        flux_support::assert(num_region != 0);
         (hash as usize & 0xFFFF) % num_region
     }
 
@@ -702,13 +702,13 @@ flux_support::assert(false);
                         InitState::GetKeyReadRegion(reg) => reg,
                         _ => {
                             // Get the data from that region
-                            // FLUX-TODO addr=0x16e1e line=703
+                            // FLUX-TODO addr=0x16e1e line=703 flavor=div_by_zero
                             flux_support::assert(false);
                             (region as isize + region_offset) as usize
                         }
                     }
                 }
-                // FLUX-TODO addr=0x16e14 line=707
+                // FLUX-TODO addr=0x16e14 line=707 flavor=explicit_panic
                 State::GetKey(key_state) => { flux_support::assert(false); match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 } },
@@ -833,13 +833,13 @@ flux_support::assert(false);
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn invalidate_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
-// FLUX-TODO addr=0x161f6 line=831
+// FLUX-TODO addr=0x161f6 line=831 flavor=div_by_zero
 flux_support::assert(false);
 
         let mut region_offset: isize = 0;
 
         loop {
-            // FLUX-TODO addr=0x161ec line=835
+            // FLUX-TODO addr=0x161ec line=835 flavor=div_by_zero
             flux_support::assert(false);
             // Get the data from that region
             let new_region = match self.state.get() {
@@ -941,7 +941,7 @@ flux_support::assert(false);
     pub fn zeroise_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
 
-        // FLUX-TODO addr=0x187f2 line=935
+        // FLUX-TODO addr=0x187f2 line=935 flavor=div_by_zero
         flux_support::assert(false);
         let mut region_offset: isize = 0;
 

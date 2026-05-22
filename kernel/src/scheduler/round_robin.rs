@@ -120,12 +120,12 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         } else {
             // grant a fresh timeslice
             self.time_remaining.set(self.timeslice_length);
-            // FLUX-TODO addr=0x1d88 line=123
+            // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
             flux_support::assert(false);
             self.timeslice_length
         };
         // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
-        flux_support::assert(false);
+        flux_support::assert(timeslice != 0);
         assert!(timeslice != 0);
 
         SchedulingDecision::RunProcess((next, Some(timeslice)))

@@ -17,8 +17,18 @@ include = [
     "def:ctrl_state",
     "def:bulk_state",
     "def:start_dma_in",
+    "def:start_dma_out",
     "def:packet_to_hex",
     "def:replace_radio_buffer",
+    "def:debug_in_packet",
+    "def:debug_out_packet",
+    "def:handle_endepout",
+    "def:handle_ep0setup",
+    "def:handle_epdata",
+    "def:handle_interrupt",
+    "def:set_pending_dma",
+    "def:setup_frequency",
+    "def:transmit_out",
 ]
 
 [dependencies]

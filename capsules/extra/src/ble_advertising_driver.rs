@@ -501,7 +501,7 @@ where
                         .and_then(|scan_buffer| {
                             scan_buffer.mut_enter(|userland| {
                                 // FLUX-TODO addr=0x1e784 line=504 flavor=slice_end
-                                flux_support::assert(false);
+                                flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                 userland[0..len as usize]
                                     .copy_from_slice_or_err(&buf[0..len as usize])
                                     .is_ok()

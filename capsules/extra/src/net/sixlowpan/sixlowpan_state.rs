@@ -524,8 +524,8 @@ impl<'a> TxState<'a> {
             // The intended surface invariant — `written <= buf.len()` — is asserted here
             // via `assume` so the slice op verifies locally.
             flux_support::assume(written <= lowpan_packet.len());
-            // FLUX-TODO addr=0x1994c line=526
-            flux_support::assert(false);
+            // FLUX-TODO addr=0x1994c line=526 flavor=slice_end
+            flux_support::assert(written <= lowpan_packet.len());
             let _ = frame.append_payload(&lowpan_packet[0..written]);
             remaining_capacity -= written;
         } else {
@@ -551,8 +551,8 @@ impl<'a> TxState<'a> {
         // trusted), and an invariant connecting `get_total_len() - 40 <= payload_buf_len`.
         // TODO — use `assume` here for now.
         flux_support::assume(payload_len <= ip6_packet.get_payload().len());
-        // FLUX-TODO addr=0x19956 line=551
-        flux_support::assert(false);
+        // FLUX-TODO addr=0x19956 line=551 flavor=slice_end
+        flux_support::assert(payload_len <= ip6_packet.get_payload().len());
         let _ = frame.append_payload(&ip6_packet.get_payload()[0..payload_len]);
         self.dgram_offset.set(consumed + payload_len);
         Ok(frame)
@@ -583,7 +583,7 @@ impl<'a> TxState<'a> {
         if payload_len > 0 {
             let payload_offset = dgram_offset - ip6_packet.get_total_hdr_size();
             // FLUX-TODO addr=0x1995c line=581 flavor=slice_order
-            flux_support::assert(false);
+            flux_support::assert(payload_offset + payload_len <= ip6_packet.get_payload().len());
             let _ = frame.append_payload(
                 &ip6_packet.get_payload()[payload_offset..payload_offset + payload_len],
             );
@@ -762,7 +762,7 @@ impl<'a> RxState<'a> {
         let packet = self.packet.take().ok_or(Err(ErrorCode::NOMEM))?;
         let uncompressed_len = if dgram_offset == 0 {
             // FLUX-TODO addr=0x1e0c6 line=759 flavor=slice_end
-            flux_support::assert(false);
+            flux_support::assert(payload_len <= payload.len());
             let (consumed, written) = sixlowpan_compression::decompress(
                 ctx_store,
                 &payload[0..payload_len],
@@ -779,7 +779,7 @@ impl<'a> RxState<'a> {
             written + remaining
         } else {
             // FLUX-TODO addr=0x1e0b4 line=773 flavor=slice_end
-            flux_support::assert(false);
+            flux_support::assert(dgram_offset + payload_len <= packet.len() && payload_len <= payload.len());
             packet[dgram_offset..dgram_offset + payload_len]
                 .copy_from_slice(&payload[0..payload_len]);
             payload_len
@@ -811,8 +811,8 @@ impl<'a> RxState<'a> {
             // in the callback represents a significant error that should never
             // occur - all other calls to `packet.take()` replace the packet,
             // and thus the packet should always be here.
-            // FLUX-TODO addr=0xa6b8 line=803
-            flux_support::assert(false);
+            // FLUX-TODO addr=0xa6b8 line=803 flavor=div_by_zero
+            flux_support::assert(self.packet.is_some());
             self.packet
                 .map(|packet| {
                     client.receive(packet, self.dgram_size.get() as usize, result);
@@ -846,8 +846,8 @@ pub struct Sixlowpan<'a, A: time::Alarm<'a>, C: ContextStore> {
 
 #[flux_rs::sig(fn(buf: &[u8][@n], off: usize, len: usize) -> &[u8][len] requires off + len <= n)]
 fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
-    // FLUX-TODO addr=0x1e092 line=836
-    flux_support::assert(false);
+    // FLUX-TODO addr=0x1e092 line=836 flavor=div_by_zero
+    flux_support::assert(off + len <= buf.len());
     &buf[off..off + len]
 }
 
@@ -991,8 +991,8 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             // The packet buffer should *always* be there; in particular,
             // since this state is not busy, it must have the packet buffer.
             // Otherwise, we are in an inconsistent state and can fail.
-            // FLUX-TODO addr=0x1e0aa line=978
-            flux_support::assert(false);
+            // FLUX-TODO addr=0x1e0aa line=978 flavor=unwrap_option
+            flux_support::assert(state.packet.is_some());
             let packet = state.packet.take().unwrap();
 
             // Filter non 6LoWPAN packets and return
@@ -1013,7 +1013,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
                 Ok((consumed, written)) => {
                     let remaining = payload_len - consumed;
                     // FLUX-TODO addr=0x1e0be line=998 flavor=slice_order
-                    flux_support::assert(false);
+                    flux_support::assert(written + remaining <= packet.len() && consumed + remaining <= payload.len());
                     packet[written..written + remaining]
                         .copy_from_slice(&payload[consumed..consumed + remaining]);
                     // Want dgram_size to contain decompressed size of packet

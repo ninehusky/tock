@@ -1418,7 +1418,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 // ## How to fix this error
                 //
                 // If you are seeing this panic, you need to refactor your
-                // FLUX-TODO line=1421 addrs=[
+                // FLUX-TODO line=1421 flavor=div_by_zero addrs=[
                 //     0x58ce, 0x4d52, 0x4c34, 0x7ca2, 0x1b9ec, 0x982a, 0x988a, 0x9bd8, 0x1fd42,
                 //     0x5436, 0x1b6dc, 0x4db0, 0x1fc4e, 0x4bd8, 0x4b00, 0x7830, 0x1b630, 0x7452,
                 //     0x7306, 0x1a478, 0x170a6, 0x1e43c, 0x1e79a, 0x1f404, 0x60cc, 0x18dc4,

@@ -1026,7 +1026,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         });
         self.command_buffer.map(|command| {
             // FLUX-TODO addr=0x1b3a6 line=1026 flavor=bounds
-            flux_support::assert(false);
+            flux_support::assert(command.len() > 0);
             command[0] = 0;
         });
         self.command_index.set(0);
@@ -1057,7 +1057,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
                 // FLUX-TODO addr=0x14058 line=1055 flavor=bounds
-                flux_support::assert(false);
+                flux_support::assert(self.queue_size.get() < buf.len());
                 buf[self.queue_size.get()] = byte;
                 self.queue_size.set(self.queue_size.get() + 1);
             });
@@ -1205,7 +1205,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                 1 => {
                     self.command_buffer.map(|command| {
                         // FLUX-TODO addr=0x1a9a2 line=1201 flavor=bounds
-                        flux_support::assert(false);
+                        flux_support::assert(0 < read_buf.len());
                         let esc_state = self.esc_state.get().next_state(read_buf[0]);
                         self.esc_state.set(esc_state);
 
@@ -1216,7 +1216,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                         let cursor = self.cursor.get();
 
                         if let EscState::Complete(key) = esc_state {
-                            // FLUX-TODO addr=0x1a9ee line=1219
+                            // FLUX-TODO addr=0x1a9ee line=1219 flavor=bounds
                             flux_support::assert(false);
                             match key {
                                 EscKey::Up | EscKey::Down if COMMAND_HISTORY_LEN >= 1 => {
@@ -1227,7 +1227,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                             ht.prev_cmd_idx()
                                         } {
                                             // FLUX-TODO addr=0x1a9ee line=1219 flavor=bounds
-                                            flux_support::assert(false);
+                                            flux_support::assert(next_index < ht.cmds.len());
                                             let next_command_len = ht.cmds[next_index].len;
 
                                             for _ in cursor..index {
@@ -1241,10 +1241,12 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
 
                                             // Display the new command
                                             for i in 0..next_command_len {
+                                                // FLUX-TODO addr=0x1a98c line=1234 flavor=bounds
+                                                flux_support::assert(next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len());
                                                 let byte = ht.cmds[next_index].buf[i];
                                                 let _ = self.write_byte(byte);
                                                 // FLUX-TODO addr=0x1a98c line=1234 flavor=bounds
-                                                flux_support::assert(false);
+                                                flux_support::assert(i < command.len());
                                                 command[i] = byte;
                                             }
 
@@ -1341,7 +1343,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 }
                             }
                         } else if read_buf[0] == BS {
-                            // FLUX-TODO addr=0x1a9c4 line=1342
+                            // FLUX-TODO addr=0x1a9c4 line=1342 flavor=div_by_zero
                             flux_support::assert(false);
                             if cursor > 0 {
                                 // Backspace, echo and remove the byte
@@ -1356,7 +1358,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 }
                                 // We don't want to write the EOL byte, but we want to copy it to the left
                                 // FLUX-TODO addr=0x1a9c4 line=1342 flavor=bounds
-                                flux_support::assert(false);
+                                flux_support::assert(index >= 1 && index < command.len());
                                 command[index - 1] = command[index];
 
                                 // Now that we copied all bytes to the left, we are left over with
@@ -1410,7 +1412,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                             // Make space for the newest byte
                             for i in (cursor..(index + 1)).rev() {
                                 // FLUX-TODO addr=0x1a9b2 line=1394 flavor=bounds
-                                flux_support::assert(false);
+                                flux_support::assert(i + 1 < command.len());
                                 command[i + 1] = command[i];
                             }
 

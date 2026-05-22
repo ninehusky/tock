@@ -264,8 +264,8 @@ impl<
         self.txbuffer
             .take()
             .map_or(Err(ErrorCode::RESERVE), |txbuffer| {
-                // FLUX-TODO addr=0x16628 line=267
-                flux_support::assert(false);
+                // FLUX-TODO addr=0x16628 line=267 flavor=bounds
+                flux_support::assert(txbuffer.len() > 0);
                 txbuffer[0] = Opcodes::WREN as u8;
                 if let Err((err, txbuffer, _)) = self.spi.read_write_bytes(txbuffer, None, 1) {
                     self.txbuffer.replace(txbuffer);
@@ -300,8 +300,8 @@ impl<
                             .take()
                             .map_or(Err(ErrorCode::RESERVE), move |rxbuffer| {
                                 // Setup the read instruction
-                                // FLUX-TODO addr=0x164b6 line=301
-                                flux_support::assert(false);
+                                // FLUX-TODO addr=0x164b6 line=301 flavor=div_by_zero
+                                flux_support::assert(txbuffer.len() > 3);
                                 txbuffer[0] = Opcodes::READ as u8;
                                 txbuffer[1] = ((sector_index * SECTOR_SIZE) >> 16) as u8;
                                 txbuffer[2] = ((sector_index * SECTOR_SIZE) >> 8) as u8;
@@ -318,8 +318,8 @@ impl<
                                     (PAGE_SIZE + 4) as usize,
                                 ) {
                                     self.txbuffer.replace(txbuffer);
-                                    // FLUX-TODO addr=0x164ae line=317
-                                    flux_support::assert(false);
+                                    // FLUX-TODO addr=0x164ae line=317 flavor=unwrap_option
+                                    flux_support::assert(rxbuffer.is_some());
                                     self.rxbuffer.replace(rxbuffer.unwrap());
                                     Err(err)
                                 } else {
@@ -532,8 +532,8 @@ impl<
 
                 self.client_sector.map(|sector| {
                     for i in 0..(PAGE_SIZE as usize) {
-                        // FLUX-TODO addr=0x1f1e4 line=529
-                        flux_support::assert(false);
+                        // FLUX-TODO addr=0x1f1e4 line=529 flavor=bounds
+                        flux_support::assert(i + 4 < write_buffer.len() && (i + (page_index * PAGE_SIZE) as usize) < SECTOR_SIZE as usize);
                         write_buffer[i + 4] = sector[i + (page_index * PAGE_SIZE) as usize];
                     }
                 });
@@ -597,8 +597,8 @@ impl<
         // operation has finished.
         self.txbuffer.take().map(|write_buffer| {
             self.rxbuffer.take().map(move |read_buffer| {
-                // FLUX-TODO addr=0x1f4ba line=592
-                flux_support::assert(false);
+                // FLUX-TODO addr=0x1f4ba line=592 flavor=bounds
+                flux_support::assert(write_buffer.len() > 0);
                 write_buffer[0] = Opcodes::RDSR as u8;
                 let _ = self
                     .spi

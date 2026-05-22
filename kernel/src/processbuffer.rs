@@ -862,7 +862,7 @@ impl Index<Range<usize>> for ReadableProcessSlice {
         // FLUX-TODO line=860 flavor=slice_end addrs=[
         //     0x10fd4, 0x10fdc,
         // ]
-        flux_support::assert(false);
+        flux_support::assert(idx.end <= self.slice.len());
         cast_byte_slice_to_process_slice(&self.slice[idx])
     }
 }
@@ -1007,7 +1007,7 @@ impl WriteableProcessSlice {
         // core::slice::copy_from_slice method implementation:
         // https://doc.rust-lang.org/src/core/slice/mod.rs.html#3034-3036
 
-        // FLUX-TODO addr=0x114b8 line=1010
+        // FLUX-TODO addr=0x114b8 line=1010 flavor=explicit_panic
         flux_support::assert(false);
         // The panic code path was put into a cold function to not
         // bloat the call site.

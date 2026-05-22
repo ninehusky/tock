@@ -136,7 +136,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
         // TODO verify SPI return value
         let _ = if rlen == 0 {
             // FLUX-TODO addr=0x15308 line=139 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(self.kernel_write.is_some());
             self.spi_master
                 .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
         } else if write_len == 0 {
@@ -168,7 +168,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                 });
             app.index += read_len;
             // FLUX-TODO addr=0x15314 line=169 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
                 self.kernel_read.take(),
@@ -176,7 +176,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
             )
         } else {
             // FLUX-TODO addr=0x1530e line=175 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
                 self.kernel_read.take(),

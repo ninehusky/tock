@@ -252,8 +252,8 @@ impl<'a> AesECB<'a> {
                                 for i in 0..take {
                                     // Copy into static mut DMA buffer
                                     unsafe {
-                                        // FLUX-TODO addr=0x21fca line=255
-                                        flux_support::assert(false);
+                                        // FLUX-TODO addr=0x21fca line=255 flavor=bounds
+                                        flux_support::assert(i + PLAINTEXT_START < 48 && i + start < output.len());
                                         ECB_DATA[i + PLAINTEXT_START] = output[i + start];
                                     }
                                 }
@@ -263,8 +263,8 @@ impl<'a> AesECB<'a> {
                             for i in 0..take {
                                 // Copy into static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x21fae line=264
-                                    flux_support::assert(false);
+                                    // FLUX-TODO addr=0x21fae line=264 flavor=bounds
+                                    flux_support::assert(i + PLAINTEXT_START < 48 && i + start < input.len());
                                     ECB_DATA[i + PLAINTEXT_START] = input[i + start];
                                 }
                             }
@@ -281,8 +281,8 @@ impl<'a> AesECB<'a> {
 
                                     // Copy into static mut DMA buffer
                                     unsafe {
-                                        // FLUX-TODO addr=0x21fd0 line=280
-                                        flux_support::assert(false);
+                                        // FLUX-TODO addr=0x21fd0 line=280 flavor=bounds
+                                        flux_support::assert(ecb_idx < 48 && i + start < output.len());
                                         ECB_DATA[ecb_idx] ^= output[i + start];
                                     }
                                 }
@@ -293,8 +293,8 @@ impl<'a> AesECB<'a> {
                                 let ecb_idx = i + PLAINTEXT_START;
                                 // Copy into static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x21fb4 line=290
-                                    flux_support::assert(false);
+                                    // FLUX-TODO addr=0x21fb4 line=290 flavor=bounds
+                                    flux_support::assert(ecb_idx < 48 && i + start < input.len());
                                     ECB_DATA[ecb_idx] ^= input[i + start];
                                 }
                             }
@@ -347,8 +347,8 @@ impl<'a> AesECB<'a> {
                                 // output buffer.
                                 self.output.map(|output| {
                                     for i in 0..take {
-                                        // FLUX-TODO addr=0x1e80 line=342
-                                        flux_support::assert(false);
+                                        // FLUX-TODO addr=0x1e80 line=342 flavor=bounds
+                                        flux_support::assert(start + i < output.len() && i + PLAINTEXT_END < 48);
                                         let in_byte = output[start + i];
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
@@ -364,8 +364,8 @@ impl<'a> AesECB<'a> {
                                         let in_byte = input[start + i];
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
-                                        // FLUX-TODO addr=0x1e32 line=357
-                                        flux_support::assert(false);
+                                        // FLUX-TODO addr=0x1e32 line=357 flavor=bounds
+                                        flux_support::assert(start_idx + current_idx + i < output.len());
                                         output[start_idx + current_idx + i] =
                                             keystream_byte ^ in_byte;
                                     }
@@ -388,8 +388,8 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x1e12 line=379
-                                    flux_support::assert(false);
+                                    // FLUX-TODO addr=0x1e12 line=379 flavor=bounds
+                                    flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
                                 }
                             }
@@ -408,8 +408,8 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x1e1c line=397
-                                    flux_support::assert(false);
+                                    // FLUX-TODO addr=0x1e1c line=397 flavor=bounds
+                                    flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48 && i + PLAINTEXT_START < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
                                     ECB_DATA[i + PLAINTEXT_START] = ECB_DATA[i + PLAINTEXT_END];
                                 }
@@ -509,7 +509,7 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             None
         } else {
             // FLUX-TODO addr=0x220a2 line=498 flavor=unwrap_option
-            flux_support::assert(false);
+            flux_support::assert(self.output.is_some());
             Some((
                 Err(ErrorCode::INVAL),
                 self.input.take(),

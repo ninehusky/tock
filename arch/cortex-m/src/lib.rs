@@ -129,7 +129,7 @@ pub trait CortexMVariant {
     unsafe fn print_cortexm_state(writer: &mut dyn Write);
 }
 
-// FLUX-TODO: `requires false` says no rust caller can invoke this. Chip vector
+// FLUX-TODO: `requires false` says no rust caller can invoke this. Chip vector flavor=div_by_zero
 // tables (e.g. chips/stm32f303xc/src/lib.rs BASE_VECTORS) still install this
 // function as a hardware exception handler via fn-pointer coercion (which
 // doesn't trigger Flux's precondition check). Outstanding proof debt: for every

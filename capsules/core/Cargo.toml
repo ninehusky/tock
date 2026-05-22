@@ -18,7 +18,15 @@ flux_support = { path = "../../flux_support" }
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
-include = [ "src/button.rs", "src/gpio.rs", "src/process_console.rs", "src/virtualizers/virtual_aes_ccm.rs" ]
+include = [
+    "src/button.rs",
+    "src/gpio.rs",
+    "src/i2c_master_slave_driver.rs",
+    "src/process_console.rs",
+    "src/spi_controller.rs",
+    "src/virtualizers/virtual_aes_ccm.rs",
+    "src/virtualizers/virtual_uart.rs",
+]
 
 
 [lints]
