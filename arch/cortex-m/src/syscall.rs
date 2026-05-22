@@ -106,7 +106,7 @@ fn write_usize_to_u8_slice(val: usize, slice: &mut [u8], index: usize) {
     // FLUX-TODO line=106 flavor=slice_end addrs=[
     //     0xf768, 0xf772,
     // ]
-    flux_support::assert(false);
+    flux_support::assert(range.end <= slice.len());
     copy_le_into(val, &mut slice[range]);
 }
 

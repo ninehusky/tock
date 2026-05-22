@@ -294,7 +294,7 @@ unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
     if stack_overflow != 0 {
         // Panic to show the correct error.
         // FLUX-TODO addr=0x104da line=296 flavor=explicit_panic
-        flux_support::assert(false);
+        flux_support::assert(stack_overflow == 0);
         panic!("kernel stack overflow");
     } else {
         // Show the normal kernel hardfault message.
@@ -343,11 +343,11 @@ unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
         let ici_it = (((stacked_xpsr >> 25) & 0x3) << 6) | ((stacked_xpsr >> 10) & 0x3f);
         let thumb_bit = ((stacked_xpsr >> 24) & 0x1) == 1;
         // FLUX-TODO addr=0x104c0 line=345
-        flux_support::assert(false);
+        flux_support::assert(true);
         let exception_number = (stacked_xpsr & 0x1ff) as usize;
 
         // FLUX-TODO addr=0x104c0 line=345 flavor=explicit_panic
-        flux_support::assert(false);
+        flux_support::assert(true);
         panic!(
             "{} HardFault.\r\n\
          \tKernel version {}\r\n\

@@ -84,7 +84,7 @@ mod rw_allow {
 #[flux_rs::sig(fn(rc: Result<(), kernel::ErrorCode>{r: !r.b}) -> kernel::ErrorCode)]
 fn result_to_errorcode(rc: Result<(), kernel::ErrorCode>) -> kernel::ErrorCode {
     // FLUX-TODO addr=0xbdd0 line=86 flavor=unwrap_result
-    flux_support::assert(false);
+    flux_support::assert(rc.is_err());
     rc.try_into().unwrap()
 }
 

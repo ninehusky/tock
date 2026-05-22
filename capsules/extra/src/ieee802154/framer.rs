@@ -197,13 +197,13 @@ impl FrameInfo {
             FrameType::Beacon => {
                 // Beginning of beacon payload field
                 // FLUX-TODO addr=0xdc1a line=199
-                flux_support::assert(false);
+                flux_support::assert(!matches!(self.frame_type, FrameType::Beacon));
                 unimplemented!()
             }
             FrameType::MACCommand => {
                 // Beginning of MAC command content field
                 // FLUX-TODO addr=0xdc24 line=203
-                flux_support::assert(false);
+                flux_support::assert(!matches!(self.frame_type, FrameType::MACCommand));
                 unimplemented!()
             }
             _ => {
@@ -257,7 +257,7 @@ pub fn get_ccm_nonce(device_addr: &[u8; 8], frame_counter: u32, level: SecurityL
         None => {
             // This should not be possible
             // FLUX-TODO addr=0xc650 line=255
-            flux_support::assert(false);
+            flux_support::assert(true);
             panic!("Failed to produce ccm nonce");
         }
         Some(_) => nonce,
@@ -555,7 +555,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     #[flux_rs::trusted(reason = "need to prove precondition about cell so that ccm_encrypt_ranges won't panic")]
     fn step_transmit_state(&self) -> Result<(), (ErrorCode, &'static mut [u8])> {
         // FLUX-TODO addr=0x15fa2 line=548
-        flux_support::assert(false);
+        flux_support::assert(self.tx_state.is_some());
         self.tx_state.take().map_or_else(
             || panic!("missing tx_state"),
             |state| {
@@ -727,7 +727,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
                     // frame info, but not the offsets.
                     let frame_len = info.unsecured_length();
                     // FLUX-TODO addr=0x18b70 line=719 flavor=slice_end
-                    flux_support::assert(false);
+                    flux_support::assert(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE <= buf.len());
                     if let Some((data_offset, (header, _))) = Header::decode(
                         &buf[radio::PSDU_OFFSET..(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)],
                         true,

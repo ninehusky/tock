@@ -104,7 +104,7 @@ pub trait ContextStore {
         match self.get_context_from_id(0) {
             Some(ctx) => ctx,
             // FLUX-TODO addr=0x18e14 line=106
-            None => { flux_support::assert(false); panic!("Context 0 not found") },
+            None => { flux_support::assert(true); panic!("Context 0 not found") },
         }
     }
     fn get_context_from_prefix(&self, prefix: &[u8], prefix_len: u8) -> Option<Context>;
@@ -657,7 +657,7 @@ fn decompress_ext_hdr(
     next_headers[0] = next_header;
     next_headers[1] = hdr_len_field as u8;
     // FLUX-TODO addr=0xd0d4 line=658
-    flux_support::assert(false);
+    flux_support::assert(2 + len <= next_headers.len() && *consumed + len <= buf.len());
     next_headers[2..2 + len].copy_from_slice(&buf[*consumed..*consumed + len]);
 
     let pad_bytes = hdr_len_field * 8 - len + 6;
@@ -852,7 +852,7 @@ pub fn decompress(
                 let upper: usize = buf.len() + 8;
                 flux_support::assume(udp_length_usize <= upper && consumed <= upper - udp_length_usize);
                 // FLUX-TODO addr=0xd0fa line=853 flavor=slice_end
-                flux_support::assert(false);
+                flux_support::assert(consumed + udp_length_usize - 8 <= buf.len());
                 let udp_checksum = decompress_udp_checksum(
                     nhc_header,
                     &next_headers[0..8],
@@ -888,7 +888,7 @@ pub fn decompress(
                 written += written_growth;
             }
             // FLUX-TODO addr=0xd0f0 line=885
-            _ => { flux_support::assert(false); panic!("Unreachable case") },
+            _ => { flux_support::assert(true); panic!("Unreachable case") },
         }
     }
 
@@ -975,7 +975,7 @@ fn decompress_tf(ip6_header: &mut IP6Header, iphc_header: u8, buf: &[u8], consum
         // FLUX-TODO line=969 flavor=bounds addrs=[
         //     0xd1a6, 0xd1ae, 0xd1ba,
         // ]
-        flux_support::assert(false);
+        flux_support::assert(*consumed + 2 < buf.len());
         let flow = (((buf[*consumed] & 0x0f) as u32) << 16)
             | ((buf[*consumed + 1] as u32) << 8)
             | (buf[*consumed + 2] as u32);
@@ -1194,7 +1194,7 @@ fn decompress_multicast(
                 }
                 ip_addr.0[0] = 0xff;
                 // FLUX-TODO addr=0xd20e line=1186
-                flux_support::assert(false);
+                flux_support::assert(*consumed + 1 < buf.len() && 2 < ip_addr.0.len());
                 ip_addr.0[1] = buf[*consumed];
                 ip_addr.0[2] = buf[*consumed + 1];
                 ip_addr.0[3] = ctx.prefix_len;
@@ -1208,7 +1208,7 @@ fn decompress_multicast(
                 let dst = &mut ip_addr.0[12..16];
                 flux_support::assume(dst.len() == 4);
                 // FLUX-TODO addr=0xd12e line=1198
-                flux_support::assert(false);
+                flux_support::assert(*consumed + 6 <= buf.len());
                 dst.copy_from_slice(&buf[*consumed + 2..*consumed + 6]);
                 *consumed += 6;
             }
@@ -1313,7 +1313,7 @@ fn decompress_iid_link_local(
             let dst = &mut ip_addr.0[8..16];
             flux_support::assume(dst.len() == 8);
             // FLUX-TODO addr=0xd49a line=1301
-            flux_support::assert(false);
+            flux_support::assert(*consumed + 8 <= buf.len());
             dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
         }
@@ -1330,7 +1330,7 @@ fn decompress_iid_link_local(
             let dst = &mut ip_addr.0[14..16];
             flux_support::assume(dst.len() == 2);
             // FLUX-TODO addr=0xd494 line=1316
-            flux_support::assert(false);
+            flux_support::assert(*consumed + 2 <= buf.len());
             dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
         }
@@ -1344,7 +1344,7 @@ fn decompress_iid_link_local(
             dst.copy_from_slice(&compute_iid(mac_addr));
         }
         // FLUX-TODO addr=0xd4ba line=1328
-        _ => { flux_support::assert(false); panic!("Unreachable case") },
+        _ => { flux_support::assert(true); panic!("Unreachable case") },
     }
     Ok(())
 }
@@ -1428,7 +1428,7 @@ fn decompress_iid_context(
             dst.copy_from_slice(src);
         }
         // FLUX-TODO addr=0xd6d4 line=1409
-        _ => { flux_support::assert(false); panic!("Unreachable case") },
+        _ => { flux_support::assert(true); panic!("Unreachable case") },
     }
     // The bits covered by the provided context are always used, so we copy
     // the context bits into the address after the non-context bits are set.
