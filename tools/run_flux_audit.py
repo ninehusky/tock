@@ -57,14 +57,24 @@ SHORT_ERROR_RE = re.compile(
 CHECKING_RE = re.compile(r"^\s*Checking\s+([\w-]+)\s+v")
 
 
-def run_flux(crate: str, out_dir: Path) -> Path:
-    """Invoke `cargo flux -p <crate>` and write captured output to <out_dir>/<crate>.log."""
+def run_flux(crate: str, out_dir: Path, isolated: bool = False) -> Path:
+    """Invoke `cargo flux -p <crate>` and write captured output to <out_dir>/<crate>.log.
+
+    When isolated=True, sets CARGO_TARGET_DIR to a per-crate path so an
+    upstream crate's flux errors don't halt this crate's build. Slower
+    (each crate rebuilds deps from scratch) but gives independent results.
+    """
     log_path = out_dir / f"{crate}.log"
-    print(f"=== {crate} === (logging to {log_path})", flush=True)
+    print(f"=== {crate} ==={' (isolated)' if isolated else ''} (logging to {log_path})", flush=True)
+    import os
+    env = os.environ.copy()
+    if isolated:
+        target = (out_dir / "target" / crate).resolve()
+        env["CARGO_TARGET_DIR"] = str(target)
     try:
         result = subprocess.run(
             ["cargo", "flux", "-p", crate, "--message-format", "short"],
-            capture_output=True, text=True, timeout=1800,
+            capture_output=True, text=True, timeout=1800, env=env,
         )
     except subprocess.TimeoutExpired:
         log_path.write_text("TIMEOUT after 1800s\n")
@@ -217,6 +227,10 @@ def main() -> int:
     ap.add_argument("--out", default=Path("tools/flux_audit_logs"), type=Path)
     ap.add_argument("--skip-build", action="store_true",
                     help="Reuse existing logs instead of re-running flux")
+    ap.add_argument("--isolated", action="store_true",
+                    help="Use a per-crate CARGO_TARGET_DIR so upstream crate "
+                         "flux errors don't halt downstream builds. Slower but "
+                         "produces independent per-crate results.")
     ap.add_argument("--ledger", default=Path("tools/panic_ledger.csv"), type=Path)
     args = ap.parse_args()
 
@@ -239,7 +253,7 @@ def main() -> int:
     for c in crates:
         log = args.out / f"{c}.log"
         if not (args.skip_build and log.exists()):
-            run_flux(c, args.out)
+            run_flux(c, args.out, isolated=args.isolated)
         per_crate[c] = parse_log(log, c)
 
     print()
