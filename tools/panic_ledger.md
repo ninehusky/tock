@@ -5,11 +5,11 @@ nrf52840dk release ELF. Per-site machine-readable truth in `panic_ledger.csv`.
 
 Built: 2026-05-22, against master commit `104a47788`.
 
-## Final distribution — 343 panic sites, 4 plain-English buckets
+## Final distribution — 343 panic sites, 3 active buckets + 0 outstanding
 
 ```
-A. Has annotation in source              297
-   ↳ marked (FLUX-TODO / FLUX-OPT / BLOCKED)         291
+A. Has annotation in source              321
+   ↳ marked (FLUX-TODO / FLUX-OPT / BLOCKED)         315
    ↳ monomorph-at-caller (marker at user-caller)       4
    ↳ marker-at-caller (macro-def, marker at caller)    2
 
@@ -20,13 +20,22 @@ B. No user source to annotate             18
 D. Addressed by refactor (panic removed)   4
    ↳ refactored away on branch                         4
 
-C. Still needs annotation                 24
-   ↳ no-line (file known, line murky)                 24
+C. Still needs annotation                  0   ← DONE
+   ↳ all 24 no-line sites recovered this turn
 
 Σ                                        343 ✓
 ```
 
-**Session arc**: started at A=249 B=18 C=76; after the 11-site apply pass A=284 B=18 C=41; after the content-match resolution of the 17 outstanding plus reclassifying 0xadac (which turned out to be marked at a refactored location, not removed), A=297 B=18 D=4 C=24.
+**Session arc**: started at A=249 B=18 C=76; the 11-site apply pass → A=284 B=18 C=41; the 17-row content-match diff → A=297 B=18 D=4 C=24; the 24-row no-line interactive pass (this turn) → **A=321 B=18 D=4 C=0**.
+
+## Confidence distribution within A (321)
+
+Of the 315 `marked` rows: 
+- 233 high confidence (marker within ±6 lines, exact match)
+- 67 medium confidence (marker at +6 to +30 lines due to inserted annotations above, OR pinpointed via content-match across refactor)
+- **15 low confidence** (fn-entry markers landed this turn for sites where LTO inlined the panic and we couldn't pin a specific line within the fn)
+
+The 15 low-confidence rows are the audit list — see CSV filter `status==marked AND confidence==low`.
 
 ## A. Has annotation (296)
 
@@ -92,21 +101,29 @@ in master, branch eliminated it." Different defenses.
 refactored location — operation moved to `decompress_ext_hdr` at branch line
 661 with a real precondition assertion at line 660.)
 
-## C. Still needs annotation (24)
+## C. Still needs annotation (0)
 
-All 24 are `recovered-no-line` rows where the survey couldn't pin a specific
-source line. Each has the **file** and **enclosing function** known. The
-`confidence` column carries quality:
+All 24 previously-no-line sites are now marked. Distribution of how they
+landed:
 
-- **HIGH (1)**: `0x724e` ieee802154/driver.rs — single bounds expression in fn body
-- **MEDIUM (8)**: multi-candidate flavor matches in fn body; first match
-  picked, alternatives in CSV `reason`
-- **LOW (15)**: no flavor-matching expression in fn body; line set to fn entry
-  as conservative fallback. Four of these have known tool bugs in fn-name
-  resolution (`0xb280, 0xb4fc, 0x9aa4, 0x1d54`).
+- **1 HIGH**: `0x724e` ieee802154/driver.rs:934 — pinpointed at the single
+  bounds expression (`cfg[0].get()`).
+- **1 MEDIUM-pinpointed**: `0x1608c` tickv.rs:224 — covers both `assert_ne!`
+  macros (my earlier heuristic missed `assert_ne!` because it only checked for
+  `assert!`).
+- **8 MEDIUM**: marker at the fn-entry (or both fn-entries where ambiguous).
+  These had multi-candidate flavor matches in the fn body; user chose fn-entry
+  precision for each.
+- **15 LOW**: fn-entry markers for sites where no panic expression is visible
+  in the fn body (LTO inlined the helper). 4 of these had additional tool-bug
+  recovery work (survey misattributed inner_file or fn-name parser broke):
+  - `0xb280` decompress_iid_context (sixlowpan_compression.rs:1390)
+  - `0xb4fc` decompress_udp_ports (sixlowpan_compression.rs:1470)
+  - `0x9aa4` Console::transmitted_buffer (console.rs:330)
+  - `0x1d54` Kernel::kernel_loop generic (kernel.rs:432)
 
-These are the **next-session interactive pass** — each needs a hand-read of
-the function body to land the marker at an exact line.
+Plus 3 sites for the master-`decompress` mass-refactor (covered by 2 fn-entry
+markers at branch decompress + decompress_ext_hdr): `0xadf8`, `0xae28`, `0xae86`.
 
 ## What this session left in branch source (committed)
 

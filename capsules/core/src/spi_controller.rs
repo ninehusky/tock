@@ -107,6 +107,9 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
     // Assumes checks for busy/etc. already done
     // Updates app.index to be index + length of op
+    // FLUX-TODO addr=0x14342 reason=multi-candidate-fn-entry flavor=bounds
+    // 2 kwbuf[i] writes in this fn (branch L122, L159); compiler likely
+    // dedup'd both bls into 0x14342. Marker covers fn body.
     fn do_next_read_write(&self, app: &mut App, kernel_data: &GrantKernelData) {
         let write_len = self.kernel_write.map_or(0, |kwbuf| {
             let mut start = app.index;

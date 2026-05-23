@@ -309,6 +309,9 @@ impl<'a> AesECB<'a> {
         }
     }
 
+    // FLUX-TODO addr=0x21dbc reason=multi-fn-ambiguous-entry flavor=bounds
+    // master attribution <AesECB>::crypt is ambiguous (2 crypts on AesECB: this
+    // inherent one + the AES128 trait impl at L494). Mark both fn entries.
     fn crypt(&self) {
         match self.mode.get() {
             AESMode::CTR => {}
@@ -491,6 +494,9 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
     // not needed by NRF5x
     fn start_message(&self) {}
 
+    // FLUX-TODO addr=0x21dbc reason=multi-fn-ambiguous-entry flavor=bounds
+    // master attribution <AesECB>::crypt is ambiguous (this AES128 trait crypt
+    // + the inherent crypt at L312). Mark both fn entries.
     fn crypt(
         &self,
         source: Option<&'static mut [u8]>,

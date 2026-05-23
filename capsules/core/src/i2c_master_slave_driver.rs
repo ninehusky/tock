@@ -103,6 +103,9 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> I2CMasterSlaveDriver<'a, I> {
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
     for I2CMasterSlaveDriver<'a, I>
 {
+    // FLUX-TODO addr=0x19fd4 reason=lto-inlined-fn-entry flavor=explicit_panic
+    // master enclosing fn known (I2CHwMasterClient::command_complete);
+    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     fn command_complete(&self, buffer: &'static mut [u8], status: Result<(), hil::i2c::Error>) {
         // Map I2C error to a number we can pass back to the application
         let status = kernel::errorcode::into_statuscode(match status {
@@ -282,6 +285,9 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
 }
 
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> SyscallDriver for I2CMasterSlaveDriver<'a, I> {
+    // FLUX-TODO addr=0x554a reason=lto-inlined-fn-entry flavor=explicit_panic
+    // master enclosing fn known (<I2CMasterSlaveDriver as SyscallDriver>::command);
+    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     fn command(
         &self,
         command_num: usize,

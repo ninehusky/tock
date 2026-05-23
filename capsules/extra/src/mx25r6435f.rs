@@ -373,6 +373,10 @@ impl<
         A: hil::time::Alarm<'a> + 'a,
     > hil::spi::SpiMasterClient for MX25R6435F<'a, S, P, A>
 {
+    // FLUX-TODO reason=multi-candidate-fn-entry covers=[0x1efd6, 0x1efee] flavor=bounds
+    // 2 bounds panics in this fn; 18 candidate arr[i] operations in the body
+    // (state-machine dispatcher with many state-specific buffer copies).
+    // Cannot disambiguate from DWARF; marker covers fn body.
     fn read_write_done(
         &self,
         write_buffer: &'static mut [u8],

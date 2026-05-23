@@ -616,6 +616,11 @@ fn compress_udp_checksum(udp_header: &UDPHeader, buf: &mut [u8], written: &mut u
         // protocol-invariant `flux_support::assume`.
         ensures consumed: usize{c: c <= buf_len}
 )]
+// FLUX-TODO reason=mass-refactor-fn-entry covers=[0xadf8, 0xae28, 0xae86]
+// master's monolithic `decompress` fn (containing these 3 panics) was split on
+// branch into decompress + decompress_ext_hdr. DWARF can't map master addrs
+// to specific operations in the split. Marker covers any bounds/slice op in
+// this fn body.
 fn decompress_ext_hdr(
     nhc_header: u8,
     buf: &[u8],
@@ -695,6 +700,11 @@ fn decompress_ext_hdr(
     ) -> Result<(usize, usize), ()>
         requires buf_len >= 42 && out_len >= 40
 )]
+// FLUX-TODO reason=mass-refactor-fn-entry covers=[0xadf8, 0xae28, 0xae86]
+// master's monolithic `decompress` fn (containing these 3 panics) was split on
+// branch into decompress + decompress_ext_hdr. DWARF can't map master addrs
+// to specific operations in the split. Marker covers any bounds/slice op in
+// this fn body.
 pub fn decompress(
     ctx_store: &dyn ContextStore,
     buf: &[u8],
@@ -1377,6 +1387,9 @@ fn decompress_iid_link_local(
               && con + 8 <= buf_len
         ensures consumed: usize{c: con <= c && c <= con + 8}
 )]
+// FLUX-TODO addr=0xb280 reason=tool-bug-survey-attributed-to-rustc flavor=slice_end
+// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.
+// Marker at fn entry; line within fn lost to LTO.
 fn decompress_iid_context(
     addr_mode: u8,
     ip_addr: &mut IPAddr,
@@ -1457,6 +1470,9 @@ fn decompress_iid_context(
         requires con + 4 <= buf_len
         ensures consumed: usize{c: con <= c && c <= con + 4}
 )]
+// FLUX-TODO addr=0xb4fc reason=tool-bug-survey-attributed-to-rustc flavor=slice_order
+// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.
+// Marker at fn entry; line within fn lost to LTO.
 fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, u16) {
     let src_compressed = (udp_nhc & nhc::UDP_SRC_PORT_FLAG) != 0;
     let dst_compressed = (udp_nhc & nhc::UDP_DST_PORT_FLAG) != 0;

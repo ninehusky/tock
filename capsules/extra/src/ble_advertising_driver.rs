@@ -607,6 +607,9 @@ where
     B: ble_advertising::BleAdvertisementDriver<'a> + ble_advertising::BleConfig,
     A: kernel::hil::time::Alarm<'a>,
 {
+    // FLUX-TODO addr=0x6386 reason=lto-inlined-fn-entry flavor=explicit_panic
+    // master enclosing fn known (<BLE as SyscallDriver>::command);
+    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     fn command(
         &self,
         command_num: usize,

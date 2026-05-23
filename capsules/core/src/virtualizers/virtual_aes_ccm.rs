@@ -410,6 +410,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
 
     // Assumes that the state is Idle, which means that crypt_buf must be
     // present. Panics if this is not the case.
+    // FLUX-TODO addr=0x1303e reason=multi-candidate-fn-entry flavor=explicit_panic
+    // 2 panic!() calls in this fn (L417 "not idle", L433 "crypt_buf not present");
+    // master shows 1 site; one may be DCE'd. Marker covers fn body.
     fn start_ccm_auth(&self) -> Result<(), ErrorCode> {
         if !(self.state.get() == CCMState::Idle)
             && !(self.state.get() == CCMState::Encrypt && self.reversed())

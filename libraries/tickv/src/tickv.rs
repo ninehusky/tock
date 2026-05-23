@@ -221,6 +221,10 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     /// Get region number from a hashed key
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> usize)]
     fn get_region(&self, hash: u64) -> usize {
+        // FLUX-TODO addr=0x1608c flavor=assert reason=assert_ne_macro
+        // master enclosing fn=get_region; the assert_ne! macros below expand to
+        // calls into core::panicking::assert_failed (the u64 monomorph),
+        // attributing to this fn but with no source line. Marker covers both.
         assert_ne!(hash, 0xFFFF_FFFF_FFFF_FFFF);
         assert_ne!(hash, 0);
 

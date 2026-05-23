@@ -676,6 +676,10 @@ impl<'a, M: device::MacDevice<'a>> SyscallDriver for RadioDriver<'a, M> {
     ///        parameters to encrypt, form headers, and transmit the frame.
     /// - `28`: Set long address.
     /// - `29`: Get the long MAC address.
+    // FLUX-TODO reason=lto-inlined-fn-entry covers=[0x720a, 0x7268]
+    // master enclosing fn known (<RadioDriver as SyscallDriver>::command);
+    // 0x720a flavor=unwrap_option, 0x7268 flavor=explicit_panic;
+    // panic source lines lost to LTO.
     fn command(
         &self,
         command_number: usize,
@@ -927,6 +931,8 @@ impl<'a, M: device::MacDevice<'a>> SyscallDriver for RadioDriver<'a, M> {
                                         return None;
                                     }
                                     let dst_addr = arg1 as u16;
+                                    // FLUX-TODO addr=0x724e flavor=bounds
+                                    // cfg[0] bounds check; only one bounds expr in fn body matches.
                                     let level = match SecurityLevel::from_scf(cfg[0].get()) {
                                         Some(level) => level,
                                         None => {
