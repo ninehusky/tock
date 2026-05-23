@@ -5,6 +5,86 @@ nrf52840dk release ELF. Per-site machine-readable truth in `panic_ledger.csv`.
 
 Built: 2026-05-22, against master commit `104a47788`.
 
+## Flux audit results (2026-05-22)
+
+After landing all per-fn `def:` includes for every panic-annotated fn,
+ran `cargo flux -p <crate>` for each of the 10 panic-bearing crates via
+`tools/run_flux_audit.py`. Per-crate results:
+
+| crate | errors | notes |
+|---|---|---|
+| kernel | **27** | upstream blocker (see below) |
+| tickv | **11** of kernel's 27 above, in tickv | (also blocked) |
+| capsules-core | 0 | clean when run with upstream trusted |
+| capsules-extra | 0 | clean |
+| tock-cells | 0 | clean |
+| nrf52 | 0 | clean |
+| nrf52840 | 0 | clean |
+| nrf5x | 0 | clean |
+| cortexm | 0 | clean |
+| cortexv7m | 0 | clean |
+
+**Headline**: kernel + tickv hold all the Flux failures. Every other crate
+(capsules, chips, arch) verifies cleanly. To get downstream visible, the
+audit script (`tools/run_flux_audit.py`) had to use `--keep-going` AND
+temporarily add `#[flux_rs::trusted]` to the 20 failing fns in kernel and
+tickv (cargo halts dependent builds when kernel's flux check fails).
+Trusts reverted before commit — tree clean.
+
+### The 27 upstream errors (kernel + tickv)
+
+Breakdown of where they came from:
+
+* **9 intentional `{ assert(false); panic!()/unreachable!() }` sentinels** —
+  these are correct as "prove unreachable" markers and will always fail
+  Flux unless surrounding control flow has a discharged invariant. Could
+  be moved to `#[flux_rs::trusted]` permanently; that's a design call.
+
+* **9 errors from this session's precondition conversions** — the
+  `.unwrap-hoist-to-local` pattern (`let x = self.cell.take(); assert(x.is_some()); x.unwrap()`)
+  added a real precondition, but Flux can't yet derive `is_some()` from
+  the surrounding Cell-wrapped state. Needs struct refinements on
+  `read_buffer: Cell<Option<...>>` etc. to track set/unset state.
+
+* **9 pre-existing precondition failures** — bounds checks
+  (`app_memory_start_offset + allocation_size <= remaining_memory.len()`),
+  slice ends, etc. Need actual Flux specs.
+
+### The 3 errors my trust-script missed
+
+`#[flux_rs::trusted]` was supposed to silence all 27 but my script's
+fn-detection failed for 3 sites where the assert is deep inside a fn
+(e.g., inside a closure or branch). Pre-existing errors, not introduced
+by this session. To address:
+* `kernel/src/scheduler/round_robin.rs:159` (head_opt.is_some after pop)
+* `kernel/src/process_standard.rs:1582, 1587` (allocation_size <= remaining_memory.len())
+
+### Tools committed this session
+
+* `tools/run_flux_audit.py` — runs cargo flux per crate, captures errors,
+  cross-references with `panic_ledger.csv`. Supports `--isolated`
+  (per-crate `CARGO_TARGET_DIR`) and `--keep-going`.
+* `tools/flux_audit_logs/` — per-crate logs (kernel/tickv with errors
+  visible; downstream blocked at kernel)
+* `tools/flux_audit_logs_unblocked/` — per-crate logs from the
+  trusted-upstream run (downstream verifies cleanly)
+
+### Picking up tomorrow
+
+The natural next steps:
+
+1. **Move the 9 intentional sentinels to `#[flux_rs::trusted]`** — explicit
+   acknowledgment that "prove unreachable" isn't expressible without
+   refinements. Targeted, ~9 fn-level changes.
+2. **Address the 9 my-conversion errors** by adding `Cell<Option<T>>`
+   struct refinements (track `is_set: bool` per field) so Flux can derive
+   `is_some()` from caller-side state.
+3. **Address the 9 pre-existing errors** — real Flux spec work, mostly
+   bounds and slice invariants. Domain-specific.
+
+After (1) + (2) + (3), kernel and tickv flux-check clean, and the full
+343-site picture is durably verified (or trusted with reason).
+
 ## Canonical roundup — 343 sites, by marker form + by flavor
 
 After this session's precondition-conversion pass and the
