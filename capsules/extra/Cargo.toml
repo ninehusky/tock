@@ -54,6 +54,8 @@ include = [
     "def:result_to_errorcode",
     "def:decompress",
     "def:get_context_0",
+    # per-fn for panic-bearing fns in otherwise-unverified files:
+    "def:command",  # KVStoreDriver::command (kv_driver.rs) and UDPDriver::command (net/udp/driver.rs)
 ]
 
 [lints]
