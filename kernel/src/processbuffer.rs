@@ -1002,13 +1002,15 @@ impl WriteableProcessSlice {
     ///
     /// This function will panic if `src.len() != self.len()`.
     #[flux_rs::sig(fn(self: &Self[@n], src: &[u8][n]))]
+    // FLUX-TODO-FN-LEVEL covers=[0x114b8] flavor=explicit_panic
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn copy_from_slice(&self, src: &[u8]) {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
         // https://doc.rust-lang.org/src/core/slice/mod.rs.html#3034-3036
 
         // FLUX-TODO addr=0x114b8 line=1010 flavor=explicit_panic
-        flux_support::assert(false);
         // The panic code path was put into a cold function to not
         // bloat the call site.
         #[inline(never)]

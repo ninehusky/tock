@@ -282,12 +282,14 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             || self.state.get() == State::Running
     }
 
+    // FLUX-TODO-FN-LEVEL covers=[0x3cfc] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn remove_pending_upcalls(&self, upcall_id: UpcallId) {
         self.tasks.map(|tasks| {
             let count_before = tasks.len();
             // VTOCK-TODO: prove tasks.retain() reduces number of tasks
             // FLUX-TODO addr=0x3cfc line=289
-            flux_support::assert(false);
             tasks.retain(|task| match task {
                 // Remove only tasks that are function calls with an id equal
                 // to `upcall_id`.

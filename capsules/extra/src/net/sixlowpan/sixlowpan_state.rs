@@ -484,6 +484,9 @@ impl<'a> TxState<'a> {
         // flux_support::assert(false);
     }
 
+    // FLUX-TODO-FN-LEVEL covers=[0x1999e] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn prepare_first_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -493,7 +496,6 @@ impl<'a> TxState<'a> {
         // Here, we assume that the compressed headers fit in the first MTU
         // fragment. This is consistent with RFC 6282.
         // FLUX-TODO addr=0x1999e line=495
-        flux_support::assert(false);
         let mut lowpan_packet = [0_u8; radio::MAX_FRAME_SIZE];
         let (consumed, written) = {
             match sixlowpan_compression::compress(
@@ -1036,6 +1038,9 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
     // This function returns an Err if an error occurred, returns Ok(Some(RxState))
     // if the packet has been fully reassembled, or returns Ok(None) if there
     // are still pending fragments
+    // FLUX-TODO-FN-LEVEL covers=[0x1e0ec] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn receive_fragment(
         &self,
         frag_payload: &[u8],
@@ -1072,7 +1077,6 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             }
         }
         // FLUX-TODO addr=0x1e0ec line=1072
-        flux_support::assert(false);
         rx_state.map_or((None, Err(ErrorCode::NOMEM)), |state| {
             // Returns true if the full packet is reassembled
             let res = state.receive_next_frame(

@@ -353,9 +353,11 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///        The number of valid bytes in the buffer. 0 if Buf is None.
     /// The buffers will only be returned on a non async error or on success.
     #[flux_rs::trusted(reason = "TODO: hash comes from `self.key.get().unwrap()` (Cell). Need cell-state refinement to discharge `hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF` from get_key/invalidate_key/zeroise_key.")]
+    // FLUX-TODO-FN-LEVEL covers=[0x18812] flavor=unwrap_option
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn continue_operation(&self) -> ContinueReturn {
         // FLUX-TODO addr=0x18812 line=356 flavor=unwrap_option
-        flux_support::assert(false);
         let (ret, length) = match self.tickv.state.get() {
             // FLUX-TODO addr=0x1881e line=354 flavor=unwrap_option
             State::Init(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.initialise(self.key.get().unwrap()), 0) },

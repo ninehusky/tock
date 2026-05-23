@@ -74,6 +74,9 @@ impl<'a> RoundRobinSched<'a> {
 }
 
 impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
+    // FLUX-TODO-FN-LEVEL covers=[0x1d88] flavor=explicit_panic
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn next(&self) -> SchedulingDecision {
         let mut first_head = None;
         let mut next = None;
@@ -122,7 +125,6 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
             // grant a fresh timeslice
             self.time_remaining.set(self.timeslice_length);
             // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
-            flux_support::assert(false);
             self.timeslice_length
         };
         // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic

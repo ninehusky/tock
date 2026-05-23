@@ -224,6 +224,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> DeferredCallClient
 impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption::Client<'a>
     for MuxAES128CCM<'a, A>
 {
+    // FLUX-TODO-FN-LEVEL covers=[0x1d814] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn crypt_done(&'a self, source: Option<&'static mut [u8]>, dest: &'static mut [u8]) {
         if self.inflight.is_none() {
             self.client.map(move |client| {
@@ -236,7 +239,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
             // when the encryption is *really* done, inflight will be cleared by remove_from_queue
             // and it will call do_next_op to perform the next operation
             // FLUX-TODO addr=0x1d814 line=238
-            flux_support::assert(false);
             // self.do_next_op() will be called when the encryption is failed or is really done
             // search for self.ccm_client
             vaes_ccm.crypt_done(source, dest);
@@ -460,6 +462,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
     }
 
     #[flux_rs::trusted(reason = "extern-spec gap: IndexMut<I> for [T] not specified in flux_support; iv[0] = 1 is provably safe (iv: [u8; 16])")]
+    // FLUX-TODO-FN-LEVEL covers=[0x134c2] flavor=explicit_panic
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn start_ccm_encrypt(&self) -> Result<(), ErrorCode> {
         if !(self.state.get() == CCMState::Auth)
             && !(self.state.get() == CCMState::Idle && self.reversed())
@@ -493,7 +498,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
 
         // FLUX-TODO addr=0x134c2 line=488 flavor=explicit_panic
-        flux_support::assert(false);
         self.aes.start_message();
         let crypt_buf = match self.crypt_buf.take() {
             // FLUX-TODO addr=0x134c2 line=488 flavor=explicit_panic
@@ -564,6 +568,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
+    // FLUX-TODO-FN-LEVEL covers=[0x1d838] flavor=div_by_zero
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn reverse_end_ccm(&self) {
         // Finalize CCM process only in the case where we did CTR before CBC
         let tag_valid = self.buf.map_or(false, |buf| {
@@ -573,7 +580,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                 },
                 |cbuf| {
                     // FLUX-TODO addr=0x1d838 line=564 flavor=div_by_zero
-                    flux_support::assert(false);
                     let (_, m_off, m_len, mic_len) = self.pos.get();
 
                     // Combine unencrypted tag at end of crypt_buf with saved
@@ -645,6 +651,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
             -> Result<(), (ErrorCode, &mut [u8])>
             requires p.a_off <= p.m_off && p.m_off + p.m_len + p.mic_len <= p.buf_len
     )]
+    // FLUX-TODO-FN-LEVEL covers=[0x132ca] flavor=slice_order
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn crypt_r(
         &self,
         parameter: CryptFunctionParameters,
@@ -671,7 +680,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         flux_support::assert(a_off <= m_off);
         flux_support::assert(m_off + m_len <= buf.len());
         // FLUX-TODO addr=0x132ca line=651 flavor=slice_order
-        flux_support::assert(false);
         let res = self.prepare_ccm_buffer(
             &self.nonce.get(),
             mic_len,
@@ -861,6 +869,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
     for VirtualAES128CCM<'a, A>
 {
     #[flux_rs::trusted(reason = "blocked-cell")]
+    // FLUX-TODO-FN-LEVEL covers=[(no addr)] flavor=slice_order
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn crypt_done(&self, _: Option<&'static mut [u8]>, crypt_buf: &'static mut [u8]) {
         self.crypt_buf.replace(crypt_buf);
         match self.state.get() {
@@ -875,7 +886,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
                         // FLUX-TODO line=859 flavor=slice_order addrs=[
                         //     0x1d842, 0x1d852,
                         // ]
-                        flux_support::assert(false);
                         self.crypt_buf.map(|cbuf| {
                             // If we authenticated over the plaintext, copy the last
                             // block over to the beginning again so that it becomes

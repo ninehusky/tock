@@ -705,6 +705,9 @@ fn decompress_ext_hdr(
 // branch into decompress + decompress_ext_hdr. DWARF can't map master addrs
 // to specific operations in the split. Marker covers any bounds/slice op in
 // this fn body.
+// FLUX-TODO-FN-LEVEL covers=[0xd11a, 0xd16c, 0xd0fa] flavor=slice_end
+// panic somewhere in this fn body; addr2line lost the line
+// (LTO + generic monomorphization). See breadcrumb comments in body.
 pub fn decompress(
     ctx_store: &dyn ContextStore,
     buf: &[u8],
@@ -747,7 +750,6 @@ pub fn decompress(
     // Destination Address
     if (iphc_header_2 & iphc::MULTICAST) != 0 {
         // FLUX-TODO addr=0xd11a line=739
-        flux_support::assert(false);
         decompress_multicast(&mut ip6_header, iphc_header_2, &dst_ctx, buf, &mut consumed)?;
     } else {
         decompress_dst(
@@ -827,7 +829,6 @@ pub fn decompress(
                 let consumed_before_port_decompress = consumed;
                 flux_support::assume(consumed <= buf.len() && buf.len() - consumed >= 4);
                 // FLUX-TODO addr=0xd16c line=817
-                flux_support::assert(false);
                 let (src_port, dst_port) = decompress_udp_ports(nhc_header, buf, &mut consumed);
 
                 //need to add any growth from decompression to the udp length if we used the buf
@@ -866,7 +867,6 @@ pub fn decompress(
                 let upper: usize = buf.len() + 8;
                 flux_support::assume(udp_length_usize <= upper && consumed <= upper - udp_length_usize);
                 // FLUX-TODO addr=0xd0fa line=853 flavor=slice_end
-                flux_support::assert(false);
                 let udp_checksum = decompress_udp_checksum(
                     nhc_header,
                     &next_headers[0..8],

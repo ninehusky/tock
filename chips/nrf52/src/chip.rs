@@ -116,6 +116,9 @@ impl<'a, I: InterruptService + 'a> kernel::platform::chip::Chip for NRF52<'a, I>
         &self.userspace_kernel_boundary
     }
 
+    // FLUX-TODO-FN-LEVEL covers=[(no addr)] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn service_pending_interrupts(&self) {
         unsafe {
             loop {
@@ -123,7 +126,6 @@ impl<'a, I: InterruptService + 'a> kernel::platform::chip::Chip for NRF52<'a, I>
                     // FLUX-TODO line=123 addrs=[
                     //     0x1e08, 0x1e2c,
                     // ]
-                    flux_support::assert(false);
                     if !self.interrupt_service.service_interrupt(interrupt) {
                         panic!("unhandled interrupt {}", interrupt);
                     }

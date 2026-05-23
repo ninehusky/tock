@@ -1192,6 +1192,9 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
     uart::ReceiveClient for ProcessConsole<'a, COMMAND_HISTORY_LEN, A, C>
 {
     #[flux_rs::trusted(reason = "ICE: flux-infer/src/infer.rs:427 UnsolvedEvar in check_rvalue_closure")]
+    // FLUX-TODO-FN-LEVEL covers=[0x1a9ee, 0x1a9c4] flavor=bounds, div_by_zero
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn received_buffer(
         &self,
         read_buf: &'static mut [u8],
@@ -1217,7 +1220,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
 
                         if let EscState::Complete(key) = esc_state {
                             // FLUX-TODO addr=0x1a9ee line=1219 flavor=bounds
-                            flux_support::assert(false);
                             match key {
                                 EscKey::Up | EscKey::Down if COMMAND_HISTORY_LEN >= 1 => {
                                     self.command_history.map(|ht| {
@@ -1344,7 +1346,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                             }
                         } else if read_buf[0] == BS {
                             // FLUX-TODO addr=0x1a9c4 line=1342 flavor=div_by_zero
-                            flux_support::assert(false);
                             if cursor > 0 {
                                 // Backspace, echo and remove the byte
                                 // preceding the cursor

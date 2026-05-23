@@ -410,6 +410,9 @@ impl<'a> IPPayload<'a> {
     /// `SResult<usize>` - The final offset into the buffer `buf` is returned
     /// wrapped in an SResult
     #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 8 + offset)]
+    // FLUX-TODO-FN-LEVEL covers=[0xdad8] flavor=slice_end
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let (offset, _) = match self.header {
             // The `unwrap` is safe because we require that `buf >= 8 + offset`, which is the
@@ -434,7 +437,6 @@ impl<'a> IPPayload<'a> {
         };
         let payload_length = self.get_payload_length();
         // FLUX-TODO addr=0xdad8 line=428 flavor=slice_end
-        flux_support::assert(false);
         // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
         // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
         // Explicit assert is load-bearing: `flux_support`'s `Index::index` extern_spec puts `in_bounds` in

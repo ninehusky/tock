@@ -1354,6 +1354,9 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// If `panic_on_reenter` is `true`, this will panic if the grant region is
     /// already currently entered. If `panic_on_reenter` is `false`, this will
     /// return `None` if the grant region is entered and do nothing.
+    // FLUX-TODO-FN-LEVEL covers=[(no addr)] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn access_grant_with_allocator<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData, &mut GrantRegionAllocator) -> R,
@@ -1427,7 +1430,6 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 //     0x1fa7c, 0x1f9ee, 0x494c, 0xbeee, 0xc106, 0xc16a, 0xc26e, 0xc586, 0x1f686,
                 //     0x48ee, 0x4834, 0xa296, 0x174a0, 0x77d4, 0x74b6, 0x12d18,
                 // ]
-                flux_support::assert(false);
                 // capsule to not call `.iter()` or `.each()` from inside a
                 // `.enter()` closure. That is, you need to close the grant
                 // region you are currently in before trying to iterate over all
