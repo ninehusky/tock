@@ -74,19 +74,23 @@ Current survey is **depth=0** (`bl <stdlib_panic_helper>`). Verifying these 6
 is deferred to a **depth=1** scan: enumerate `bl <wrapper>` for each and
 attribute to user source. That adds **61 new annotation targets**.
 
-### B3. Removed on branch (5) — eliminated via refactor
+## D. Addressed by refactor — panic removed (4)
 
-These master-binary sites have been refactored out on this branch (typically
-by switching to `unsafe { get_unchecked() }` which has no runtime bounds
-check). The panic doesn't exist in the branch binary at all.
+These master-binary sites have been refactored out on this branch. The panic
+doesn't exist in the branch binary at all. Distinction from B: B is "no user
+source ever existed to annotate" (compiler code); D is "user source existed
+in master, branch eliminated it." Different defenses.
 
-| addr | master file:line | branch disposition |
-|---|---|---|
-| 0x1f66c | gpio.rs:144 | replaced with `pins.get_unchecked()` (branch line 156-158); commented-out reference at line 158 |
-| 0xadac  | sixlowpan_compression.rs:783 | `next_headers[2..2+len].copy_from_slice()` removed; not present in branch source |
-| 0xbb7c  | stream.rs:269 | `buf[i] = *b` loop body removed/refactored; not present |
-| 0xd02c  | udp/driver.rs:543 | `retcode.try_into().unwrap()` removed/refactored; not present |
-| 0x18372 | tickv.rs:1120 | master had 2 `_ => unreachable!()` in this file; branch has only 1 (line 264) corresponding to the other master site |
+| addr | master file:line | what the panic was | branch disposition |
+|---|---|---|---|
+| 0x1f66c | gpio.rs:144 (bounds) | `pins[pin_num]` bounds check in `GPIO::fired()` callback | replaced with `unsafe { pins.get_unchecked(pin_num as usize) }` (branch line 156-158); runtime bounds check eliminated, precondition taken on faith |
+| 0xbb7c  | stream.rs:269 (bounds) | `buf[i] = *b` inside `encode_bytes_be` reverse-iter loop | branch rewrote the body as a while-loop (to dodge Iterator extern_spec conflicts). NOTE: the while-loop introduces new bounds checks (`buf[i]`, `bs[bs.len()-1-i]`) that are unannotated; a fresh branch survey would surface those as new sites |
+| 0xd02c  | udp/driver.rs:543 (unwrap_result) | `retcode.try_into().unwrap()` in UDP `command()` ErrorCode conversion | branch redesigned UDP port-binding logic end-to-end; this match arm doesn't exist |
+| 0x18372 | tickv.rs:1120 (explicit_panic) | `_ => unreachable!()` in `RubbishState` garbage-collection state machine | branch consolidated state-machine logic; master had 7 `unreachable!()` in this file, branch has 1 (line 264) corresponding to a different master site |
+
+(Note: 0xadac was originally classified here but turned out to be marked at a
+refactored location — operation moved to `decompress_ext_hdr` at branch line
+661 with a real precondition assertion at line 660.)
 
 ## C. Still needs annotation (24)
 
