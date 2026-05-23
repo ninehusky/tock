@@ -13,6 +13,7 @@ enabled = true
 check_overflow = "lazy"
 include = [
     "def:hard_fault_handler_arm_v7m_kernel",
+    "def:switch_to_user_arm_v7m",   # holds FLUX-TODO-FN-LEVEL marker
 ]
 
 [dependencies]
