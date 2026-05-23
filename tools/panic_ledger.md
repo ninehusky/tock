@@ -5,18 +5,20 @@ nrf52840dk release ELF. Per-site machine-readable truth in `panic_ledger.csv`.
 
 Built: 2026-05-22, against master commit `104a47788`.
 
-## Final distribution — 343 panic sites, 3 plain-English buckets
+## Final distribution — 343 panic sites, 4 plain-English buckets
 
 ```
-A. Has annotation in source              296
-   ↳ marked (FLUX-TODO / FLUX-OPT / BLOCKED)         290
+A. Has annotation in source              297
+   ↳ marked (FLUX-TODO / FLUX-OPT / BLOCKED)         291
    ↳ monomorph-at-caller (marker at user-caller)       4
    ↳ marker-at-caller (macro-def, marker at caller)    2
 
-B. No annotation possible, defensible     23
+B. No user source to annotate             18
    ↳ singleton stdlib helper (in /rustc/)             12
    ↳ singleton compiler-gen wrapper (depth=1 deferred) 6
-   ↳ removed on branch (refactored out / replaced)     5
+
+D. Addressed by refactor (panic removed)   4
+   ↳ refactored away on branch                         4
 
 C. Still needs annotation                 24
    ↳ no-line (file known, line murky)                 24
@@ -24,7 +26,7 @@ C. Still needs annotation                 24
 Σ                                        343 ✓
 ```
 
-**Session arc**: started at A=249 B=18 C=76; after the 11-site apply pass A=284 B=18 C=41; after this turn's content-match resolution of the 17 outstanding, A=296 B=23 C=24.
+**Session arc**: started at A=249 B=18 C=76; after the 11-site apply pass A=284 B=18 C=41; after the content-match resolution of the 17 outstanding plus reclassifying 0xadac (which turned out to be marked at a refactored location, not removed), A=297 B=18 D=4 C=24.
 
 ## A. Has annotation (296)
 
@@ -44,7 +46,7 @@ and the `assert_failed::<Option<BulkInState>>` pair in usbd.rs.
 `panic!()` is inside `macro_rules!`, callers elsewhere in usbd.rs are
 annotated at the expansion site.
 
-## B. No annotation possible, defensible (23)
+## B. No user source to annotate (18)
 
 ### B1. Stdlib panic helpers (12) — lives in `/rustc/`
 
