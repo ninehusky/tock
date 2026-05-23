@@ -49,12 +49,12 @@ DEFAULT_CRATES = list(CRATES.values())
 SUMMARY_RE = re.compile(
     r"summary\.\s+(\d+)\s+functions processed:\s+(\d+)\s+checked;\s+(\d+)\s+trusted;\s+(\d+)\s+ignored\.\s+(\d+)\s+constraints solved\.\s+Finished in ([\d.]+)s"
 )
-# Flux error lines look like:
-#   error[FLUX]: refinement type error
-#      --> kernel/src/process_standard.rs:289:5
-# We capture the file:line from the `-->` line that follows an `error[FLUX]`.
-ERROR_RE = re.compile(r"^error\[FLUX[^\]]*\]")
-LOC_RE = re.compile(r"^\s*-->\s*([^\s:]+):(\d+):(\d+)")
+# `--message-format short` puts file:line:col on the same line as the error:
+#   kernel/src/grant.rs:1248:9: error[E0999]: refinement type error: a precondition cannot be proved
+SHORT_ERROR_RE = re.compile(
+    r"^([^\s:]+\.rs):(\d+):(\d+):\s+error\[(?:E0999|FLUX[^\]]*)\]:\s*(.*)"
+)
+CHECKING_RE = re.compile(r"^\s*Checking\s+([\w-]+)\s+v")
 
 
 def run_flux(crate: str, out_dir: Path) -> Path:
@@ -77,41 +77,46 @@ def run_flux(crate: str, out_dir: Path) -> Path:
     return log_path
 
 
-def parse_log(log_path: Path) -> dict:
-    """Extract per-crate stats + per-(file,line) error list from a flux log."""
-    text = log_path.read_text()
-    summary = None
-    for line in text.splitlines():
-        m = SUMMARY_RE.search(line)
-        if m:
-            # Take the LAST summary (the target crate's summary; deps come first)
-            summary = {
-                "processed": int(m.group(1)),
-                "checked":   int(m.group(2)),
-                "trusted":   int(m.group(3)),
-                "ignored":   int(m.group(4)),
-                "solved":    int(m.group(5)),
-                "wall_s":    float(m.group(6)),
-            }
+def parse_log(log_path: Path, target_crate: str) -> dict:
+    """Extract per-crate stats + per-(file,line) error list from a flux log.
 
-    # Walk lines: an error block is `error[FLUX...]` followed by one or more
-    # `--> file:line:col` lines (the first locates the error site).
+    The log contains output for each crate flux checked (dependencies first,
+    then the target). We track which crate we're currently "in" via the
+    `Checking <name> v...` lines so we can attribute the summary and errors
+    correctly to the target crate.
+    """
+    text = log_path.read_text()
+    # Normalize: dashes in the target crate name need to be matched against
+    # the cargo crate name in `Checking` (which uses dashes for cargo names too).
+    summary = None
     errors = []
-    lines = text.splitlines()
-    i = 0
-    while i < len(lines):
-        if ERROR_RE.match(lines[i]):
-            # Find the first --> in the next ~5 lines
-            for j in range(i + 1, min(len(lines), i + 6)):
-                m = LOC_RE.match(lines[j])
-                if m:
-                    errors.append({
-                        "file": m.group(1),
-                        "line": int(m.group(2)),
-                        "col":  int(m.group(3)),
-                    })
-                    break
-        i += 1
+    current_crate = None
+    for line in text.splitlines():
+        m_check = CHECKING_RE.match(line)
+        if m_check:
+            current_crate = m_check.group(1)
+            continue
+        if current_crate != target_crate:
+            continue
+        m_sum = SUMMARY_RE.search(line)
+        if m_sum:
+            summary = {
+                "processed": int(m_sum.group(1)),
+                "checked":   int(m_sum.group(2)),
+                "trusted":   int(m_sum.group(3)),
+                "ignored":   int(m_sum.group(4)),
+                "solved":    int(m_sum.group(5)),
+                "wall_s":    float(m_sum.group(6)),
+            }
+            continue
+        m_err = SHORT_ERROR_RE.match(line)
+        if m_err:
+            errors.append({
+                "file": m_err.group(1),
+                "line": int(m_err.group(2)),
+                "col":  int(m_err.group(3)),
+                "msg":  m_err.group(4),
+            })
     return {"summary": summary, "errors": errors}
 
 
@@ -235,7 +240,7 @@ def main() -> int:
         log = args.out / f"{c}.log"
         if not (args.skip_build and log.exists()):
             run_flux(c, args.out)
-        per_crate[c] = parse_log(log)
+        per_crate[c] = parse_log(log, c)
 
     print()
     print(f"{'crate':<18} {'procd':>6} {'chk':>5} {'trst':>5} {'ign':>4} {'solved':>7} {'errors':>7} {'wall_s':>8}")
