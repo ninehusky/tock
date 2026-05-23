@@ -1244,8 +1244,9 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // FLUX-TODO line=1244 flavor=unwrap_option addrs=[
         //     0x17e38, 0xbdd6, 0x77c0, 0x1dec,
         // ]
-        flux_support::assert(false);
-        self.access_grant(fun, true).unwrap()
+        let grant_opt = self.access_grant(fun, true);
+        flux_support::assert(grant_opt.is_some());
+        grant_opt.unwrap()
     }
 
     /// Run a function with access to the data in the related process for the

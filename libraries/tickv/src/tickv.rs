@@ -451,8 +451,9 @@ flux_support::assert(num_region != 0);
             };
 
             // FLUX-TODO addr=0x16b2a line=442 flavor=unwrap_option
-            flux_support::assert(false);
-            let region_data = self.read_buffer.take().unwrap();
+            let region_buf_opt = self.read_buffer.take();
+            flux_support::assert(region_buf_opt.is_some());
+            let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::AppendKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::AppendKeyReadRegion(new_region))
             {
@@ -722,8 +723,9 @@ flux_support::assert(num_region != 0);
 
             // Get the data from that region
             // FLUX-TODO addr=0x16e14 line=707 flavor=unwrap_option
-            flux_support::assert(false);
-            let region_data = self.read_buffer.take().unwrap();
+            let region_buf_opt = self.read_buffer.take();
+            flux_support::assert(region_buf_opt.is_some());
+            let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::GetKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::GetKeyReadRegion(new_region))
             {
@@ -857,8 +859,9 @@ flux_support::assert(false);
 
             // Get the data from that region
             // FLUX-TODO addr=0x161ec line=835 flavor=unwrap_option
-            flux_support::assert(false);
-            let region_data = self.read_buffer.take().unwrap();
+            let region_buf_opt = self.read_buffer.take();
+            flux_support::assert(region_buf_opt.is_some());
+            let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::InvalidateKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
                     Ok(()) => {}
@@ -962,8 +965,9 @@ flux_support::assert(false);
 
             // Get the data from that region
             // FLUX-TODO addr=0x187f2 line=935 flavor=unwrap_option
-            flux_support::assert(false);
-            let region_data = self.read_buffer.take().unwrap();
+            let region_buf_opt = self.read_buffer.take();
+            flux_support::assert(region_buf_opt.is_some());
+            let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::ZeroiseKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
                     Ok(()) => {}
@@ -1038,8 +1042,9 @@ flux_support::assert(false);
     ) -> Result<usize, ErrorCode> {
         // Get the data from that region
         // FLUX-TODO addr=0x1852c line=1009 flavor=unwrap_option
-        flux_support::assert(false);
-        let region_data = self.read_buffer.take().unwrap();
+        let region_buf_opt = self.read_buffer.take();
+        flux_support::assert(region_buf_opt.is_some());
+        let region_data = region_buf_opt.unwrap();
         if self.state.get() != State::GarbageCollect(RubbishState::ReadRegion(region, flash_freed))
         {
             match self.controller.read_region(region, region_data) {

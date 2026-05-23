@@ -328,8 +328,9 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     )]
     pub fn set_read_buffer(&self, read_buffer: &[u8]) {
         // FLUX-TODO addr=0x1d1ec line=329 flavor=unwrap_option
-        flux_support::assert(false);
-        let buf = self.tickv.read_buffer.take().unwrap();
+        let read_buf_opt = self.tickv.read_buffer.take();
+        flux_support::assert(read_buf_opt.is_some());
+        let buf = read_buf_opt.unwrap();
         buf.copy_from_slice(read_buffer);
         self.tickv.read_buffer.replace(Some(buf));
     }
@@ -360,8 +361,9 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
             State::Init(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.initialise(self.key.get().unwrap()), 0) },
             State::AppendKey(_) => {
                 // FLUX-TODO addr=0x18812 line=356 flavor=unwrap_option
-                flux_support::assert(false);
-                let value = self.value.take().unwrap();
+                let value_opt = self.value.take();
+                flux_support::assert(value_opt.is_some());
+                let value = value_opt.unwrap();
                 let value_length = self.value_length.get();
                 // FLUX-TODO addr=0x1882a line=360 flavor=unwrap_option
                 flux_support::assert(self.key.get().is_some());
@@ -373,8 +375,9 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
             }
             State::GetKey(_) => {
                 // FLUX-TODO addr=0x18818 line=365 flavor=unwrap_option
-                flux_support::assert(false);
-                let buf = self.value.take().unwrap();
+                let buf_opt = self.value.take();
+                flux_support::assert(buf_opt.is_some());
+                let buf = buf_opt.unwrap();
                 // FLUX-TODO addr=0x18830 line=366 flavor=unwrap_option
                 flux_support::assert(self.key.get().is_some());
                 let ret = self.tickv.get_key(self.key.get().unwrap(), buf);

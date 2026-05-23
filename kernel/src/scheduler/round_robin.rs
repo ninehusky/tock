@@ -98,8 +98,9 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                         break;
                     }
                     // FLUX-TODO addr=0x1dcc line=100 flavor=unwrap_option
-                    flux_support::assert(false);
-                    self.processes.push_tail(self.processes.pop_head().unwrap());
+                    let head_opt = self.processes.pop_head();
+                    flux_support::assert(head_opt.is_some());
+                    self.processes.push_tail(head_opt.unwrap());
                 }
                 None => {
                     self.processes.push_tail(self.processes.pop_head().unwrap());
@@ -152,8 +153,9 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         self.last_rescheduled.set(reschedule);
         if !reschedule {
             // FLUX-TODO addr=0x1e7a line=147 flavor=unwrap_option
-            flux_support::assert(false);
-            self.processes.push_tail(self.processes.pop_head().unwrap());
+            let head_opt = self.processes.pop_head();
+            flux_support::assert(head_opt.is_some());
+            self.processes.push_tail(head_opt.unwrap());
         }
     }
 }
