@@ -72,8 +72,11 @@ def run_flux(crate: str, out_dir: Path, isolated: bool = False) -> Path:
         target = (out_dir / "target" / crate).resolve()
         env["CARGO_TARGET_DIR"] = str(target)
     try:
+        # `--keep-going` so an upstream crate's flux errors don't halt the
+        # build before we get to the target crate.
         result = subprocess.run(
-            ["cargo", "flux", "-p", crate, "--message-format", "short"],
+            ["cargo", "flux", "-p", crate, "--keep-going",
+             "--message-format", "short"],
             capture_output=True, text=True, timeout=1800, env=env,
         )
     except subprocess.TimeoutExpired:
@@ -90,23 +93,25 @@ def run_flux(crate: str, out_dir: Path, isolated: bool = False) -> Path:
 def parse_log(log_path: Path, target_crate: str) -> dict:
     """Extract per-crate stats + per-(file,line) error list from a flux log.
 
-    The log contains output for each crate flux checked (dependencies first,
-    then the target). We track which crate we're currently "in" via the
-    `Checking <name> v...` lines so we can attribute the summary and errors
-    correctly to the target crate.
+    Strategy: if we see `Checking <target_crate> v...`, the summary that
+    follows belongs to the target. If we never see that line (cargo got
+    quieter on cached runs), fall back to assuming the LAST summary is
+    the target's (deps run first in dependency order).
+
+    For errors, we always collect every short-format error line. (Errors
+    from a dep that failed to verify are not attributable per se, but in
+    practice they're rare with --keep-going and target-crate errors
+    dominate.)
     """
     text = log_path.read_text()
-    # Normalize: dashes in the target crate name need to be matched against
-    # the cargo crate name in `Checking` (which uses dashes for cargo names too).
-    summary = None
+    target_summary = None     # captured when we're inside the target crate's section
+    last_summary = None       # always overwritten with the latest summary seen
+    in_target = False
     errors = []
-    current_crate = None
     for line in text.splitlines():
         m_check = CHECKING_RE.match(line)
         if m_check:
-            current_crate = m_check.group(1)
-            continue
-        if current_crate != target_crate:
+            in_target = (m_check.group(1) == target_crate)
             continue
         m_sum = SUMMARY_RE.search(line)
         if m_sum:
@@ -118,6 +123,9 @@ def parse_log(log_path: Path, target_crate: str) -> dict:
                 "solved":    int(m_sum.group(5)),
                 "wall_s":    float(m_sum.group(6)),
             }
+            last_summary = summary
+            if in_target:
+                target_summary = summary
             continue
         m_err = SHORT_ERROR_RE.match(line)
         if m_err:
@@ -127,7 +135,10 @@ def parse_log(log_path: Path, target_crate: str) -> dict:
                 "col":  int(m_err.group(3)),
                 "msg":  m_err.group(4),
             })
-    return {"summary": summary, "errors": errors}
+    return {
+        "summary": target_summary if target_summary else last_summary,
+        "errors": errors,
+    }
 
 
 def audit_includes(ledger_path: Path) -> dict:
