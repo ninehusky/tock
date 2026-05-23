@@ -541,7 +541,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     } else {
                         // Compare the computed encrypted tag to the received
                         // FLUX-TODO addr=0x1d82a line=534 flavor=slice_order
-                        flux_support::assert(false);
+                        flux_support::assert(m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
                         // encrypted tag
                         // FLUX-TODO addr=0x1d818 line=532 flavor=slice_order
                         flux_support::assert(m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
