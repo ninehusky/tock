@@ -41,6 +41,8 @@ impl<'a> Nrf52840DefaultPeripherals<'a> {
 impl<'a> kernel::platform::chip::InterruptService for Nrf52840DefaultPeripherals<'a> {
     unsafe fn service_interrupt(&self, interrupt: u32) -> bool {
         match interrupt {
+            // FLUX-TODO-BLOCKED addr=0x1d04 line=44 reason=match_arm
+            // flux_support::assert(false);
             crate::peripheral_interrupts::USBD => self.usbd.handle_interrupt(),
             nrf52::peripheral_interrupts::GPIOTE => self.gpio_port.handle_interrupt(),
             nrf52::peripheral_interrupts::RADIO => {

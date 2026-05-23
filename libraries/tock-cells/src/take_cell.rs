@@ -118,6 +118,10 @@ impl<'a, T: ?Sized> TakeCell<'a, T> {
     {
         let maybe_val = self.take();
         maybe_val.map(|val| {
+            // FLUX-TODO line=121 addrs=[
+            //     0x1a88a, 0x1a8a0, 0x1a8b0, 0x1a8d0,
+            // ]
+            flux_support::assert(false);
             let res = closure(val);
             self.replace(val);
             res

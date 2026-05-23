@@ -1146,6 +1146,10 @@ impl<'a, A: hil::adc::Adc<'a> + hil::adc::AdcHighSpeed<'a>> SyscallDriver for Ad
     /// - `command_num` - which command call this is
     /// - `data` - value sent by the application, varying uses
     /// - `_processid` - application identifier, unused
+    // FLUX-TODO addr=0x6064 reason=monomorph-at-caller flavor=explicit_panic
+    // enclosing-fn dyn-dispatched via SyscallDriver vtable; DWARF line lost
+    // during LTO inlining of panic helper; marker placed at fn entry.
+    // flux_support::assert(false);
     fn command(
         &self,
         command_num: usize,

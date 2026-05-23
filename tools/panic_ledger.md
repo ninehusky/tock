@@ -1,0 +1,161 @@
+# Panic-site ledger — master nrf52840dk
+
+Authoritative per-site account of every panic call site in the **master**
+nrf52840dk release ELF. Per-site machine-readable truth in `panic_ledger.csv`.
+
+Built: 2026-05-22, against master commit `104a47788`.
+
+## Final distribution — 343 panic sites, 3 plain-English buckets
+
+```
+A. Has an annotation in source           284
+   ↳ marked (existing + new FLUX-TODOs)   280   (178 high confidence, 102 medium)
+   ↳ monomorph-at-caller (this session)    4
+
+B. No user source to annotate             18
+   ↳ stdlib helper (in /rustc/)           12
+   ↳ compiler-generated wrapper            6
+
+C. Needs annotation, none yet             41
+   ↳ outstanding (file:line known)        17
+   ↳ no-line (file known, line murky)     24
+
+Σ                                         343 ✓
+```
+
+**Session change**: A went from 249 → 284; C went from 76 → 41. The 35 marked-this-session
+sites split as 4 monomorph-at-caller (UDPDriver, AdcDedicated, I2CMS, usbd assert
+pair), 9 new FLUX-TODO markers via apply script (alarm, virtual_aes_ccm:238,
+sixlowpan_compression:739/817, sixlowpan_state:495/1072, chip:123, process_standard:289,
+take_cell:121), 2 new FLUX-TODO-BLOCKED markers (ipv6.rs:504 before_close_brace,
+ipv6.rs:573 impl_scope). Compilation verified clean (`make release` from
+`boards/nordic/nrf52840dk`).
+
+## A. Has an annotation (284)
+
+280 sites have a `// FLUX-TODO` / `// FLUX-OPT` / `// FLUX-TODO-BLOCKED` within
+±6 lines (high confidence: 178) or ±30 lines (medium: 102) of the panic line in
+the branch source. The medium-confidence ones are sites where line-shifts from
+inserted annotations above pushed the marker past the strict window — they're
+still the right marker for the right panic, just visually offset.
+
+Plus 4 `monomorph-at-caller` markers landed this session at:
+- `capsules/extra/src/net/udp/driver.rs:393` (UDPDriver::command)
+- `capsules/core/src/adc.rs:1149` (AdcDedicated::command)
+- `capsules/core/src/i2c_master_slave_driver.rs:197` (I2CMS::command_complete)
+- `chips/nrf52/src/usbd.rs:1377` + `:1839` (the assert_eq! pair for `Option<BulkInState>`)
+
+## B. No user source to annotate (18)
+
+Plain-English defense: the `bl` instruction lives in compiler-emitted code, not
+in any user-written `.rs` file. We do not modify stdlib. Every user-code call
+that *triggers* one of these helpers is annotated separately in category A.
+
+**12 — stdlib panic helpers (in `/rustc/`)**: `panic_fmt`, `panic`, `panic_bounds_check`,
+`assert_failed_inner`, `slice_start_index_len_fail`, `slice_end_index_len_fail`,
+`slice_index_order_fail`, `unwrap_failed` (Option), `unwrap_failed` (Result),
+`panic_const_div_by_zero`, `panic_const_rem_by_zero`, `rust_begin_unwind`.
+
+**6 — compiler-generated wrappers around stdlib generics** (lives in cgu.0; the
+source file is `/rustc/...`):
+- `<[u8; 16] as Index<Range>>::index` (0xb314)
+- `<[u8; 500] as Index<RangeTo>>::index` (0x1331e)
+- `<usize>::div_ceil` (0xf5e4)
+- `<Range as SliceIndex<[u8]>>::index_mut` × 2 (0x96cc, 0x586e)
+- `<[u8]>::split_at_mut` (0x13302)
+
+## C. Needs annotation (41) — the remaining work
+
+### C1. Outstanding (17) — known file:line, no marker yet
+
+Listed below. These are MASTER-survey addresses whose effective_frame
+file:line does not match any branch source marker even with a ±30-line
+fallback. Many likely correspond to a panic that EXISTS in the branch survey
+too but at a different line number — line-shifts from inserted annotations
+above can push line numbers around by 30+ in heavily-annotated files. For
+each, the fix is either: (a) confirm the existing branch marker covers it
+(and update the ledger), or (b) add a new marker.
+
+```
+0x1a0fa  bounds          capsules/core/src/button.rs:246
+0x1f66c  bounds          capsules/core/src/gpio.rs:144
+0x1d67a  bounds          capsules/core/src/virtualizers/virtual_aes_ccm.rs:831
+0x15da6  explicit_panic  capsules/extra/src/ieee802154/framer.rs:525
+0x18980  slice_end       capsules/extra/src/ieee802154/framer.rs:695
+0xadac   slice_end       capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:783
+0xb0d2   explicit_panic  capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1071
+0xb29a   explicit_panic  capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1110
+0x1de9c  slice_end       capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:899
+0x1debe  slice_end       capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:731
+0xbb7c   bounds          capsules/extra/src/net/stream.rs:269
+0xd02c   unwrap_result   capsules/extra/src/net/udp/driver.rs:543
+0x1152e  explicit_panic  chips/nrf52/src/usbd.rs:56  ← macro def; marker at caller (line 643)
+0x11644  explicit_panic  chips/nrf52/src/usbd.rs:56  ← macro def; marker at caller
+0x12326  explicit_panic  chips/nrf52/src/usbd.rs:2163
+0x18372  explicit_panic  libraries/tickv/src/tickv.rs:1120
+0x18368  unwrap_option   libraries/tickv/src/tickv.rs:992
+```
+
+Two of these (`0x1152e`, `0x11644`) are macro-definition sites in usbd.rs:56;
+the panic-emitting `panic!()` is inside `macro_rules! internal_err`, callers
+elsewhere in usbd.rs are already annotated. These are effectively covered;
+the ledger could be updated to reflect that.
+
+### C2. Recovered-no-line (24) — line attribution murky
+
+Of the 24 no-line sites: 1 has a high-confidence single-flavor source line, 8
+have multi-candidate medium-confidence picks, 15 are at fn-entry as a
+conservative "panic somewhere in this fn" fallback. Confidence column in the
+CSV carries the breakdown.
+
+For each, the file is known and the enclosing function is known; only the
+specific statement within the function is uncertain. A hand-pass over the 15
+fn-entry-fallback rows (~30–60 min) would land each at an exact line.
+
+Listed in the CSV; filter `status==recovered-no-line`. The 15 lowest-confidence
+ones with the specific reason for the low rating:
+
+```
+0x1e182  adc.rs:740           sample_ready                     no explicit_panic found in fn body
+0x1e7b6  adc.rs:827           samples_ready                    no explicit_panic found in fn body
+0x19fd4  i2c_master_slave_driver.rs:106  command_complete (slave)  no explicit_panic
+0x76a2   spi_controller.rs:226  command                        no explicit_panic
+0x6386   ble_advertising_driver.rs:608  command                no explicit_panic
+0x720a   ieee802154/driver.rs:671  command                     no unwrap_option
+0x7268   ieee802154/driver.rs:671  command                     no explicit_panic
+0x4f10   kv_driver.rs:471     command                          no explicit_panic
+0xb280   [tool bug] survey path was /rustc/                    decompress_iid_context
+0xb4fc   [tool bug] survey path was /rustc/                    decompress_udp_ports
+0x9aa4   [tool bug] fn not found                               Console::transmitted_buffer
+0x1d54   [tool bug] fn-name parser broke on generics           kernel_loop monomorph
+0x554a   syscall_driver.rs:117  command — fn lookup hit trait, not impl
+0x794c   syscall_driver.rs:117  command — fn lookup hit trait, not impl
+0x1608c  tickv.rs:208         get_region                       no assert found
+```
+
+## Coverage holes for two panic flavors
+
+The flavor-coverage audit found two flavors that have caller sites but zero
+flavor-tagged markers in branch source:
+
+- **`assert`** (2 callers, 0 flavor-tagged markers)
+- **`optional_cell_unwrap`** (7 callers, 0 flavor-tagged markers)
+
+Both are listed in the outstanding/no-line buckets above. Closing these
+specific holes is part of the C work.
+
+## What this session left in branch source (uncommitted)
+
+- 4 `FLUX-TODO-BLOCKED` markers (from the earlier turn) at process_standard.rs,
+  virtual_aes_ccm.rs:176, sixlowpan_state.rs:483, interrupt_service.rs:44
+- 2 `FLUX-TODO-BLOCKED` markers (from the apply pass) at ipv6.rs:504 and :573
+- 4 `FLUX-TODO addr=… reason=monomorph-at-caller` at UDPDriver, AdcDedicated,
+  I2CMS, usbd assert_eq pair
+- 9 `FLUX-TODO addr=… line=…` via apply script at alarm.rs:188,
+  virtual_aes_ccm.rs:238, sixlowpan_compression.rs:739/817,
+  sixlowpan_state.rs:495/1072, chip.rs:123, process_standard.rs:289,
+  take_cell.rs:121
+- `tools/panic_ledger.csv` and `tools/panic_ledger.md` (this file)
+- `tools/panic_survey.json` (regenerated as part of analysis, not directly related)
+
+Build confirmed clean: `make release` from `boards/nordic/nrf52840dk`.

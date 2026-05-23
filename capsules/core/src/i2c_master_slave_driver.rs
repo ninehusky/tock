@@ -194,6 +194,10 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
     for I2CMasterSlaveDriver<'a, I>
 {
+    // FLUX-TODO addr=0x1ec5a reason=monomorph-at-caller flavor=explicit_panic
+    // enclosing-fn dyn-dispatched via I2CHwSlaveClient vtable; DWARF line lost
+    // during LTO inlining of panic helper; marker placed at fn entry.
+    // flux_support::assert(false);
     fn command_complete(
         &self,
         buffer: &'static mut [u8],

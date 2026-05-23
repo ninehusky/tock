@@ -173,6 +173,8 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> MuxAES128CCM<'a, A> 
     fn do_next_op(&self) {
         if self.inflight.is_none() {
             let mnode = self
+                // FLUX-TODO-BLOCKED addr=0x13098 line=176 reason=mid_chain
+                // flux_support::assert(false);
                 .ccm_clients
                 .iter()
                 .find(|node| node.queued_up.is_some());
@@ -233,6 +235,8 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
             // vaes_ccm.crypt_done might call additional start_ccm_crypt / start_ccm_auth
             // when the encryption is *really* done, inflight will be cleared by remove_from_queue
             // and it will call do_next_op to perform the next operation
+            // FLUX-TODO addr=0x1d814 line=238
+            flux_support::assert(false);
             // self.do_next_op() will be called when the encryption is failed or is really done
             // search for self.ccm_client
             vaes_ccm.crypt_done(source, dest);
@@ -611,7 +615,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         self.crypt_buf.map(|cbuf| {
             let mut cbuf_block = [0u8; AES128_BLOCK_SIZE];
             // FLUX-TODO addr=0x132de line=596 flavor=slice_order
-            flux_support::assert(false);
+            flux_support::assert(auth_len >= AES128_BLOCK_SIZE && auth_len <= cbuf.len());
             cbuf_block.copy_from_slice(&cbuf[auth_len - AES128_BLOCK_SIZE..auth_len]);
             self.saved_tag.set(cbuf_block);
             cbuf[auth_len - AES128_BLOCK_SIZE..auth_len]

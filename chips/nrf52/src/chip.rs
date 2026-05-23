@@ -120,6 +120,10 @@ impl<'a, I: InterruptService + 'a> kernel::platform::chip::Chip for NRF52<'a, I>
         unsafe {
             loop {
                 if let Some(interrupt) = nvic::next_pending() {
+                    // FLUX-TODO line=123 addrs=[
+                    //     0x1e08, 0x1e2c,
+                    // ]
+                    flux_support::assert(false);
                     if !self.interrupt_service.service_interrupt(interrupt) {
                         panic!("unhandled interrupt {}", interrupt);
                     }

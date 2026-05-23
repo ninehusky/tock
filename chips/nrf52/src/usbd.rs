@@ -1374,6 +1374,9 @@ impl<'a> Usbd<'a> {
             1..=7 => {
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[endpoint].state.get().bulk_state();
+                // FLUX-TODO addr=0x113ca reason=monomorph-at-caller flavor=assert
+                // assert_failed::<Option<BulkInState>> wrapper fired here.
+                // flux_support::assert(false);
                 assert_eq!(in_state, Some(BulkInState::InDma));
                 self.descriptors[endpoint].state.set(EndpointState::Bulk(
                     transfer_type,
@@ -1836,6 +1839,9 @@ impl<'a> Usbd<'a> {
         self.client.map(|client| {
             let (transfer_type, in_state, out_state) =
                 self.descriptors[endpoint].state.get().bulk_state();
+            // FLUX-TODO addr=0x113ca reason=monomorph-at-caller flavor=assert
+            // assert_failed::<Option<BulkInState>> wrapper fired here.
+            // flux_support::assert(false);
             assert_eq!(in_state, Some(BulkInState::Init));
 
             let result = client.packet_in(transfer_type, endpoint);

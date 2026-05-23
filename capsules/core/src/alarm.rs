@@ -185,6 +185,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         // Compute the earliest alarm, and invoke the `expired_handler` for
         // every expired alarm. This will issue a callback and reset the alarms
         // respectively.
+        // FLUX-TODO addr=0x19046 line=188
+        flux_support::assert(false);
         let res = Self::earliest_alarm(
             now,
             // Pass an interator of all non-None expirations:

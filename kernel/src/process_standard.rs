@@ -286,6 +286,8 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         self.tasks.map(|tasks| {
             let count_before = tasks.len();
             // VTOCK-TODO: prove tasks.retain() reduces number of tasks
+            // FLUX-TODO addr=0x3cfc line=289
+            flux_support::assert(false);
             tasks.retain(|task| match task {
                 // Remove only tasks that are function calls with an id equal
                 // to `upcall_id`.
@@ -459,6 +461,8 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         self.tasks.map_or(None, |tasks| tasks.dequeue())
     }
 
+    // FLUX-TODO-BLOCKED addr=0x2e94 line=462 reason=impl_scope
+    // flux_support::assert(false);
     fn remove_upcall(&self, upcall_id: UpcallId) -> Option<Task> {
         self.tasks.map_or(None, |tasks| {
             tasks.remove_first_matching(|task| match task {

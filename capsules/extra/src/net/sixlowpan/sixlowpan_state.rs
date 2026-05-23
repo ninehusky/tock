@@ -480,6 +480,8 @@ impl<'a> TxState<'a> {
         self.dgram_size.set(ip6_packet.get_total_len());
         self.dgram_tag.set(self.sixlowpan.next_dgram_tag());
         self.prepare_first_fragment(ip6_packet, frame, ctx_store)
+        // FLUX-TODO-BLOCKED addr=0x1979c line=483 reason=before_close_brace
+        // flux_support::assert(false);
     }
 
     fn prepare_first_fragment<'b>(
@@ -490,6 +492,8 @@ impl<'a> TxState<'a> {
     ) -> Result<Frame, (Result<(), ErrorCode>, &'static mut [u8])> {
         // Here, we assume that the compressed headers fit in the first MTU
         // fragment. This is consistent with RFC 6282.
+        // FLUX-TODO addr=0x1999e line=495
+        flux_support::assert(false);
         let mut lowpan_packet = [0_u8; radio::MAX_FRAME_SIZE];
         let (consumed, written) = {
             match sixlowpan_compression::compress(
@@ -1067,6 +1071,8 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
                 return (None, Err(ErrorCode::NOMEM));
             }
         }
+        // FLUX-TODO addr=0x1e0ec line=1072
+        flux_support::assert(false);
         rx_state.map_or((None, Err(ErrorCode::NOMEM)), |state| {
             // Returns true if the full packet is reassembled
             let res = state.receive_next_frame(

@@ -390,6 +390,10 @@ impl<'a> SyscallDriver for UDPDriver<'a> {
     ///        This represents the size of the payload buffer in the kernel. Apps can use this
     ///        syscall to ensure they do not attempt to send too-large messages.
 
+    // FLUX-TODO addr=0xd04c reason=monomorph-at-caller flavor=explicit_panic
+    // enclosing-fn dyn-dispatched via SyscallDriver vtable; DWARF line lost
+    // during LTO inlining of panic helper; marker placed at fn entry.
+    // flux_support::assert(false);
     fn command(
         &self,
         command_num: usize,

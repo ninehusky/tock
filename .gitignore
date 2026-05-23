@@ -101,4 +101,5 @@ tools/nrf52840dk.dis
 # panic-survey scratch artifacts (markdown reports, stat plots) — regenerable
 tools/*.md
 !tools/README.md
+!tools/panic_ledger.md
 tools/*.png

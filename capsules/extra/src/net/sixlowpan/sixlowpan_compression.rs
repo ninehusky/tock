@@ -736,6 +736,8 @@ pub fn decompress(
 
     // Destination Address
     if (iphc_header_2 & iphc::MULTICAST) != 0 {
+        // FLUX-TODO addr=0xd11a line=739
+        flux_support::assert(false);
         decompress_multicast(&mut ip6_header, iphc_header_2, &dst_ctx, buf, &mut consumed)?;
     } else {
         decompress_dst(
@@ -814,6 +816,8 @@ pub fn decompress(
                 // Decompress UDP header fields
                 let consumed_before_port_decompress = consumed;
                 flux_support::assume(consumed <= buf.len() && buf.len() - consumed >= 4);
+                // FLUX-TODO addr=0xd16c line=817
+                flux_support::assert(false);
                 let (src_port, dst_port) = decompress_udp_ports(nhc_header, buf, &mut consumed);
 
                 //need to add any growth from decompression to the udp length if we used the buf

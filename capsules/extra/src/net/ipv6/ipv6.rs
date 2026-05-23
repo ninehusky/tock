@@ -501,6 +501,8 @@ impl<'a> IP6Packet<'a> {
     #[flux_rs::sig(fn(self: &Self[@p]) -> &[u8][p.payload_buf_len])]
     pub fn get_payload(&self) -> &[u8] {
         self.payload.payload
+        // FLUX-TODO-BLOCKED addr=0xdb5e line=504 reason=before_close_brace
+        // flux_support::assert(false);
     }
 
     #[flux_rs::sig(fn(self: &Self[@p]) -> usize requires p.kind != 1)]
@@ -570,6 +572,8 @@ impl<'a> IP6Packet<'a> {
     }
 
     // TODO: Do we need a decode equivalent? I don't think so, but we might
+    // FLUX-TODO-BLOCKED addr=0xdb00 line=573 reason=impl_scope
+    // flux_support::assert(false);
 
     #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n]) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 48)]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
