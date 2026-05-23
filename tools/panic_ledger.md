@@ -5,6 +5,72 @@ nrf52840dk release ELF. Per-site machine-readable truth in `panic_ledger.csv`.
 
 Built: 2026-05-22, against master commit `104a47788`.
 
+## Canonical roundup — 343 sites, by marker form + by flavor
+
+After this session's precondition-conversion pass and the
+fn-level-marker conversion for panic-in-callee cases, every panic site
+has a flavor + a comment describing it. Roughly half also carry an
+actual assertion (real precondition, intentional `assert(false)`
+"prove-unreachable", or upstream `flux_support::assume` providing
+coverage).
+
+### By marker form (sums to 343)
+
+```
+A. Has marker + real precondition       142
+   `flux_support::assert(<actual condition>)` — Flux can discharge directly
+
+B. Has marker + intentional assert(false) 12
+   `{ flux_support::assert(false); panic!() }` — "prove unreachable" sentinel
+
+C. Has marker + upstream assume/cell-context  5
+   Coverage via flux_support::assume() above the panic-emitting op,
+   not via a per-site assert below the marker
+
+D. Comment-only marker (no assert)       148
+   `// FLUX-TODO addr=... flavor=...` documenting the panic without an
+   assertion. Includes:
+      ↳ FLUX-TODO-FN-LEVEL  22  (panic-in-callee, fn-level only)
+      ↳ FLUX-TODO-BLOCKED    8  (insertion-point hazards)
+      ↳ plain FLUX-TODO    118  (apply-script comments documenting the
+                                  panic without a per-site precondition)
+
+E. No user source to annotate (defensible) 18
+   stdlib helpers (12) + compiler-generated wrappers (6, depth=1 deferred)
+
+F. Removed by branch refactor               4
+
+G. Marker-at-caller (macro / dyn dispatched) 2
+   panic line is the macro definition; markers live at expansion sites
+
+H. Monomorph-at-caller                      4
+   misattributed monomorph; marker at user-callable entry point
+
+Σ                                         343  ✓
+```
+
+Sites with an actual assertion: A + B + C = **159**.
+Sites documented without an assertion: D + E + F + G + H = **184**.
+
+### By panic flavor (sums to 343)
+
+```
+explicit_panic          124   panic!/unreachable!/unimplemented!
+unwrap_option            75   Option::unwrap, OptionalCell
+bounds                   65   arr[i] panic_bounds_check
+slice_end                37   arr[..hi] where hi > len
+slice_order              21   arr[lo..hi] where lo > hi
+optional_cell_unwrap      7   OptionalCell::unwrap_or_panic
+assert                    4   assert_eq!/assert_ne!
+div_by_zero               3
+rem_by_zero               3
+unwrap_result             2   Result::unwrap
+slice_start               1
+unwind                    1   rust_begin_unwind
+
+Σ                       343  ✓
+```
+
 ## Final distribution — 343 panic sites, 3 active buckets + 0 outstanding
 
 ```
