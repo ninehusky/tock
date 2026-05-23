@@ -200,6 +200,8 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 
                     // if not, disable the interrupt
                     if interrupt_count.get() == 0 {
+                        // FLUX-TODO addr=0x1a0fa line=203 flavor=bounds
+                        flux_support::assert(false);
                         self.pins[data].0.disable_interrupts();
                     }
 

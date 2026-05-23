@@ -2172,6 +2172,8 @@ fn status_epin(ep: usize) -> Field<u32, EndpointStatus::Register> {
         6 => EndpointStatus::EPIN6,
         7 => EndpointStatus::EPIN7,
         8 => EndpointStatus::EPIN8,
+        // FLUX-TODO-BLOCKED addr=0x12326 line=2175 reason=match_arm flavor=explicit_panic
+        // flux_support::assert(false);
         _ => unreachable!(),
     }
 }
