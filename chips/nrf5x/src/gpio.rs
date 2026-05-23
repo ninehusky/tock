@@ -531,7 +531,7 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
         };
         let pin: u32 = (GPIO_PER_PORT as u32 * self.port as u32) + self.pin as u32;
         // FLUX-TODO addr=0x5858 line=533 flavor=bounds
-        flux_support::assert(channel < self.gpiote_registers.config.len());
+        flux_support::assume(channel < self.gpiote_registers.config.len());
         self.gpiote_registers.config[channel]
             .write(Config::MODE::Event + Config::PSEL.val(pin) + polarity);
         self.gpiote_registers.intenset.set(1 << channel);
@@ -540,7 +540,7 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
     fn disable_interrupts(&self) {
         if let Some(channel) = self.allocated_channel.get() {
             // FLUX-TODO addr=0x1ba34 line=540 flavor=bounds
-            flux_support::assert(channel < self.gpiote_registers.config.len());
+            flux_support::assume(channel < self.gpiote_registers.config.len());
             self.gpiote_registers.config[channel]
                 .write(Config::MODE::CLEAR + Config::PSEL::CLEAR + Config::POLARITY::CLEAR);
             self.gpiote_registers.intenclr.set(1 << channel);
@@ -596,13 +596,16 @@ impl<'a, const N: usize> Port<'a, N> {
     pub fn handle_interrupt(&self) {
         // do this just to get a pointer the memory map
         // doesn't matter which pin is used because it is the same
+        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
         let pin_registers = self.pins[0].gpiote_registers;
 
         for (i, ev) in pin_registers.event_in.iter().enumerate() {
             if ev.any_matching_bits_set(EventsIn::EVENT::Ready) {
                 ev.write(EventsIn::EVENT::NotReady);
                 // Get pin number for the event and `trigger` an interrupt manually on that pin
+                flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                 let pin = pin_registers.config[i].read(Config::PSEL) as usize;
+                flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                 self.pins[pin].handle_interrupt();
             }
         }

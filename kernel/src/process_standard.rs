@@ -372,7 +372,10 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
                 // process faulted. Panic and print status
                 self.state.set(State::Faulted);
                 // FLUX-TODO addr=0x3206 line=370 flavor=explicit_panic
-                flux_support::assert(false);
+                // Notes: blocked-fault-state
+                //        To discharge this, you'd need to ensure this function itself is unreachable if
+                //        the fault policy's `action()` returns `FaultAction::Panic`.
+                // flux_support::assert(false);
                 panic!("Process {} had a fault", self.get_process_name());
             }
             FaultAction::Restart => {
@@ -537,7 +540,8 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
 
     fn setup_mpu(&self) -> MpuConfiguredCapability {
         // FLUX-TODO addr=0x463a line=531 flavor=unwrap_result
-        flux_support::assert(self.app_memory_allocator.is_some());
+        // Notes: blocked-cell
+        // flux_support::assert(self.app_memory_allocator.is_some());
         self.app_memory_allocator
             .map_or(Err(()), |am| Ok(am.configure_mpu(self.chip.mpu())))
             .expect("Fatal kernel bug in setting up MPU - cannot branch to process as it would be unsafe")
@@ -1578,13 +1582,16 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
         //   4. kernel-reserved memory, growing downward starting at
         //      `app_memory_padding`.
         //
-        // FLUX-TODO addr=0x9074 line=1575 flavor=div_by_zero
-        flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
         // - `unused_memory`: the rest of the `remaining_memory`, not assigned
         //   to this app.
         //
         // FLUX-TODO addr=0x9074 line=1575 flavor=explicit_panic
-        flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
+        // Notes: actionable. The split_at_mut below panics unless
+        // app_memory_start_offset + allocation_size <= remaining_memory.len().
+        // Discharging needs this function's own MPU-layout reasoning (how the
+        // allocation sizes relate to remaining_memory) plus a split_at_mut
+        // extern spec; deferred, not an infra blocker.
+        // flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
         let (_allocated_padded_memory, unused_memory) =
             remaining_memory.split_at_mut(app_memory_start_offset + allocation_size);
 

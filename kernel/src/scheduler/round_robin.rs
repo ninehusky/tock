@@ -100,9 +100,13 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                         next = Some(proc.processid());
                         break;
                     }
-                    // FLUX-TODO addr=0x1dcc line=100 flavor=unwrap_option
                     let head_opt = self.processes.pop_head();
-                    flux_support::assert(head_opt.is_some());
+                    // FLUX-TODO addr=0x1dcc line=100 flavor=unwrap_option
+                    // Notes: blocked-list
+                    // Needs a refinement on a `List<T>` where if
+                    // `List::head()` returning `Some(_)` means
+                    // that `List::pop_head()` returns `Some(_)` as well.
+                    // flux_support::assert(head_opt.is_some());
                     self.processes.push_tail(head_opt.unwrap());
                 }
                 None => {
@@ -127,8 +131,13 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
             // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
             self.timeslice_length
         };
+
         // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
-        flux_support::assert(timeslice != 0);
+        // Notes: blocked-cell
+        // Discharging this requires reasoning about `timeslice`, which is either
+        // a cell's value or `self.timeslice_length`.
+        // flux_support::assert(timeslice != 0);
+
         assert!(timeslice != 0);
 
         SchedulingDecision::RunProcess((next, Some(timeslice)))
@@ -154,9 +163,12 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         };
         self.last_rescheduled.set(reschedule);
         if !reschedule {
-            // FLUX-TODO addr=0x1e7a line=147 flavor=unwrap_option
             let head_opt = self.processes.pop_head();
-            flux_support::assert(head_opt.is_some());
+
+            // FLUX-TODO addr=0x1e7a line=147 flavor=unwrap_option
+            // Notes: blocked-list
+            // Needs same refinement shape as the one mentioned above for the other unwrap_option on `head_opt`.
+            // flux_support::assert(head_opt.is_some());
             self.processes.push_tail(head_opt.unwrap());
         }
     }

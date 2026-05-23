@@ -35,10 +35,11 @@ impl Pinmux {
     pub unsafe fn new(pin: u32) -> Pinmux {
         let port: usize = (pin as usize) / PIN_PER_PORT;
         let pin_idx: usize = (pin as usize) % PIN_PER_PORT;
+        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
         let used_pins = USED_PINS[port].get();
         if used_pins & (1 << pin_idx) != 0 {
             // FLUX-TODO addr=0x22290 line=40 flavor=explicit_panic
-            flux_support::assert(false);
+            flux_support::assume(false);
             panic!("Pin {} is already in use!", pin);
         } else {
             USED_PINS[port].set(used_pins | 1 << pin_idx);

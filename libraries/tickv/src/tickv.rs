@@ -150,8 +150,13 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 InitState::GetKeyReadRegion(_) => self.get_key(hashed_main_key, &mut buf),
                 _ => Err(ErrorCode::EraseNotReady(0)),
             },
-            // FLUX-TODO addr=0x183cc line=152 flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => {
+
+                // FLUX-TODO addr=0x183cc line=152 flavor=explicit_panic
+                // Notes: blocked-cell
+                // flux_support::assert(false);
+                unreachable!()
+            },
         };
 
         match key_ret {
@@ -450,10 +455,13 @@ flux_support::assert(num_region != 0);
                 _ => { flux_support::assert(false); unreachable!() },
             };
 
-            // FLUX-TODO addr=0x16b2a line=442 flavor=unwrap_option
             let region_buf_opt = self.read_buffer.take();
-            flux_support::assert(region_buf_opt.is_some());
+
+            // FLUX-TODO addr=0x16b2a line=442 flavor=unwrap_option
+            // Notes: blocked-cell
+            // flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
+
             if self.state.get() != State::AppendKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::AppendKeyReadRegion(new_region))
             {
@@ -715,18 +723,23 @@ flux_support::assert(num_region != 0);
                         }
                     }
                 }
-                // FLUX-TODO addr=0x16e14 line=707 flavor=explicit_panic
-                State::GetKey(key_state) => { flux_support::assert(false); match key_state {
+                State::GetKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
-                } },
-                // FLUX-TODO addr=0x16e1e line=703 flavor=explicit_panic
-                _ => { flux_support::assert(false); unreachable!() },
+                },
+                _ => {
+                    // FLUX-TODO addr=0x16e1e line=703 flavor=explicit_panic
+                    // Notes: blocked-cell
+                    // flux_support::assert(false);
+                    unreachable!()
+                },
             };
 
             // Get the data from that region
-            // FLUX-TODO addr=0x16e14 line=707 flavor=unwrap_option
             let region_buf_opt = self.read_buffer.take();
-            flux_support::assert(region_buf_opt.is_some());
+
+            // FLUX-TODO addr=0x16e14 line=707 flavor=unwrap_option
+            // Notes: blocked-cell
+            // flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::GetKey(KeyState::ReadRegion(new_region))
                 && self.state.get() != State::Init(InitState::GetKeyReadRegion(new_region))
@@ -858,14 +871,19 @@ flux_support::assert(num_region != 0);
                 State::InvalidateKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 },
-                // FLUX-TODO addr=0x161f6 line=831 flavor=explicit_panic
-                _ => { flux_support::assert(false); unreachable!() },
+                _ => {
+                    // FLUX-TODO addr=0x161f6 line=831 flavor=explicit_panic
+                    // Notes: blocked-cell
+                    // flux_support::assert(false);
+                    unreachable!()
+                },
             };
 
             // Get the data from that region
             // FLUX-TODO addr=0x161ec line=835 flavor=unwrap_option
+            // Notes: blocked-cell
             let region_buf_opt = self.read_buffer.take();
-            flux_support::assert(region_buf_opt.is_some());
+            // flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::InvalidateKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
@@ -966,14 +984,19 @@ flux_support::assert(num_region != 0);
                 State::ZeroiseKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 },
-                // FLUX-TODO addr=0x187fc line=931 flavor=explicit_panic
-                _ => { flux_support::assert(false); unreachable!() },
+                _ => {
+                    // FLUX-TODO addr=0x187fc line=931 flavor=explicit_panic
+                    // Notes: blocked-cell
+                    // flux_support::assert(false);
+                    unreachable!()
+                },
             };
 
             // Get the data from that region
             // FLUX-TODO addr=0x187f2 line=935 flavor=unwrap_option
+            // Notes: blocked-cell
             let region_buf_opt = self.read_buffer.take();
-            flux_support::assert(region_buf_opt.is_some());
+            // flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::ZeroiseKey(KeyState::ReadRegion(new_region)) {
                 match self.controller.read_region(new_region, region_data) {
@@ -1049,8 +1072,9 @@ flux_support::assert(num_region != 0);
     ) -> Result<usize, ErrorCode> {
         // Get the data from that region
         // FLUX-TODO addr=0x1852c line=1009 flavor=unwrap_option
+        // Notes: blocked-cell
         let region_buf_opt = self.read_buffer.take();
-        flux_support::assert(region_buf_opt.is_some());
+        // flux_support::assert(region_buf_opt.is_some());
         let region_data = region_buf_opt.unwrap();
         if self.state.get() != State::GarbageCollect(RubbishState::ReadRegion(region, flash_freed))
         {
@@ -1179,8 +1203,12 @@ flux_support::assert(num_region != 0);
                     reg + 1
                 }
             },
-            // FLUX-TODO addr=0x18536 line=1137 flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => {
+                // FLUX-TODO addr=0x18536 line=1137 flavor=explicit_panic
+                // Notes: blocked-cell
+                // flux_support::assert(false);
+                unreachable!()
+            },
         };
 
         for i in start..num_region {

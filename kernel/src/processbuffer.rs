@@ -757,8 +757,13 @@ impl ReadableProcessSlice {
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x11434 line=760 flavor=explicit_panic
-            flux_support::assert(false);
+            // FLUX-OPT addr=0x11434 line=760 flavor=explicit_panic
+            // Checked: this panic is proven dead at the call site below.
+            // copy_to_slice's `dest: &mut [u8][n]` precondition makes
+            // copy_to_slice_or_err infallible, so the is_err() branch (and this
+            // helper) is unreachable; Flux discharges the witnessing
+            // assert(false) at the call site. This #[cold] helper is verified
+            // standalone where that context is unavailable, so no assert here.
             panic!(
                 "source slice length ({}) does not match destination slice length ({})",
                 src_len, dst_len,
@@ -862,7 +867,14 @@ impl Index<Range<usize>> for ReadableProcessSlice {
         // FLUX-TODO line=860 flavor=slice_end addrs=[
         //     0x10fd4, 0x10fdc,
         // ]
-        flux_support::assert(idx.end <= self.slice.len());
+        // Notes: actionable. Discharge path is known but deferred: give this
+        // impl (and the RangeTo/RangeFrom/usize siblings) an `Index::in_bounds`
+        // assoc refinement + `#[no_panic_if(<Self as Index<_>>::in_bounds(len,
+        // idx))]`, and drop this assert (under no_panic_if the inner
+        // self.slice[idx] is checked directly; a bare `requires` doesn't bind to
+        // the trait method, and the cross-crate flux_support::assert trips a
+        // spurious MightPanic). Cascades to every `rps[range]` call site.
+        // flux_support::assert(idx.end <= self.slice.len());
         cast_byte_slice_to_process_slice(&self.slice[idx])
     }
 }
@@ -1017,8 +1029,13 @@ impl WriteableProcessSlice {
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x114b8 line=1010 flavor=explicit_panic
-            flux_support::assert(false);
+            // FLUX-OPT addr=0x114b8 line=1010 flavor=explicit_panic
+            // Checked: this panic is proven dead at the call site below.
+            // copy_from_slice's `src: &[u8][n]` precondition makes
+            // copy_from_slice_or_err infallible, so the is_err() branch (and
+            // this helper) is unreachable; Flux discharges the witnessing
+            // assert(false) at the call site. This #[cold] helper is verified
+            // standalone where that context is unavailable, so no assert here.
             panic!(
                 "src slice len ({}) != dest slice len ({})",
                 src_len, dst_len,

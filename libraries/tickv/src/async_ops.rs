@@ -328,8 +328,9 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     )]
     pub fn set_read_buffer(&self, read_buffer: &[u8]) {
         // FLUX-TODO addr=0x1d1ec line=329 flavor=unwrap_option
+        // Notes: blocked-cell
         let read_buf_opt = self.tickv.read_buffer.take();
-        flux_support::assert(read_buf_opt.is_some());
+        // flux_support::assert(read_buf_opt.is_some());
         let buf = read_buf_opt.unwrap();
         buf.copy_from_slice(read_buffer);
         self.tickv.read_buffer.replace(Some(buf));

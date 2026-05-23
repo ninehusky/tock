@@ -121,7 +121,16 @@ impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
             // Actually do the write. This will return how many bytes it was
             // able to print.
             // FLUX-TODO addr=0x110a4 line=125 flavor=slice_order
-            flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
+            // Notes: actionable. Discharge needs an extern spec tying str::len
+            // and str::as_bytes to the same length. The obvious form (both
+            // -> &[u8][str_len(s)] using the BUILT-IN str_len theory fn) does
+            // discharge this — but it enables SMT string theory globally, which
+            // regressed ~40 unrelated integer-bounds proofs in chips/capsules
+            // (aes/gpio/i2c/spi). A safe version needs a plain *uninterpreted*
+            // str_len (declared in flux_rs::defs!, no string theory) so it can't
+            // perturb the solver. Deferred. `start <= string_len` already
+            // follows from the early-return control flow above.
+            // flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
             let ret = self
                 .binary_writer
                 .write_buffer(&(s).as_bytes()[start..string_len]);
