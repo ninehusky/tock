@@ -33,9 +33,36 @@ C. Still needs annotation                  0   ← DONE
 Of the 315 `marked` rows: 
 - 233 high confidence (marker within ±6 lines, exact match)
 - 67 medium confidence (marker at +6 to +30 lines due to inserted annotations above, OR pinpointed via content-match across refactor)
-- **15 low confidence** (fn-entry markers landed this turn for sites where LTO inlined the panic and we couldn't pin a specific line within the fn)
+- **15 low confidence** (fn-entry markers for sites where LTO inlined the panic and we couldn't pin a specific line within the fn)
 
-The 15 low-confidence rows are the audit list — see CSV filter `status==marked AND confidence==low`.
+### Hand-read audit of the 15 LOW rows — none tightenable
+
+Walked through each of the 15 LOW rows looking for a specific
+panic-emitting expression in the fn body. **Result: 0 of 15 could be
+cleanly tightened.** Patterns:
+
+1. **No panic-likely expression in fn body** (most common):
+   adc.rs sample_ready, samples_ready; ble_advertising_driver command;
+   kv_driver command; spi_controller SyscallDriver command. The
+   explicit_panic flavor must come from a helper inlined via LTO from
+   kernel/grant/process code that the dispatcher fns touch.
+
+2. **Many candidates, no way to disambiguate**: sixlowpan_compression
+   mass-refactor (decompress + decompress_ext_hdr); mx25r6435f
+   read_write_done (state-machine with 18 candidate arr[i] ops);
+   i2c_master_slave_driver command (7 candidate index ops).
+
+3. **Visible candidates are flavor-mismatched**: button.rs command has
+   `pins[data]` (bounds) but the missing panic is explicit_panic; aes.rs
+   crypt's bounds address sits in a different code region than the
+   visible bounds ops in copy_plaintext (which already have their own
+   addrs).
+
+The fn-entry markers are honest as "panic somewhere in this fn body."
+Tightening these would require either: DWARF `.debug_line` parsing with
+finer granularity, disassembly walking from each address with register
+analysis, or rebuilding with `[profile.release] debug=true` and
+re-running addr2line.
 
 ## A. Has annotation (296)
 
