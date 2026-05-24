@@ -57,6 +57,11 @@ for pkg,r in d.items():
         offs=[m.start() for m in re.finditer(re.escape(ASSERT),t)]
         for s in sites:
             o=next((x for x in offs if t.count("\n",0,x)+1==s["line"]),None)
+            # skip commented-out asserts (probe counted these as phantom sites)
+            lt=t.splitlines()
+            if s["line"]-1 < len(lt):
+                L=lt[s["line"]-1]; ci=L.find(ASSERT)
+                if ci!=-1 and "//" in L[:ci]: continue
             fn=enc_fn(t,o) if o is not None else None
             clo=is_closure(t,o) if o is not None else False
             insc=(mode=="WHOLE") or (f in files) or any(dn in (fn or "") for dn in defs)
