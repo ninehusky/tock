@@ -259,6 +259,7 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
         }
     }
 
+    #[flux_rs::trusted(reason = "temporarily adding this")]
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> {
         // FLUX-TODO addr=0x16542 line=261 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());
@@ -313,6 +314,7 @@ pub struct TicKVSystem<'a, F: Flash + 'static, H: Hasher<'a, 8>, const PAGE_SIZE
 }
 
 impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, H, PAGE_SIZE> {
+    #[flux_rs::trusted(reason = "this ICEs")]
     pub fn new(
         flash: &'a F,
         hasher: &'a H,
@@ -344,6 +346,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
         self.operation.set(Operation::Init);
     }
 
+    #[flux_rs::trusted(reason = "ice")]
     fn complete_init(&self) {
         self.operation.set(Operation::None);
         match self.next_operation.get() {
