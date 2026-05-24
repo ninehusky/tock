@@ -80,28 +80,37 @@ with open("tools/flux_spans.tsv","w") as fh:
     for r in rows:
         fh.write(f"{r['crate']}\t{r['path']}\t{r['fn']}\t{r['category']}\t{r['why']}\t{r['closure']}\t{r['in_scope']}\t{r['cond']}\n")
 
-# Markdown, SILENT-focused
+# Markdown — every NOT-genuinely-proven assert (cmd-click the path:line)
 sil=[r for r in rows if r["category"]=="SILENT"]
+vac=[r for r in rows if r["category"]=="DEAD_VACUOUS"]
+trb=[r for r in rows if r["category"]=="TRUSTED_BLOCKED"]
 def grp(w): return [r for r in sil if r["why"]==w]
+def emit(fh, items):
+    for r in sorted(items,key=lambda x:x["path"]):
+        fh.write(f"- {r['path']}  —  `fn {r['fn']}`  —  `{r['cond']}`\n")
 with open("tools/flux_silent_spans.md","w") as fh:
-    fh.write("# SILENT assert spans (Flux did not check these)\n\n")
-    fh.write(f"From `tools/negation_probe.json`. Total SILENT: {len(sil)} "
-             f"(closure {len(grp('closure'))}, in-scope non-closure {len(grp('in_scope_skipped'))}, "
-             f"out-of-scope {len(grp('out_of_scope'))}).\n")
-    fh.write("`closure` count is a lower bound (detector misses match-arm-nested closures).\n\n")
-    for w,title in [("closure","## Inside a closure (cell.map(|x| {…}) — confirmed Flux bug)"),
-                    ("in_scope_skipped","## In-scope, NOT a closure, still skipped (the larger/second issue)"),
-                    ("out_of_scope","## Out of include scope (expected — fn not in include filter)")]:
+    fh.write("# Asserts Flux does NOT genuinely check\n\n")
+    fh.write(f"From `tools/negation_probe.json` (+ `dead_proven_validate.json`), commented-out "
+             f"sites excluded. cmd-click any `path:line`.\n\n")
+    fh.write(f"**Silent/vacuous total: {len(sil)+len(vac)}** "
+             f"= SILENT {len(sil)} (closure {len(grp('closure'))} + in-scope-skipped "
+             f"{len(grp('in_scope_skipped'))} + out-of-scope {len(grp('out_of_scope'))}) "
+             f"+ vacuous-dead {len(vac)}. Plus {len(trb)} trusted-blocked (appendix).\n\n")
+    fh.write("> Note: the `closure` count is a LOWER bound — the detector misses closures "
+             "nested in match-arms, so some 'in-scope-skipped' below may actually be closures.\n")
+    fh.write("> The 'in-scope-skipped' set includes the `#[flux_rs::sig]`-with-unsatisfiable-"
+             "`requires` vacuity (e.g. framer.rs incoming_frame_security).\n\n")
+    for w,title in [("closure","## SILENT — inside a closure (`cell.map(|x| {…})`) — confirmed Flux bug"),
+                    ("in_scope_skipped","## SILENT — in-scope, NOT a closure, still skipped"),
+                    ("out_of_scope","## SILENT — out of include scope (fn not in include filter)")]:
         g=grp(w)
-        fh.write(f"\n{title}  ({len(g)})\n\n")
-        for r in sorted(g,key=lambda x:x["path"]):
-            fh.write(f"- `{r['path']}` — `fn {r['fn']}` — `{r['cond']}`\n")
-    # also dump DEAD_VACUOUS if validator ran
-    vac=[r for r in rows if r["category"]=="DEAD_VACUOUS"]
-    if vac:
-        fh.write(f"\n## DEAD_VACUOUS — assert(false) sentinels whose body Flux doesn't check ({len(vac)})\n\n")
-        for r in sorted(vac,key=lambda x:x["path"]):
-            fh.write(f"- `{r['path']}` — `fn {r['fn']}`\n")
+        fh.write(f"\n{title}  ({len(g)})\n\n"); emit(fh,g)
+    fh.write(f"\n## DEAD_VACUOUS — `assert(false)` sentinels whose body Flux never checks  ({len(vac)})\n\n")
+    emit(fh,vac)
+    fh.write(f"\n## APPENDIX: TRUSTED_BLOCKED — inside `#[flux_rs::trusted]` fns (blocked_cell/blocked_ice)  ({len(trb)})\n\n")
+    emit(fh,trb)
 
 print(f"wrote tools/flux_spans.tsv ({len(rows)} asserts) and tools/flux_silent_spans.md")
-print(f"SILENT: closure={len(grp('closure'))} in_scope_skipped={len(grp('in_scope_skipped'))} out_of_scope={len(grp('out_of_scope'))}")
+print(f"SILENT {len(sil)} (closure={len(grp('closure'))} in_scope_skipped={len(grp('in_scope_skipped'))} "
+      f"out_of_scope={len(grp('out_of_scope'))}) + DEAD_VACUOUS {len(vac)} = {len(sil)+len(vac)} silent/vacuous; "
+      f"TRUSTED_BLOCKED {len(trb)}")
