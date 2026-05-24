@@ -55,7 +55,14 @@ include = [
     "def:decompress",
     "def:get_context_0",
     # per-fn for panic-bearing fns in otherwise-unverified files:
-    "def:command",  # KVStoreDriver::command (kv_driver.rs) and UDPDriver::command (net/udp/driver.rs)
+    # "def:command" — EXCLUDED for the negation-probe measurement (2026-05-23):
+    # `def:` is an unanchored substring, so "command" matches all 89 command*/
+    # command_complete fns crate-wide, ~30 of which hit the dyn-predicate ICE
+    # (infer.rs:1034). Critically, ZERO flux_support::assert sites live in any
+    # command* fn, so excluding it removes no measurable obligation — it only
+    # removes ICE noise that blocked the crate from completing. Re-add (and dodge
+    # the ICEs) if the two syscall command methods later gain asserts.
+    # "def:command",  # KVStoreDriver::command (kv_driver.rs) and UDPDriver::command (net/udp/driver.rs)
 ]
 
 [lints]

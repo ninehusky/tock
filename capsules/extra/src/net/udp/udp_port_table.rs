@@ -171,6 +171,7 @@ impl UdpPortManager {
     /// Called by capsules that would like to eventually be able to bind to a
     /// UDP port. This call will succeed unless MAX_NUM_BOUND_PORTS capsules
     /// have already bound to a port.
+    #[flux_rs::trusted(reason = "blocked_ice: flux ICE fold_unfold.rs:513 invalid downcast on Option-array")]
     pub fn create_socket(&'static self) -> Result<UdpSocket, Result<(), ErrorCode>> {
         self.port_array
             .map_or(Err(Err(ErrorCode::NOSUPPORT)), |table| {
@@ -194,6 +195,7 @@ impl UdpPortManager {
     /// The slot in the table is only freed if the socket that is dropped is
     /// unbound. If the slot is bound, the socket is being dropped after a call to
     /// bind(), and the slot in the table should remain reserved.
+    #[flux_rs::trusted(reason = "blocked_ice: flux ICE fold_unfold.rs:513 invalid downcast on Option-array")]
     fn destroy_socket(&self, socket: &UdpSocket) {
         self.port_array.map(|table| match table[socket.idx] {
             Some(entry) => {
@@ -206,6 +208,7 @@ impl UdpPortManager {
     }
 
     /// Check if a given port is already bound, by either an app or capsule.
+    #[flux_rs::trusted(reason = "blocked_ice: flux ICE fold_unfold.rs:513 invalid downcast on Option-array (blocks asserts 223/228/232)")]
     pub fn is_bound(&self, port: u16) -> Result<bool, ()> {
         // First, check the user bindings.
         if self.user_ports.is_none() {

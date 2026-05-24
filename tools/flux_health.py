@@ -63,15 +63,21 @@ ICE_MARKERS = [
     re.compile(r"flux[-_].*\.rs:\d+:\d+:\s"),       # a flux-internal source loc in a panic
     re.compile(r"tracked_span_(?:dbg_)?assert"),
 ]
-# crate self-checked: cargo printed "Checking <crate> v..." for the target.
+# cargo prints "Checking <crate> v" only when it actually compiles (absent on a
+# warm flux query cache), so it is NOT a reliable "was this checked" signal.
 CHECKING_RE = re.compile(r"^\s*Checking\s+([\w-]+)\s+v")
-# flux end-of-run summary (only printed when the crate finished its check pass)
+# flux end-of-run summary IS the reliable "a flux check pass completed" signal.
 SUMMARY_RE = re.compile(
     r"summary\.\s+(\d+)\s+functions processed:\s+(\d+)\s+checked;\s+"
     r"(\d+)\s+trusted;\s+(\d+)\s+ignored\.\s+(\d+)\s+constraints solved"
 )
 # refinement errors (real obligations that failed) — short or long format
 ERROR_RE = re.compile(r"error\[(?:E0999|FLUX[^\]]*)\]")
+# "could not compile `<crate>`": if it names a DEPENDENCY (not the target), the
+# target was masked (never reached). If it names the target, the target was
+# checked and flux just found errors — that is NOT masking.
+COMPILE_FAIL_RE = re.compile(r"could not compile `([\w-]+)`")
+EXIT_RE = re.compile(r"^--- exit: (-?\d+) ---")
 
 
 def run_flux(pkg: str, out_dir: Path, isolated: bool, timeout: int) -> Path:
@@ -101,14 +107,15 @@ def classify(log: Path, pkg: str) -> dict:
         return {"health": "TIMEOUT", "self_checked": False, "ice": [],
                 "errors": 0, "summary": None}
 
-    self_checked = False
     summary = None
     errors = 0
     ice_hits = []
+    exit_code = None
+    dep_compile_fail = False
     for line in text.splitlines():
-        m = CHECKING_RE.match(line)
-        if m and m.group(1) == pkg:
-            self_checked = True
+        m = EXIT_RE.match(line)
+        if m:
+            exit_code = int(m.group(1))
         m = SUMMARY_RE.search(line)
         if m:
             summary = {
@@ -118,18 +125,28 @@ def classify(log: Path, pkg: str) -> dict:
             }
         if ERROR_RE.search(line):
             errors += 1
+        m = COMPILE_FAIL_RE.search(line)
+        if m and m.group(1) != pkg:
+            dep_compile_fail = True   # a dependency failed to build -> target masked
         for pat in ICE_MARKERS:
             if pat.search(line):
                 ice_hits.append(line.strip()[:160])
                 break
 
+    # A flux summary means a check pass completed. Multiple summaries appear
+    # (one per flux-enabled crate); the target's is among them unless a dep
+    # build failed first (dep_compile_fail) and stopped cargo before the target.
+    checked = summary is not None
     if ice_hits:
         health = "TAINTED"
-    elif not self_checked:
+    elif dep_compile_fail and not checked:
         health = "MASKED"
-    else:
+    elif checked:
         health = "CLEAN"
-    return {"health": health, "self_checked": self_checked,
+    else:
+        health = "MASKED"
+    return {"health": health, "self_checked": checked, "exit": exit_code,
+            "dep_compile_fail": dep_compile_fail,
             "ice": ice_hits[:5], "errors": errors, "summary": summary}
 
 

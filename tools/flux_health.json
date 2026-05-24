@@ -1,0 +1,152 @@
+{
+  "kernel": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 0,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 0,
+    "summary": {
+      "processed": 899,
+      "checked": 674,
+      "trusted": 225,
+      "ignored": 0,
+      "solved": 579
+    }
+  },
+  "tock-cells": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 0,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 0,
+    "summary": {
+      "processed": 66,
+      "checked": 62,
+      "trusted": 4,
+      "ignored": 0,
+      "solved": 12
+    }
+  },
+  "tickv": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 0,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 0,
+    "summary": {
+      "processed": 52,
+      "checked": 19,
+      "trusted": 33,
+      "ignored": 0,
+      "solved": 15
+    }
+  },
+  "cortexm": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 0,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 0,
+    "summary": {
+      "processed": 795,
+      "checked": 4,
+      "trusted": 243,
+      "ignored": 548,
+      "solved": 6
+    }
+  },
+  "cortexv7m": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 0,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 0,
+    "summary": {
+      "processed": 6,
+      "checked": 1,
+      "trusted": 5,
+      "ignored": 0,
+      "solved": 0
+    }
+  },
+  "capsules-core": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 0,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 0,
+    "summary": {
+      "processed": 489,
+      "checked": 119,
+      "trusted": 370,
+      "ignored": 0,
+      "solved": 28
+    }
+  },
+  "capsules-extra": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 101,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 25,
+    "summary": {
+      "processed": 489,
+      "checked": 119,
+      "trusted": 370,
+      "ignored": 0,
+      "solved": 28
+    }
+  },
+  "nrf52": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 101,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 40,
+    "summary": {
+      "processed": 554,
+      "checked": 36,
+      "trusted": 518,
+      "ignored": 0,
+      "solved": 0
+    }
+  },
+  "nrf52840": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 101,
+    "dep_compile_fail": true,
+    "ice": [],
+    "errors": 40,
+    "summary": {
+      "processed": 554,
+      "checked": 36,
+      "trusted": 518,
+      "ignored": 0,
+      "solved": 0
+    }
+  },
+  "nrf5x": {
+    "health": "CLEAN",
+    "self_checked": true,
+    "exit": 0,
+    "dep_compile_fail": false,
+    "ice": [],
+    "errors": 0,
+    "summary": {
+      "processed": 554,
+      "checked": 36,
+      "trusted": 518,
+      "ignored": 0,
+      "solved": 0
+    }
+  }
+}
