@@ -84,6 +84,17 @@ def find_assert_sites(text: str):
         i = text.find(ASSERT_CALL, idx)
         if i == -1:
             break
+        # skip commented-out asserts: a `//` before the call on the same line,
+        # or the call sitting inside a /* */ block. (A commented assert flipped to
+        # false stays a comment -> no error -> would be falsely classified SILENT.)
+        line_start = text.rfind("\n", 0, i) + 1
+        if "//" in text[line_start:i]:
+            idx = i + len(ASSERT_CALL)
+            continue
+        last_open = text.rfind("/*", 0, i)
+        if last_open != -1 and text.rfind("*/", 0, i) < last_open:
+            idx = i + len(ASSERT_CALL)
+            continue
         arg_start = i + len(ASSERT_CALL)
         # balance parens from arg_start, skipping string/char literals + // comments
         depth = 1
