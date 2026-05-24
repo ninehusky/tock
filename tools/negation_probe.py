@@ -256,7 +256,7 @@ def probe_crate(pkg: str, log_dir: Path, timeout: int) -> dict:
                 # enclosing fn is trusted -> body skipped; flip can't fire.
                 rec["category"] = "TRUSTED_BLOCKED"
                 results.append(rec)
-                print(f"    {relfile}:{site['line']:<5} TRUSTED_BLOCKED  {site['inner'][:50]}", flush=True)
+                print(f"    {relfile}:{site['start_line']:<5} TRUSTED_BLOCKED  {site['inner'][:50]}", flush=True)
                 continue
             # passes baseline -> flip to false and re-check
             try:
@@ -272,7 +272,7 @@ def probe_crate(pkg: str, log_dir: Path, timeout: int) -> dict:
                 ferrs = error_lines(flog, crate_dir)
                 rec["category"] = "PROVEN" if err_at(ferrs, relfile, site) else "SILENT"
             results.append(rec)
-            print(f"    {relfile}:{site['line']:<5} {rec['category']:<13} {site['inner'][:50]}", flush=True)
+            print(f"    {relfile}:{site['start_line']:<5} {rec['category']:<13} {site['inner'][:50]}", flush=True)
     return {"pkg": pkg, "status": "OK", "sites": results}
 
 

@@ -1,0 +1,1706 @@
+{
+  "kernel": {
+    "pkg": "kernel",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/kernel.rs",
+        "line": 283,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/kernel.rs",
+        "line": 698,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 378,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 470,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 544,
+        "inner": "self.app_memory_allocator.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 1594,
+        "inner": "app_memory_start_offset + allocation_size <= remaining_memory.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 1643,
+        "inner": "kernel_memory_break.as_usize() + grant_pointers.len() <= memory_end.as_usize(),",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 1661,
+        "inner": "kernel_memory_break.as_usize() + upcall_buf.len() <= grant_entry_checkpoint.as_u",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 1671,
+        "inner": "process_struct_memory_location.as_usize() + isize_into_usize(process_struct_offs",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/process_standard.rs",
+        "line": 1677,
+        "inner": "kernel_memory_break >= actual_kernel_break",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/allocator.rs",
+        "line": 178,
+        "inner": "new_water_mark >= self.breaks.high_water_mark",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/allocator.rs",
+        "line": 179,
+        "inner": "new_water_mark <= self.memory_end()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/debug.rs",
+        "line": 417,
+        "inner": "DEBUG_WRITER.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/grant.rs",
+        "line": 1250,
+        "inner": "grant_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/grant.rs",
+        "line": 1441,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/processbuffer.rs",
+        "line": 774,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/processbuffer.rs",
+        "line": 877,
+        "inner": "idx.end <= self.slice.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/processbuffer.rs",
+        "line": 1046,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/scheduler/round_robin.rs",
+        "line": 109,
+        "inner": "head_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/scheduler/round_robin.rs",
+        "line": 139,
+        "inner": "timeslice != 0",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/scheduler/round_robin.rs",
+        "line": 149,
+        "inner": "execution_time_us.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/scheduler/round_robin.rs",
+        "line": 171,
+        "inner": "head_opt.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/utilities/binary_write.rs",
+        "line": 133,
+        "inner": "start <= string_len && string_len <= s.as_bytes().len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/utilities/leasable_buffer.rs",
+        "line": 266,
+        "inner": "self.active_range.start <= self.active_range.end && self.active_range.end <= sel",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/utilities/leasable_buffer.rs",
+        "line": 371,
+        "inner": "self.active_range.start <= self.active_range.end && self.active_range.end <= sel",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/utilities/static_init.rs",
+        "line": 51,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/collections/ring_buffer.rs",
+        "line": 57,
+        "inner": "self.tail <= self.ring.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/collections/ring_buffer.rs",
+        "line": 63,
+        "inner": "self.head <= self.ring.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/collections/ring_buffer.rs",
+        "line": 85,
+        "inner": "self.ring.len() != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/collections/ring_buffer.rs",
+        "line": 94,
+        "inner": "self.ring.len() != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/collections/ring_buffer.rs",
+        "line": 126,
+        "inner": "self.tail < self.ring.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/collections/ring_buffer.rs",
+        "line": 170,
+        "inner": "self.head < self.ring.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      }
+    ]
+  },
+  "tock-cells": {
+    "pkg": "tock-cells",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/optional_cell.rs",
+        "line": 201,
+        "inner": "self.value.get().is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      }
+    ]
+  },
+  "tickv": {
+    "pkg": "tickv",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/tickv.rs",
+        "line": 87,
+        "inner": "len < 0xFFF",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 157,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 239,
+        "inner": "num_region != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 243,
+        "inner": "num_region != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 455,
+        "inner": "false",
+        "trusted_fn": true,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 462,
+        "inner": "region_buf_opt.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 721,
+        "inner": "S != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 732,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 742,
+        "inner": "region_buf_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 860,
+        "inner": "S != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 867,
+        "inner": "S != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 877,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 886,
+        "inner": "region_buf_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 977,
+        "inner": "S != 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 990,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 999,
+        "inner": "region_buf_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 1077,
+        "inner": "region_buf_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 1209,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 204,
+        "inner": "length <= value.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 333,
+        "inner": "read_buf_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 364,
+        "inner": "self.key.get().is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 368,
+        "inner": "value_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 372,
+        "inner": "self.key.get().is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 382,
+        "inner": "buf_opt.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 385,
+        "inner": "self.key.get().is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 394,
+        "inner": "self.key.get().is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 396,
+        "inner": "self.key.get().is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/async_ops.rs",
+        "line": 402,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      }
+    ]
+  },
+  "cortexm": {
+    "pkg": "cortexm",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/lib.rs",
+        "line": 154,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/systick.rs",
+        "line": 211,
+        "inner": "hertz > 0",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/syscall.rs",
+        "line": 109,
+        "inner": "range.start <= range.end && range.end <= slice.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      }
+    ]
+  },
+  "cortexv7m": {
+    "pkg": "cortexv7m",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/lib.rs",
+        "line": 300,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/lib.rs",
+        "line": 352,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      }
+    ]
+  },
+  "capsules-core": {
+    "pkg": "capsules-core",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/i2c_master_slave_driver.rs",
+        "line": 205,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1009,
+        "inner": "false",
+        "trusted_fn": true,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1029,
+        "inner": "command.len() > 0",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1060,
+        "inner": "self.queue_size.get() < buf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1211,
+        "inner": "0 < read_buf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1232,
+        "inner": "next_index < ht.cmds.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1247,
+        "inner": "next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1251,
+        "inner": "i < command.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1362,
+        "inner": "index >= 1 && index < command.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/process_console.rs",
+        "line": 1416,
+        "inner": "i + 1 < command.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/adc.rs",
+        "line": 1158,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/button.rs",
+        "line": 207,
+        "inner": "data < self.pins.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 177,
+        "inner": "false",
+        "trusted_fn": true,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 184,
+        "inner": "node.queued_up.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 504,
+        "inner": "false",
+        "trusted_fn": true,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 548,
+        "inner": "m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 551,
+        "inner": "m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 627,
+        "inner": "auth_len >= AES128_BLOCK_SIZE && auth_len <= cbuf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 680,
+        "inner": "a_off <= m_off",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 681,
+        "inner": "m_off + m_len <= buf.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 880,
+        "inner": "false",
+        "trusted_fn": true,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 897,
+        "inner": "auth_last + i < cbuf.len() && enc_last + i < cbuf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/virtualizers/virtual_aes_ccm.rs",
+        "line": 906,
+        "inner": "auth_len + m_len <= cbuf.len() && m_off + m_len <= buf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      }
+    ]
+  },
+  "capsules-extra": {
+    "pkg": "capsules-extra",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/tickv.rs",
+        "line": 247,
+        "inner": "self.flash_read_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 265,
+        "inner": "self.flash_read_buffer.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 270,
+        "inner": "i + (address % PAGE_SIZE) < data_buf.as_mut().len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 356,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 358,
+        "inner": "self.value_buffer.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 373,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 375,
+        "inner": "self.value_buffer.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 390,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 419,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 428,
+        "inner": "self.unhashed_key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 476,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 478,
+        "inner": "self.value_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 495,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 497,
+        "inner": "self.value_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 520,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 522,
+        "inner": "self.value_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 557,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 559,
+        "inner": "self.value_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 590,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 609,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 628,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 630,
+        "inner": "self.value_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 642,
+        "inner": "self.key_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 647,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/tickv.rs",
+        "line": 684,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/ble_advertising_driver.rs",
+        "line": 504,
+        "inner": "len as usize <= userland.len() && len as usize <= buf.len()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/sip_hash.rs",
+        "line": 163,
+        "inner": "mem::size_of::<u16>() <= input.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/sip_hash.rs",
+        "line": 187,
+        "inner": "start + i < buf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/mx25r6435f.rs",
+        "line": 268,
+        "inner": "txbuffer.len() > 0",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/mx25r6435f.rs",
+        "line": 304,
+        "inner": "txbuffer.len() > 3",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/mx25r6435f.rs",
+        "line": 322,
+        "inner": "rxbuffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/mx25r6435f.rs",
+        "line": 540,
+        "inner": "i + 4 < write_buffer.len() && (i + (page_index * PAGE_SIZE) as usize) < SECTOR_S",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/mx25r6435f.rs",
+        "line": 605,
+        "inner": "write_buffer.len() > 0",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/virtual_kv.rs",
+        "line": 126,
+        "inner": "self.key.is_some() && self.value.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/virtual_kv.rs",
+        "line": 163,
+        "inner": "self.key.is_some() && self.value.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/virtual_kv.rs",
+        "line": 231,
+        "inner": "self.key.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154/mac.rs",
+        "line": 160,
+        "inner": "full_mac_frame.len() >= frame_len + PSDU_OFFSET",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/ieee802154/driver.rs",
+        "line": 317,
+        "inner": "num_neighbors <= neighbors.len()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/ieee802154/driver.rs",
+        "line": 375,
+        "inner": "num_keys <= keys.len()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/ieee802154/driver.rs",
+        "line": 572,
+        "inner": "self.num_neighbors.get() <= neighbors.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154/driver.rs",
+        "line": 602,
+        "inner": "self.num_keys.get() <= keys.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154/driver.rs",
+        "line": 1075,
+        "inner": "offset + frame_len + USER_FRAME_METADATA_SIZE <= rbuf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154/framer.rs",
+        "line": 200,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/ieee802154/framer.rs",
+        "line": 206,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/ieee802154/framer.rs",
+        "line": 260,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/ieee802154/framer.rs",
+        "line": 448,
+        "inner": "buf.len() >= radio::PSDU_OFFSET + LQI_SIZE",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154/framer.rs",
+        "line": 558,
+        "inner": "self.tx_state.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/ieee802154/framer.rs",
+        "line": 730,
+        "inner": "radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE <= buf.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/stream.rs",
+        "line": 277,
+        "inner": "bs.len() <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/util.rs",
+        "line": 73,
+        "inner": "full_bytes <= buf1.len() && full_bytes <= buf2.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/net/network_capabilities.rs",
+        "line": 69,
+        "inner": "full_bytes < addr.0.len() && full_bytes < allowed_addr.0.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/net/udp/udp_send.rs",
+        "line": 334,
+        "inner": "self.tx_buffer.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/net/udp/driver.rs",
+        "line": 88,
+        "inner": "rc_into.is_ok()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/udp/driver.rs",
+        "line": 396,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/udp/udp_port_table.rs",
+        "line": 224,
+        "inner": "self.port_array.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/udp/udp_port_table.rs",
+        "line": 229,
+        "inner": "MAX_NUM_BOUND_PORTS <= table.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/udp/udp_port_table.rs",
+        "line": 233,
+        "inner": "i < table.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 107,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_FAILING"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 665,
+        "inner": "2 + len <= next_headers.len() && *consumed + len <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 905,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 992,
+        "inner": "*consumed + 2 < buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1211,
+        "inner": "*consumed + 1 < buf.len() && 2 < ip_addr.0.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1225,
+        "inner": "*consumed + 6 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1330,
+        "inner": "*consumed + 8 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1347,
+        "inner": "*consumed + 2 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1361,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1416,
+        "inner": "*consumed + 8 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1431,
+        "inner": "*consumed + 2 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1448,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1495,
+        "inner": "*consumed + 1 <= *consumed + 3",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1496,
+        "inner": "*consumed + 3 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1501,
+        "inner": "*consumed <= *consumed + 2",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1502,
+        "inner": "*consumed + 2 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1510,
+        "inner": "*consumed <= *consumed + 2",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1511,
+        "inner": "*consumed + 2 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1514,
+        "inner": "*consumed + 2 <= *consumed + 4",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1515,
+        "inner": "*consumed + 4 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1570,
+        "inner": "*consumed <= *consumed + 2",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_compression.rs",
+        "line": 1571,
+        "inner": "*consumed + 2 <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 275,
+        "inner": "hdr.len() >= 5",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 283,
+        "inner": "2 <= hdr.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 285,
+        "inner": "0 < hdr.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 287,
+        "inner": "4 <= hdr.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 290,
+        "inner": "4 < hdr.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 484,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 534,
+        "inner": "written <= lowpan_packet.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 561,
+        "inner": "payload_len <= ip6_packet.get_payload().len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 592,
+        "inner": "payload_offset + payload_len <= ip6_packet.get_payload().len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 771,
+        "inner": "payload_len <= payload.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 788,
+        "inner": "dgram_offset + payload_len <= packet.len() && payload_len <= payload.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 821,
+        "inner": "self.packet.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 856,
+        "inner": "off + len <= buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 955,
+        "inner": "packet.len() >= 5",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 1001,
+        "inner": "state.packet.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/sixlowpan/sixlowpan_state.rs",
+        "line": 1022,
+        "inner": "written + remaining <= packet.len() && consumed + remaining <= payload.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 346,
+        "inner": "i < dst.len() && i < src.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 423,
+        "inner": "done.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 429,
+        "inner": "done.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 434,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 445,
+        "inner": "payload_length <= self.payload.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 507,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 516,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 546,
+        "inner": "false",
+        "trusted_fn": true,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 578,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/net/ipv6/ipv6.rs",
+        "line": 585,
+        "inner": "done.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/ipv6/ip_utils.rs",
+        "line": 117,
+        "inner": "bytes <= prefix.len() && bytes <= 16",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/ipv6/ip_utils.rs",
+        "line": 125,
+        "inner": "full_bytes < self.0.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/ipv6/ip_utils.rs",
+        "line": 128,
+        "inner": "full_bytes < self.0.len() && full_bytes < prefix.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/net/ipv6/ip_utils.rs",
+        "line": 191,
+        "inner": "i < payload.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/net/ipv6/ip_utils.rs",
+        "line": 196,
+        "inner": "i + 1 < payload.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      }
+    ]
+  },
+  "nrf52": {
+    "pkg": "nrf52",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/usbd.rs",
+        "line": 644,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 655,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1013,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1379,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1476,
+        "inner": "matches!(out_state, Some(BulkOutState::OutDma { .. }))",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1574,
+        "inner": "in_state.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1607,
+        "inner": "out_state.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1650,
+        "inner": "ep_buf.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1844,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1885,
+        "inner": "matches!(out_state, Some(BulkOutState::OutData { .. }))",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1905,
+        "inner": "self.descriptors[endpoint].slice_in.is_some()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1912,
+        "inner": "size <= slice.len()",
+        "trusted_fn": true,
+        "category": "TRUSTED_BLOCKED"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1920,
+        "inner": "self.descriptors[endpoint].slice_out.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1933,
+        "inner": "self.descriptors[endpoint].slice_in.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1937,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 1952,
+        "inner": "self.descriptors[endpoint].slice_out.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 2176,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 2208,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 2224,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      },
+      {
+        "file": "src/usbd.rs",
+        "line": 2246,
+        "inner": "2 * i + 1 < packet_hex.len()",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/ble_radio.rs",
+        "line": 636,
+        "inner": "self.buffer.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ble_radio.rs",
+        "line": 696,
+        "inner": "i < buf.len() && i < nrf5x::constants::RADIO_PAYLOAD_LENGTH",
+        "trusted_fn": false,
+        "category": "PROVEN"
+      },
+      {
+        "file": "src/adc.rs",
+        "line": 496,
+        "inner": "self.buffer.is_some()",
+        "trusted_fn": false,
+        "category": "FAILING"
+      },
+      {
+        "file": "src/adc.rs",
+        "line": 565,
+        "inner": "frequency != 0",
+        "trusted_fn": false,
+        "category": "FAILING"
+      }
+    ]
+  },
+  "nrf52840": {
+    "pkg": "nrf52840",
+    "status": "OK",
+    "sites": [
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 760,
+        "inner": "self.rx_buf.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 841,
+        "inner": "self.rx_buf.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 892,
+        "inner": "radio::PSDU_OFFSET + radio::MHR_FC_SIZE < ack_buf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 916,
+        "inner": "self.rx_buf.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 979,
+        "inner": "self.timer0.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 982,
+        "inner": "self.timer0.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 1002,
+        "inner": "self.tx_buf.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 1022,
+        "inner": "self.tx_buf.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 1047,
+        "inner": "self.tx_buf.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 1063,
+        "inner": "self.rx_buf.is_some()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/ieee802154_radio.rs",
+        "line": 1071,
+        "inner": "data_len < rbuf.len()",
+        "trusted_fn": false,
+        "category": "SILENT"
+      },
+      {
+        "file": "src/interrupt_service.rs",
+        "line": 45,
+        "inner": "false",
+        "trusted_fn": false,
+        "category": "DEAD_PROVEN"
+      }
+    ]
+  },
+  "nrf5x": {
+    "pkg": "nrf5x",
+    "status": "OK",
+    "sites": []
+  }
+}
