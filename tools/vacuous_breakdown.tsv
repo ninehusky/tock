@@ -1,0 +1,94 @@
+cause	crate	path	condition
+CLOSURE	capsules-extra	capsules/extra/src/ieee802154/driver.rs:1075	offset + frame_len + USER_FRAME_METADATA_SIZE <=
+CLOSURE	capsules-extra	capsules/extra/src/ieee802154/driver.rs:572	self.num_neighbors.get() <= neighbors.len()
+CLOSURE	capsules-extra	capsules/extra/src/ieee802154/driver.rs:602	self.num_keys.get() <= keys.len()
+CLOSURE	capsules-extra	capsules/extra/src/mx25r6435f.rs:268	txbuffer.len() > 0
+CLOSURE	capsules-extra	capsules/extra/src/mx25r6435f.rs:304	txbuffer.len() > 3
+CLOSURE	capsules-extra	capsules/extra/src/mx25r6435f.rs:322	rxbuffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/mx25r6435f.rs:540	i + 4 < write_buffer.len() && (i + (page_index *
+CLOSURE	capsules-extra	capsules/extra/src/mx25r6435f.rs:605	write_buffer.len() > 0
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:428	self.unhashed_key_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:476	self.key_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:478	self.value_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:495	self.key_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:497	self.value_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:520	self.key_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:522	self.value_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:557	self.key_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:559	self.value_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:590	self.key_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:628	self.key_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:630	self.value_buffer.is_some()
+CLOSURE	capsules-extra	capsules/extra/src/tickv.rs:642	self.key_buffer.is_some()
+CLOSURE	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1002	self.tx_buf.is_some()
+CLOSURE	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1022	self.tx_buf.is_some()
+CLOSURE	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1063	self.rx_buf.is_some()
+CLOSURE	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1071	data_len < rbuf.len()
+CLOSURE	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:892	radio::PSDU_OFFSET + radio::MHR_FC_SIZE < ack_bu
+CLOSURE	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:916	self.rx_buf.is_some()
+SIG_EDGE	capsules-extra	capsules/extra/src/ieee802154/framer.rs:200	false
+SIG_EDGE	capsules-extra	capsules/extra/src/ieee802154/framer.rs:206	false
+SIG_EDGE	capsules-extra	capsules/extra/src/ieee802154/framer.rs:448	buf.len() >= radio::PSDU_OFFSET + LQI_SIZE
+SIG_EDGE	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:346	i < dst.len() && i < src.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:423	done.is_some()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:429	done.is_some()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:434	false
+SIG_EDGE	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:445	payload_length <= self.payload.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:516	false
+SIG_EDGE	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:585	done.is_some()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:275	hdr.len() >= 5
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:283	2 <= hdr.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:285	0 < hdr.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:287	4 <= hdr.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:290	4 < hdr.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:592	payload_offset + payload_len <= ip6_packet.get_p
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:856	off + len <= buf.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:955	packet.len() >= 5
+SIG_EDGE	capsules-extra	capsules/extra/src/net/stream.rs:277	bs.len() <= buf.len()
+SIG_EDGE	capsules-extra	capsules/extra/src/net/udp/driver.rs:88	rc_into.is_ok()
+SIG_EDGE	cortexm	arch/cortex-m/src/lib.rs:154	false
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1211	*consumed + 1 < buf.len() && 2 < ip_addr.0.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1225	*consumed + 6 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1330	*consumed + 8 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1347	*consumed + 2 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1361	false
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1416	*consumed + 8 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1431	*consumed + 2 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1448	false
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1495	*consumed + 1 <= *consumed + 3
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1496	*consumed + 3 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1501	*consumed <= *consumed + 2
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1502	*consumed + 2 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1510	*consumed <= *consumed + 2
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1511	*consumed + 2 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1514	*consumed + 2 <= *consumed + 4
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1515	*consumed + 4 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1570	*consumed <= *consumed + 2
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1571	*consumed + 2 <= buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:665	2 + len <= next_headers.len() && *consumed + len
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:905	false
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:992	*consumed + 2 < buf.len()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/tickv.rs:247	self.flash_read_buffer.is_some()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/tickv.rs:419	self.key_buffer.is_some()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/tickv.rs:609	false
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/tickv.rs:647	false
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/tickv.rs:684	false
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/virtual_kv.rs:163	self.key.is_some() && self.value.is_some()
+TRAIT_IMPL_skip	capsules-extra	capsules/extra/src/virtual_kv.rs:231	self.key.is_some()
+TRUSTED(mislabeled)	capsules-core	capsules/core/src/process_console.rs:1009	false
+TRUSTED(mislabeled)	capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:504	false
+TRUSTED(mislabeled)	capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:880	false
+TRUSTED(mislabeled)	capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:546	false
+TRUSTED(mislabeled)	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:771	payload_len <= payload.len()
+TRUSTED(mislabeled)	capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:788	dgram_offset + payload_len <= packet.len() && pa
+TRUSTED(mislabeled)	tickv	libraries/tickv/src/tickv.rs:455	false
+UNEXPLAINED(free/inherent,no-sig)	capsules-extra	capsules/extra/src/net/ipv6/ip_utils.rs:191	i < payload.len()
+UNEXPLAINED(free/inherent,no-sig)	capsules-extra	capsules/extra/src/net/ipv6/ip_utils.rs:196	i + 1 < payload.len()
+UNEXPLAINED(free/inherent,no-sig)	capsules-extra	capsules/extra/src/virtual_kv.rs:126	self.key.is_some() && self.value.is_some()
+UNEXPLAINED(free/inherent,no-sig)	cortexv7m	arch/cortex-v7m/src/lib.rs:300	false
+UNEXPLAINED(free/inherent,no-sig)	cortexv7m	arch/cortex-v7m/src/lib.rs:352	false
+UNEXPLAINED(free/inherent,no-sig)	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1047	self.tx_buf.is_some()
+UNEXPLAINED(free/inherent,no-sig)	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:760	self.rx_buf.is_some()
+UNEXPLAINED(free/inherent,no-sig)	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:841	self.rx_buf.is_some()
+UNEXPLAINED(free/inherent,no-sig)	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:979	self.timer0.is_some()
+UNEXPLAINED(free/inherent,no-sig)	nrf52840	chips/nrf52840/src/ieee802154_radio.rs:982	self.timer0.is_some()
