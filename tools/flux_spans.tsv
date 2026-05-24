@@ -1,0 +1,236 @@
+crate	path	fn	category	why_silent	closure	in_scope	condition
+kernel	kernel/src/kernel.rs:283	create_grant	DEAD_VALIDATED		False	True	false
+kernel	kernel/src/kernel.rs:698	do_process	DEAD_VALIDATED		False	True	false
+kernel	kernel/src/process_standard.rs:378	set_fault_state	DEAD_VALIDATED		False	True	false
+kernel	kernel/src/process_standard.rs:470	dequeue_task	DEAD_VALIDATED		False	True	false
+kernel	kernel/src/process_standard.rs:544	setup_mpu	SILENT	in_scope_skipped	False	True	self.app_memory_allocator.is_some()
+kernel	kernel/src/process_standard.rs:1594	create	SILENT	in_scope_skipped	False	True	app_memory_start_offset + allocation_size <= remaining_memory.len()
+kernel	kernel/src/process_standard.rs:1643	create	PROVEN		False	True	kernel_memory_break.as_usize() + grant_pointers.len() <= memory_end.as_usize(),
+kernel	kernel/src/process_standard.rs:1661	create	PROVEN		False	True	kernel_memory_break.as_usize() + upcall_buf.len() <= grant_entry_checkpoint.as_u
+kernel	kernel/src/process_standard.rs:1671	create	PROVEN		False	True	process_struct_memory_location.as_usize() + isize_into_usize(process_struct_offs
+kernel	kernel/src/process_standard.rs:1677	create	PROVEN		False	True	kernel_memory_break >= actual_kernel_break
+kernel	kernel/src/allocator.rs:178	add_shared_readonly_buffer	PROVEN		False	True	new_water_mark >= self.breaks.high_water_mark
+kernel	kernel/src/allocator.rs:179	add_shared_readonly_buffer	PROVEN		False	True	new_water_mark <= self.memory_end()
+kernel	kernel/src/debug.rs:417	get_debug_writer	SILENT	in_scope_skipped	False	True	DEBUG_WRITER.is_some()
+kernel	kernel/src/grant.rs:1250	enter	SILENT	in_scope_skipped	False	True	grant_opt.is_some()
+kernel	kernel/src/grant.rs:1441	access_grant_with_allocator	DEAD_VALIDATED		True	True	false
+kernel	kernel/src/processbuffer.rs:774	len_mismatch_fail	DEAD_VALIDATED		False	True	false
+kernel	kernel/src/processbuffer.rs:877	index	SILENT	in_scope_skipped	False	True	idx.end <= self.slice.len()
+kernel	kernel/src/processbuffer.rs:1046	len_mismatch_fail	DEAD_VALIDATED		False	True	false
+kernel	kernel/src/scheduler/round_robin.rs:109	next	SILENT	in_scope_skipped	False	True	head_opt.is_some()
+kernel	kernel/src/scheduler/round_robin.rs:139	next	SILENT	in_scope_skipped	False	True	timeslice != 0
+kernel	kernel/src/scheduler/round_robin.rs:149	result	TRUSTED_BLOCKED		False	True	execution_time_us.is_some()
+kernel	kernel/src/scheduler/round_robin.rs:171	result	TRUSTED_BLOCKED		False	True	head_opt.is_some()
+kernel	kernel/src/utilities/binary_write.rs:133	write_str	SILENT	in_scope_skipped	False	True	start <= string_len && string_len <= s.as_bytes().len()
+kernel	kernel/src/utilities/leasable_buffer.rs:266	active_slice	PROVEN		False	True	self.active_range.start <= self.active_range.end && self.active_range.end <= sel
+kernel	kernel/src/utilities/leasable_buffer.rs:371	index	PROVEN		False	True	self.active_range.start <= self.active_range.end && self.active_range.end <= sel
+kernel	kernel/src/utilities/static_init.rs:51	static_buf_check_used	DEAD_VALIDATED		False	True	false
+kernel	kernel/src/collections/ring_buffer.rs:57	as_slices	PROVEN		False	True	self.tail <= self.ring.len()
+kernel	kernel/src/collections/ring_buffer.rs:63	as_slices	PROVEN		False	True	self.head <= self.ring.len()
+kernel	kernel/src/collections/ring_buffer.rs:85	has_elements	PROVEN		False	True	self.ring.len() != 0
+kernel	kernel/src/collections/ring_buffer.rs:94	is_full	PROVEN		False	True	self.ring.len() != 0
+kernel	kernel/src/collections/ring_buffer.rs:126	enqueue	PROVEN		False	True	self.tail < self.ring.len()
+kernel	kernel/src/collections/ring_buffer.rs:170	dequeue	PROVEN		False	True	self.head < self.ring.len()
+tock-cells	libraries/tock-cells/src/optional_cell.rs:201	unwrap_or_panic	TRUSTED_BLOCKED		False	True	self.value.get().is_some()
+tickv	libraries/tickv/src/tickv.rs:87	new	PROVEN		False	True	len < 0xFFF
+tickv	libraries/tickv/src/tickv.rs:157	initialise	DEAD_VALIDATED		False	True	false
+tickv	libraries/tickv/src/tickv.rs:239	get_region	PROVEN		False	True	num_region != 0
+tickv	libraries/tickv/src/tickv.rs:243	get_region	PROVEN		False	True	num_region != 0
+tickv	libraries/tickv/src/tickv.rs:455	append_key	DEAD_VACUOUS		False	True	false
+tickv	libraries/tickv/src/tickv.rs:462	append_key	TRUSTED_BLOCKED		False	True	region_buf_opt.is_some()
+tickv	libraries/tickv/src/tickv.rs:721	get_key	PROVEN		False	True	S != 0
+tickv	libraries/tickv/src/tickv.rs:732	get_key	DEAD_VALIDATED		False	True	false
+tickv	libraries/tickv/src/tickv.rs:742	get_key	SILENT	in_scope_skipped	False	True	region_buf_opt.is_some()
+tickv	libraries/tickv/src/tickv.rs:860	invalidate_key	PROVEN		False	True	S != 0
+tickv	libraries/tickv/src/tickv.rs:867	invalidate_key	PROVEN		False	True	S != 0
+tickv	libraries/tickv/src/tickv.rs:877	invalidate_key	DEAD_VALIDATED		False	True	false
+tickv	libraries/tickv/src/tickv.rs:886	invalidate_key	SILENT	in_scope_skipped	False	True	region_buf_opt.is_some()
+tickv	libraries/tickv/src/tickv.rs:977	zeroise_key	PROVEN		False	True	S != 0
+tickv	libraries/tickv/src/tickv.rs:990	zeroise_key	DEAD_VALIDATED		False	True	false
+tickv	libraries/tickv/src/tickv.rs:999	zeroise_key	SILENT	in_scope_skipped	False	True	region_buf_opt.is_some()
+tickv	libraries/tickv/src/tickv.rs:1077	garbage_collect_region	SILENT	in_scope_skipped	False	True	region_buf_opt.is_some()
+tickv	libraries/tickv/src/tickv.rs:1209	garbage_collect	DEAD_VALIDATED		False	True	false
+tickv	libraries/tickv/src/async_ops.rs:204	append_key	PROVEN		False	True	length <= value.len()
+tickv	libraries/tickv/src/async_ops.rs:333	set_read_buffer	SILENT	in_scope_skipped	False	True	read_buf_opt.is_some()
+tickv	libraries/tickv/src/async_ops.rs:364	continue_operation	SILENT	in_scope_skipped	False	True	self.key.get().is_some()
+tickv	libraries/tickv/src/async_ops.rs:368	continue_operation	SILENT	in_scope_skipped	False	True	value_opt.is_some()
+tickv	libraries/tickv/src/async_ops.rs:372	continue_operation	SILENT	in_scope_skipped	False	True	self.key.get().is_some()
+tickv	libraries/tickv/src/async_ops.rs:382	continue_operation	SILENT	in_scope_skipped	False	True	buf_opt.is_some()
+tickv	libraries/tickv/src/async_ops.rs:385	continue_operation	SILENT	in_scope_skipped	False	True	self.key.get().is_some()
+tickv	libraries/tickv/src/async_ops.rs:394	continue_operation	SILENT	in_scope_skipped	False	True	self.key.get().is_some()
+tickv	libraries/tickv/src/async_ops.rs:396	continue_operation	SILENT	in_scope_skipped	False	True	self.key.get().is_some()
+tickv	libraries/tickv/src/async_ops.rs:402	continue_operation	DEAD_VACUOUS		False	True	false
+cortexm	arch/cortex-m/src/lib.rs:154	unhandled_interrupt	DEAD_VACUOUS		False	True	false
+cortexm	arch/cortex-m/src/systick.rs:211	get_remaining_us	PROVEN		False	True	hertz > 0
+cortexm	arch/cortex-m/src/syscall.rs:109	write_usize_to_u8_slice	TRUSTED_BLOCKED		False	True	range.start <= range.end && range.end <= slice.len()
+cortexv7m	arch/cortex-v7m/src/lib.rs:300	hard_fault_handler_arm_v7m_kernel	DEAD_VACUOUS		False	True	false
+cortexv7m	arch/cortex-v7m/src/lib.rs:352	hard_fault_handler_arm_v7m_kernel	DEAD_VACUOUS		False	True	false
+capsules-core	capsules/core/src/i2c_master_slave_driver.rs:205	command_complete	DEAD_VALIDATED		False	True	false
+capsules-core	capsules/core/src/process_console.rs:1009	read_command	DEAD_VACUOUS		False	True	false
+capsules-core	capsules/core/src/process_console.rs:1029	read_command	TRUSTED_BLOCKED		True	True	command.len() > 0
+capsules-core	capsules/core/src/process_console.rs:1060	write_byte	TRUSTED_BLOCKED		True	True	self.queue_size.get() < buf.len()
+capsules-core	capsules/core/src/process_console.rs:1211	received_buffer	TRUSTED_BLOCKED		True	True	0 < read_buf.len()
+capsules-core	capsules/core/src/process_console.rs:1232	received_buffer	TRUSTED_BLOCKED		False	True	next_index < ht.cmds.len()
+capsules-core	capsules/core/src/process_console.rs:1247	received_buffer	TRUSTED_BLOCKED		False	True	next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len()
+capsules-core	capsules/core/src/process_console.rs:1251	received_buffer	TRUSTED_BLOCKED		False	True	i < command.len()
+capsules-core	capsules/core/src/process_console.rs:1362	received_buffer	TRUSTED_BLOCKED		False	True	index >= 1 && index < command.len()
+capsules-core	capsules/core/src/process_console.rs:1416	received_buffer	TRUSTED_BLOCKED		False	True	i + 1 < command.len()
+capsules-core	capsules/core/src/adc.rs:1158	samples_ready	DEAD_VALIDATED		False	True	false
+capsules-core	capsules/core/src/button.rs:207	command	PROVEN		False	True	data < self.pins.len()
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:177	do_next_op	DEAD_VACUOUS		False	True	false
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:184	do_next_op	TRUSTED_BLOCKED		True	True	node.queued_up.is_some()
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:504	start_ccm_encrypt	DEAD_VACUOUS		False	True	false
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:548	end_ccm	TRUSTED_BLOCKED		False	True	m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len()
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:551	end_ccm	TRUSTED_BLOCKED		False	True	m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len()
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:627	save_tag_block	TRUSTED_BLOCKED		True	True	auth_len >= AES128_BLOCK_SIZE && auth_len <= cbuf.len()
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:680	crypt_r	PROVEN		False	True	a_off <= m_off
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:681	crypt_r	PROVEN		False	True	m_off + m_len <= buf.len()
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:880	crypt_done	DEAD_VACUOUS		False	True	false
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:897	crypt_done	TRUSTED_BLOCKED		False	True	auth_last + i < cbuf.len() && enc_last + i < cbuf.len()
+capsules-core	capsules/core/src/virtualizers/virtual_aes_ccm.rs:906	crypt_done	TRUSTED_BLOCKED		True	True	auth_len + m_len <= cbuf.len() && m_off + m_len <= buf.len()
+capsules-extra	capsules/extra/src/tickv.rs:247	read_region	SILENT	in_scope_skipped	False	True	self.flash_read_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:265	write	TRUSTED_BLOCKED		False	True	self.flash_read_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:270	write	TRUSTED_BLOCKED		False	True	i + (address % PAGE_SIZE) < data_buf.as_mut().len()
+capsules-extra	capsules/extra/src/tickv.rs:356	complete_init	TRUSTED_BLOCKED		False	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:358	complete_init	TRUSTED_BLOCKED		False	True	self.value_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:373	complete_init	TRUSTED_BLOCKED		False	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:375	complete_init	TRUSTED_BLOCKED		False	True	self.value_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:390	complete_init	TRUSTED_BLOCKED		False	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:419	add_mut_data_done	SILENT	in_scope_skipped	False	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:428	hash_done	SILENT	closure	True	True	self.unhashed_key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:476	read_complete	SILENT	closure	True	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:478	read_complete	SILENT	closure	True	True	self.value_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:495	read_complete	SILENT	closure	True	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:497	read_complete	SILENT	closure	True	True	self.value_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:520	read_complete	SILENT	closure	True	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:522	read_complete	SILENT	closure	True	True	self.value_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:557	read_complete	SILENT	closure	True	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:559	read_complete	SILENT	closure	True	True	self.value_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:590	read_complete	SILENT	closure	True	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:609	read_complete	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/tickv.rs:628	write_complete	SILENT	closure	True	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:630	write_complete	SILENT	closure	True	True	self.value_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:642	write_complete	SILENT	closure	True	True	self.key_buffer.is_some()
+capsules-extra	capsules/extra/src/tickv.rs:647	write_complete	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/tickv.rs:684	erase_complete	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/ble_advertising_driver.rs:504	receive_event	FAILING		True	True	len as usize <= userland.len() && len as usize <= buf.len()
+capsules-extra	capsules/extra/src/sip_hash.rs:163	read_le_u16	TRUSTED_BLOCKED		False	True	mem::size_of::<u16>() <= input.len()
+capsules-extra	capsules/extra/src/sip_hash.rs:187	u8to64_le	TRUSTED_BLOCKED		False	True	start + i < buf.len()
+capsules-extra	capsules/extra/src/mx25r6435f.rs:268	enable_write	SILENT	closure	True	True	txbuffer.len() > 0
+capsules-extra	capsules/extra/src/mx25r6435f.rs:304	read_sector	SILENT	closure	True	True	txbuffer.len() > 3
+capsules-extra	capsules/extra/src/mx25r6435f.rs:322	read_sector	SILENT	in_scope_skipped	False	True	rxbuffer.is_some()
+capsules-extra	capsules/extra/src/mx25r6435f.rs:540	read_write_done	SILENT	closure	True	True	i + 4 < write_buffer.len() && (i + (page_index * PAGE_SIZE) as usize) < SECTOR_S
+capsules-extra	capsules/extra/src/mx25r6435f.rs:605	alarm	SILENT	closure	True	True	write_buffer.len() > 0
+capsules-extra	capsules/extra/src/virtual_kv.rs:126	insert	SILENT	in_scope_skipped	False	True	self.key.is_some() && self.value.is_some()
+capsules-extra	capsules/extra/src/virtual_kv.rs:163	get	SILENT	in_scope_skipped	False	True	self.key.is_some() && self.value.is_some()
+capsules-extra	capsules/extra/src/virtual_kv.rs:231	delete	SILENT	in_scope_skipped	False	True	self.key.is_some()
+capsules-extra	capsules/extra/src/ieee802154/mac.rs:160	transmit	PROVEN		False	True	full_mac_frame.len() >= frame_len + PSDU_OFFSET
+capsules-extra	capsules/extra/src/ieee802154/driver.rs:317	add_neighbor	FAILING		True	True	num_neighbors <= neighbors.len()
+capsules-extra	capsules/extra/src/ieee802154/driver.rs:375	add_key	FAILING		True	True	num_keys <= keys.len()
+capsules-extra	capsules/extra/src/ieee802154/driver.rs:572	lookup_addr_long	SILENT	closure	True	True	self.num_neighbors.get() <= neighbors.len()
+capsules-extra	capsules/extra/src/ieee802154/driver.rs:602	lookup_key	SILENT	closure	True	True	self.num_keys.get() <= keys.len()
+capsules-extra	capsules/extra/src/ieee802154/driver.rs:1075	receive	SILENT	closure	True	True	offset + frame_len + USER_FRAME_METADATA_SIZE <= rbuf.len()
+capsules-extra	capsules/extra/src/ieee802154/framer.rs:200	ccm_encrypt_ranges	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/ieee802154/framer.rs:206	ccm_encrypt_ranges	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/ieee802154/framer.rs:260	get_ccm_nonce	DEAD_VALIDATED		False	True	false
+capsules-extra	capsules/extra/src/ieee802154/framer.rs:448	incoming_frame_security	SILENT	in_scope_skipped	False	True	buf.len() >= radio::PSDU_OFFSET + LQI_SIZE
+capsules-extra	capsules/extra/src/ieee802154/framer.rs:558	step_transmit_state	TRUSTED_BLOCKED		False	True	self.tx_state.is_some()
+capsules-extra	capsules/extra/src/ieee802154/framer.rs:730	step_receive_state	TRUSTED_BLOCKED		False	True	radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE <= buf.len()
+capsules-extra	capsules/extra/src/net/stream.rs:277	encode_bytes	SILENT	in_scope_skipped	False	True	bs.len() <= buf.len()
+capsules-extra	capsules/extra/src/net/util.rs:73	matches_prefix	PROVEN		False	True	full_bytes <= buf1.len() && full_bytes <= buf2.len()
+capsules-extra	capsules/extra/src/net/network_capabilities.rs:69	is_addr_valid	PROVEN		False	True	full_bytes < addr.0.len() && full_bytes < allowed_addr.0.len()
+capsules-extra	capsules/extra/src/net/udp/udp_send.rs:334	send	FAILING		False	True	self.tx_buffer.is_some()
+capsules-extra	capsules/extra/src/net/udp/driver.rs:88	result_to_errorcode	SILENT	in_scope_skipped	False	True	rc_into.is_ok()
+capsules-extra	capsules/extra/src/net/udp/driver.rs:396	parse_ip_port_pair	DEAD_VACUOUS		False	False	false
+capsules-extra	capsules/extra/src/net/udp/udp_port_table.rs:224	is_bound	TRUSTED_BLOCKED		False	True	self.port_array.is_some()
+capsules-extra	capsules/extra/src/net/udp/udp_port_table.rs:229	is_bound	TRUSTED_BLOCKED		True	True	MAX_NUM_BOUND_PORTS <= table.len()
+capsules-extra	capsules/extra/src/net/udp/udp_port_table.rs:233	is_bound	TRUSTED_BLOCKED		False	True	i < table.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:107	get_context_0	DEAD_FAILING		False	True	false
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:665	decompress_ext_hdr	SILENT	in_scope_skipped	False	True	2 + len <= next_headers.len() && *consumed + len <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:905	decompress	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:992	decompress_tf	SILENT	in_scope_skipped	False	True	*consumed + 2 < buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1211	decompress_multicast	SILENT	in_scope_skipped	False	True	*consumed + 1 < buf.len() && 2 < ip_addr.0.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1225	decompress_multicast	SILENT	in_scope_skipped	False	True	*consumed + 6 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1330	decompress_iid_link_local	SILENT	in_scope_skipped	False	True	*consumed + 8 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1347	decompress_iid_link_local	SILENT	in_scope_skipped	False	True	*consumed + 2 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1361	decompress_iid_link_local	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1416	decompress_iid_context	SILENT	in_scope_skipped	False	True	*consumed + 8 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1431	decompress_iid_context	SILENT	in_scope_skipped	False	True	*consumed + 2 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1448	decompress_iid_context	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1495	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed + 1 <= *consumed + 3
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1496	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed + 3 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1501	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed <= *consumed + 2
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1502	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed + 2 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1510	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed <= *consumed + 2
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1511	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed + 2 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1514	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed + 2 <= *consumed + 4
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1515	decompress_udp_ports	SILENT	in_scope_skipped	False	True	*consumed + 4 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1570	decompress_udp_checksum	SILENT	in_scope_skipped	False	True	*consumed <= *consumed + 2
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs:1571	decompress_udp_checksum	SILENT	in_scope_skipped	False	True	*consumed + 2 <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:275	set_frag_hdr	SILENT	in_scope_skipped	False	True	hdr.len() >= 5
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:283	set_frag_hdr	SILENT	in_scope_skipped	False	True	2 <= hdr.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:285	set_frag_hdr	SILENT	in_scope_skipped	False	True	0 < hdr.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:287	set_frag_hdr	SILENT	in_scope_skipped	False	True	4 <= hdr.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:290	set_frag_hdr	SILENT	in_scope_skipped	False	True	4 < hdr.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:484	start_transmit	DEAD_VALIDATED		False	True	false
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:534	prepare_first_fragment	PROVEN		False	True	written <= lowpan_packet.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:561	prepare_first_fragment	PROVEN		False	True	payload_len <= ip6_packet.get_payload().len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:592	prepare_next_fragment	SILENT	in_scope_skipped	False	True	payload_offset + payload_len <= ip6_packet.get_payload().len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:771	receive_next_frame	SILENT	in_scope_skipped	False	True	payload_len <= payload.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:788	receive_next_frame	SILENT	in_scope_skipped	False	True	dgram_offset + payload_len <= packet.len() && payload_len <= payload.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:821	end_receive	FAILING		True	True	self.packet.is_some()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:856	slice_view	SILENT	in_scope_skipped	False	True	off + len <= buf.len()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:955	receive_frame	SILENT	in_scope_skipped	False	True	packet.len() >= 5
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:1001	receive_single_packet	TRUSTED_BLOCKED		True	True	state.packet.is_some()
+capsules-extra	capsules/extra/src/net/sixlowpan/sixlowpan_state.rs:1022	receive_single_packet	TRUSTED_BLOCKED		False	True	written + remaining <= packet.len() && consumed + remaining <= payload.len()
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:346	copy_subslice_into	SILENT	in_scope_skipped	False	True	i < dst.len() && i < src.len()
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:423	encode	SILENT	in_scope_skipped	False	True	done.is_some()
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:429	encode	SILENT	in_scope_skipped	False	True	done.is_some()
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:434	encode	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:445	encode	SILENT	in_scope_skipped	False	True	payload_length <= self.payload.len()
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:507	get_payload	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:516	get_total_hdr_size	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:546	set_transport_checksum	DEAD_VACUOUS		False	True	false
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:578	set_payload	DEAD_VALIDATED		False	True	false
+capsules-extra	capsules/extra/src/net/ipv6/ipv6.rs:585	encode	SILENT	in_scope_skipped	False	True	done.is_some()
+capsules-extra	capsules/extra/src/net/ipv6/ip_utils.rs:117	set_prefix	TRUSTED_BLOCKED		False	True	bytes <= prefix.len() && bytes <= 16
+capsules-extra	capsules/extra/src/net/ipv6/ip_utils.rs:125	set_prefix	TRUSTED_BLOCKED		False	True	full_bytes < self.0.len()
+capsules-extra	capsules/extra/src/net/ipv6/ip_utils.rs:128	set_prefix	TRUSTED_BLOCKED		False	True	full_bytes < self.0.len() && full_bytes < prefix.len()
+capsules-extra	capsules/extra/src/net/ipv6/ip_utils.rs:191	compute_udp_checksum	SILENT	in_scope_skipped	False	True	i < payload.len()
+capsules-extra	capsules/extra/src/net/ipv6/ip_utils.rs:196	compute_udp_checksum	SILENT	in_scope_skipped	False	True	i + 1 < payload.len()
+nrf52	chips/nrf52/src/usbd.rs:644	ctrl_state	DEAD_FAILING		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:655	bulk_state	DEAD_FAILING		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:1013	set_pending_dma	DEAD_FAILING		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:1379	handle_endepin	DEAD_VALIDATED		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:1476	handle_endepout	FAILING		False	True	matches!(out_state, Some(BulkOutState::OutDma { .. }))
+nrf52	chips/nrf52/src/usbd.rs:1574	handle_epdata	FAILING		False	True	in_state.is_some()
+nrf52	chips/nrf52/src/usbd.rs:1607	handle_epdata	FAILING		False	True	out_state.is_some()
+nrf52	chips/nrf52/src/usbd.rs:1650	handle_ep0setup	FAILING		False	True	ep_buf.is_some()
+nrf52	chips/nrf52/src/usbd.rs:1844	transmit_in	DEAD_VALIDATED		True	True	false
+nrf52	chips/nrf52/src/usbd.rs:1885	transmit_out	FAILING		False	True	matches!(out_state, Some(BulkOutState::OutData { .. }))
+nrf52	chips/nrf52/src/usbd.rs:1905	start_dma_in	TRUSTED_BLOCKED		False	True	self.descriptors[endpoint].slice_in.is_some()
+nrf52	chips/nrf52/src/usbd.rs:1912	start_dma_in	TRUSTED_BLOCKED		False	True	size <= slice.len()
+nrf52	chips/nrf52/src/usbd.rs:1920	start_dma_out	FAILING		False	True	self.descriptors[endpoint].slice_out.is_some()
+nrf52	chips/nrf52/src/usbd.rs:1933	debug_in_packet	FAILING		False	True	self.descriptors[endpoint].slice_in.is_some()
+nrf52	chips/nrf52/src/usbd.rs:1937	debug_in_packet	DEAD_FAILING		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:1952	debug_out_packet	FAILING		False	True	self.descriptors[endpoint].slice_out.is_some()
+nrf52	chips/nrf52/src/usbd.rs:2176	status_epin	DEAD_VALIDATED		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:2208	inter_endepin	DEAD_VALIDATED		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:2224	inter_endepout	DEAD_VALIDATED		False	True	false
+nrf52	chips/nrf52/src/usbd.rs:2246	packet_to_hex	PROVEN		False	True	2 * i + 1 < packet_hex.len()
+nrf52	chips/nrf52/src/ble_radio.rs:636	handle_interrupt	SILENT	in_scope_skipped	False	True	self.buffer.is_some()
+nrf52	chips/nrf52/src/ble_radio.rs:696	replace_radio_buffer	PROVEN		False	True	i < buf.len() && i < nrf5x::constants::RADIO_PAYLOAD_LENGTH
+nrf52	chips/nrf52/src/adc.rs:496	handle_interrupt	FAILING		False	True	self.buffer.is_some()
+nrf52	chips/nrf52/src/adc.rs:565	setup_frequency	FAILING		False	True	frequency != 0
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:760	rx	SILENT	in_scope_skipped	False	True	self.rx_buf.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:841	handle_interrupt	SILENT	in_scope_skipped	False	True	self.rx_buf.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:892	handle_interrupt	SILENT	closure	True	True	radio::PSDU_OFFSET + radio::MHR_FC_SIZE < ack_buf.len()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:916	handle_interrupt	SILENT	closure	True	True	self.rx_buf.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:979	handle_interrupt	SILENT	in_scope_skipped	False	True	self.timer0.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:982	handle_interrupt	SILENT	in_scope_skipped	False	True	self.timer0.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1002	handle_interrupt	SILENT	closure	True	True	self.tx_buf.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1022	handle_interrupt	SILENT	closure	True	True	self.tx_buf.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1047	handle_interrupt	SILENT	in_scope_skipped	False	True	self.tx_buf.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1063	handle_interrupt	SILENT	closure	True	True	self.rx_buf.is_some()
+nrf52840	chips/nrf52840/src/ieee802154_radio.rs:1071	handle_interrupt	SILENT	closure	True	True	data_len < rbuf.len()
+nrf52840	chips/nrf52840/src/interrupt_service.rs:45	service_interrupt	DEAD_VACUOUS		False	True	false
