@@ -63,7 +63,12 @@ CRATES = {                       # cargo pkg -> filesystem crate dir
 ASSERT_CALL = "flux_support::assert("
 ICE_MARKERS = [
     re.compile(r"internal compiler error"),
-    re.compile(r"thread '.*' panicked at"),
+    # NB: current rustc/flux format is `thread 'rustc' (3232) panicked at` — the
+    # thread-id between the name and "panicked at" defeated `thread '.*' panicked at`,
+    # so a swallowed UnsolvedEvar ICE slipped past the gate (2026-05-24 bug).
+    re.compile(r"thread '\w+'.*panicked at"),
+    re.compile(r"panicked at .*flux"),
+    re.compile(r"UnsolvedEvar"),
     re.compile(r"Box<dyn Any>"),
     re.compile(r"tracked_span_(?:dbg_)?assert"),
 ]
@@ -146,6 +151,8 @@ def flip_text(text: str, site: dict) -> str:
 
 FN_DECL_RE = re.compile(r"(?m)^([ \t]*)(?:pub(?:\([^)]*\))?\s+)?"
                         r"(?:const\s+|unsafe\s+|async\s+|extern\s+\"[^\"]*\"\s+)*fn\s+\w+")
+_TRUST_BOUNDARY = re.compile(r"\n[ \t]*\}[ \t]*\n")   # a block-close on its own line
+_IMPL_RE = re.compile(r"(?m)^[ \t]*impl\b[^\{]*")
 
 
 def enclosing_fn_trusted(text: str, call_off: int) -> bool:
@@ -159,10 +166,25 @@ def enclosing_fn_trusted(text: str, call_off: int) -> bool:
         last = m
     if not last:
         return False
-    # scan the attribute/doc lines immediately above the fn decl
-    head = text.rfind("\n", 0, last.start())
-    probe = text[max(0, head - 400):last.start()]
-    return "flux_rs::trusted" in probe
+    # scan the WHOLE attribute/comment region above the fn decl, from the previous
+    # block-close up to the fn. (A fixed 400-char window misses long `reason="..."`
+    # strings -> trusted fns get mislabeled SILENT; this matches triage_skipped.py.)
+    region = text[max(0, last.start() - 1500):last.start()]
+    b = None
+    for mm in _TRUST_BOUNDARY.finditer(region):
+        b = mm
+    if b:
+        region = region[b.end():]
+    if "flux_rs::trusted" in region:
+        return True
+    # also check the enclosing impl block header
+    impl = None
+    for mm in _IMPL_RE.finditer(text):
+        if mm.start() < last.start():
+            impl = mm
+        else:
+            break
+    return bool(impl and "flux_rs::trusted" in text[max(0, impl.start() - 400):impl.start()])
 
 
 # --------------------------------------------------------------------------

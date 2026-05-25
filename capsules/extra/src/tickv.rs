@@ -422,6 +422,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
 
     fn add_data_done(&self, _result: Result<(), ErrorCode>, _data: SubSlice<'static, u8>) {}
 
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn hash_done(&self, _result: Result<(), ErrorCode>, digest: &'static mut [u8; 8]) {
         self.client.map(move |cb| {
             // FLUX-TODO addr=0x1cf82 line=406 flavor=unwrap_option
@@ -436,6 +437,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
 impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
     for TicKVSystem<'a, F, H, PAGE_SIZE>
 {
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn read_complete(&self, pagebuffer: &'static mut F::Page, _result: Result<(), flash::Error>) {
         self.tickv.set_read_buffer(pagebuffer.as_mut());
         self.tickv
@@ -610,6 +612,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
         }
     }
 
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn write_complete(&self, pagebuffer: &'static mut F::Page, _result: Result<(), flash::Error>) {
         self.tickv
             .tickv
@@ -648,6 +651,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
         }
     }
 
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn erase_complete(&self, _result: Result<(), flash::Error>) {
         let (ret, tickv_buf, tickv_buf_len) = self.tickv.continue_operation();
 
@@ -691,6 +695,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> KVSystem<'a>
 {
     type K = TicKVKeyType;
 
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn set_client(&self, client: &'a dyn KVSystemClient<Self::K>) {
         self.client.set(client);
     }

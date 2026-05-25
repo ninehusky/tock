@@ -197,6 +197,7 @@ impl<
         A: hil::time::Alarm<'a> + 'a,
     > MX25R6435F<'a, S, P, A>
 {
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     pub fn new(
         spi: &'a S,
         alarm: &'a A,
@@ -232,6 +233,7 @@ impl<
 
     /// Requests the readout of a 24-bit identification number.
     /// This command will cause a debug print when succeeded.
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     pub fn read_identification(&self) -> Result<(), ErrorCode> {
         self.configure_spi()?;
 
@@ -285,6 +287,7 @@ impl<
         self.enable_write()
     }
 
+    #[flux_rs::trusted()]
     fn read_sector(
         &self,
         sector_index: u32,
@@ -377,6 +380,7 @@ impl<
     // 2 bounds panics in this fn; 18 candidate arr[i] operations in the body
     // (state-machine dispatcher with many state-specific buffer copies).
     // Cannot disambiguate from DWARF; marker covers fn body.
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn read_write_done(
         &self,
         write_buffer: &'static mut [u8],
@@ -596,6 +600,7 @@ impl<
         A: hil::time::Alarm<'a> + 'a,
     > hil::time::AlarmClient for MX25R6435F<'a, S, P, A>
 {
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn alarm(&self) {
         // After the timer expires we still have to check that the erase/write
         // operation has finished.
@@ -620,6 +625,7 @@ impl<
         C: hil::flash::Client<Self>,
     > hil::flash::HasClient<'a, C> for MX25R6435F<'a, S, P, A>
 {
+    #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn set_client(&self, client: &'a C) {
         self.client.set(client);
     }

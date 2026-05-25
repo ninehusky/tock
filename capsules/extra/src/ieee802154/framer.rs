@@ -427,10 +427,10 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// IEEE 802.15.4-2015, 9.2.3, incoming frame security procedure
-    #[flux_rs::sig(
-        fn(&Self, buf: &mut [u8][@n], usize, u8) -> RxState
-        requires n >= radio::PSDU_OFFSET + LQI_SIZE
-    )]
+    // #[flux_rs::sig(
+    //     fn(&Self, buf: &mut [u8][@n], usize, u8) -> RxState
+    //     requires n >= radio::PSDU_OFFSET + LQI_SIZE
+    // )]
     fn incoming_frame_security(
         &self,
         buf: &'static mut [u8],
@@ -445,6 +445,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
 
         // The buffer containing the 15.4 packet also contains the PSDU bytes and an LQI
         // byte. We only pass the 15.4 packet up the stack and slice buf accordingly.
+        flux_support::assert(false);
         flux_support::assert(buf.len() >= radio::PSDU_OFFSET + LQI_SIZE);
         // FLUX-OPT line=443 addrs=[
         //     0x1c752, 0x1c75c,

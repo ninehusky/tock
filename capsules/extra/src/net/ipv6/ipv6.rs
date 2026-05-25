@@ -409,6 +409,7 @@ impl<'a> IPPayload<'a> {
     ///
     /// `SResult<usize>` - The final offset into the buffer `buf` is returned
     /// wrapped in an SResult
+    #[flux_rs::trusted(reason = "thread 'rustc' (32885569) panicked at crates/flux-refineck/src/type_env.rs:553:17: assertion failed: !scope.has_free_vars(arg)")]
     #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 8 + offset)]
     // FLUX-TODO-FN-LEVEL covers=[0xdad8] flavor=slice_end
     // panic somewhere in this fn body; addr2line lost the line

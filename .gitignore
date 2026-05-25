@@ -102,4 +102,10 @@ tools/nrf52840dk.dis
 tools/*.md
 !tools/README.md
 !tools/panic_ledger.md
+
+# de-ICE / census tooling outputs — regenerable; the numbers live in the .md writeups
+tools/census_*.json
+tools/deice_probe*.json
+tools/deice_logs*/
+tools/skipped_triage.tsv
 tools/*.png
