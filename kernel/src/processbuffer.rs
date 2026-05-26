@@ -1022,14 +1022,13 @@ impl WriteableProcessSlice {
         // core::slice::copy_from_slice method implementation:
         // https://doc.rust-lang.org/src/core/slice/mod.rs.html#3034-3036
 
-        // FLUX-TODO addr=0x114b8 line=1010 flavor=explicit_panic
         // The panic code path was put into a cold function to not
         // bloat the call site.
         #[inline(never)]
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-OPT addr=0x114b8 line=1010 flavor=explicit_panic
+            // FLUX-OPT addr=0x1157c line=1038 flavor=explicit_panic
             // Checked: this panic is proven dead at the call site below.
             // copy_from_slice's `src: &[u8][n]` precondition makes
             // copy_from_slice_or_err infallible, so the is_err() branch (and

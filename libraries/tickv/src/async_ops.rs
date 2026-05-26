@@ -358,12 +358,11 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     // panic somewhere in this fn body; addr2line lost the line
     // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn continue_operation(&self) -> ContinueReturn {
-        // FLUX-TODO addr=0x18812 line=356 flavor=unwrap_option
         let (ret, length) = match self.tickv.state.get() {
             // FLUX-TODO addr=0x1881e line=354 flavor=unwrap_option
             State::Init(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.initialise(self.key.get().unwrap()), 0) },
             State::AppendKey(_) => {
-                // FLUX-TODO addr=0x18812 line=356 flavor=unwrap_option
+                // FLUX-TODO addr=0x1898e line=368 flavor=unwrap_option
                 let value_opt = self.value.take();
                 flux_support::assert(value_opt.is_some());
                 let value = value_opt.unwrap();

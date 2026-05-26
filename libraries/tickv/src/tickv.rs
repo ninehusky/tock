@@ -235,8 +235,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
 
         // Determine the number of regions
         let num_region = self.flash_size / S;
-// FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
-flux_support::assert(num_region != 0);
 
         // Determine the block where the data should be
         // FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
@@ -715,7 +713,7 @@ flux_support::assert(num_region != 0);
                         InitState::GetKeyReadRegion(reg) => reg,
                         _ => {
                             // Get the data from that region
-                            // FLUX-TODO addr=0x16e1e line=703 flavor=div_by_zero
+                            // (No binary panic: div by const-generic S; Flux obligation only.)
                             // Precondition: get_region's flash_size/S division needs S != 0,
                             // which the struct invariant `S > 0` guarantees.
                             flux_support::assert(S != 0);
@@ -727,7 +725,7 @@ flux_support::assert(num_region != 0);
                     KeyState::ReadRegion(reg) => reg,
                 },
                 _ => {
-                    // FLUX-TODO addr=0x16e1e line=703 flavor=explicit_panic
+                    // FLUX-TODO addr=0x16fae line=731 flavor=explicit_panic
                     // Notes: blocked-cell
                     // flux_support::assert(false);
                     unreachable!()
@@ -854,7 +852,7 @@ flux_support::assert(num_region != 0);
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
     pub fn invalidate_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
-        // FLUX-TODO addr=0x161f6 line=831 flavor=div_by_zero
+        // (No binary panic: div by const-generic S; Flux obligation only.)
         // Precondition: get_region's flash_size/S division needs S != 0
         // (struct invariant `S > 0`).
         flux_support::assert(S != 0);
@@ -862,7 +860,7 @@ flux_support::assert(num_region != 0);
         let mut region_offset: isize = 0;
 
         loop {
-            // FLUX-TODO addr=0x161ec line=835 flavor=div_by_zero
+            // (No binary panic: div by const-generic S; Flux obligation only.)
             // Precondition: same as above.
             flux_support::assert(S != 0);
             // Get the data from that region
@@ -872,7 +870,7 @@ flux_support::assert(num_region != 0);
                     KeyState::ReadRegion(reg) => reg,
                 },
                 _ => {
-                    // FLUX-TODO addr=0x161f6 line=831 flavor=explicit_panic
+                    // FLUX-TODO addr=0x16386 line=876 flavor=explicit_panic
                     // Notes: blocked-cell
                     // flux_support::assert(false);
                     unreachable!()
@@ -880,7 +878,7 @@ flux_support::assert(num_region != 0);
             };
 
             // Get the data from that region
-            // FLUX-TODO addr=0x161ec line=835 flavor=unwrap_option
+            // FLUX-TODO addr=0x1637c line=885 flavor=unwrap_option
             // Notes: blocked-cell
             let region_buf_opt = self.read_buffer.take();
             // flux_support::assert(region_buf_opt.is_some());
@@ -971,7 +969,7 @@ flux_support::assert(num_region != 0);
     pub fn zeroise_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
 
-        // FLUX-TODO addr=0x187f2 line=935 flavor=div_by_zero
+        // (No binary panic: div by const-generic S; Flux obligation only.)
         // Precondition: get_region's flash_size/S division needs S != 0
         // (struct invariant `S > 0`).
         flux_support::assert(S != 0);
@@ -993,7 +991,7 @@ flux_support::assert(num_region != 0);
             };
 
             // Get the data from that region
-            // FLUX-TODO addr=0x187f2 line=935 flavor=unwrap_option
+            // FLUX-TODO addr=0x1896e line=998 flavor=unwrap_option
             // Notes: blocked-cell
             let region_buf_opt = self.read_buffer.take();
             // flux_support::assert(region_buf_opt.is_some());

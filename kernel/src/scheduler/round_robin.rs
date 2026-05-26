@@ -128,7 +128,6 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         } else {
             // grant a fresh timeslice
             self.time_remaining.set(self.timeslice_length);
-            // FLUX-TODO addr=0x1d88 line=123 flavor=explicit_panic
             self.timeslice_length
         };
 

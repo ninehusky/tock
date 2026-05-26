@@ -437,14 +437,13 @@ impl<'a> IPPayload<'a> {
             }
         };
         let payload_length = self.get_payload_length();
-        // FLUX-TODO addr=0xdad8 line=428 flavor=slice_end
         // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
         // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
         // Explicit assert is load-bearing: `flux_support`'s `Index::index` extern_spec puts `in_bounds` in
         // `#[no_panic_if]` (opt-in per call-site), not in the sig's `requires`. Since this function isn't
         // marked `#[flux_rs::no_panic]`, the slice-op bounds check wouldn't fire without this explicit assert.
         flux_support::assert(payload_length <= self.payload.len());
-        // FLUX-OPT addr=0xdad8 line=428 flavor=slice_end
+        // FLUX-OPT addr=0xdaa8 line=448 flavor=slice_end
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)
     }

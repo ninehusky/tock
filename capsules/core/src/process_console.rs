@@ -1219,7 +1219,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                         let cursor = self.cursor.get();
 
                         if let EscState::Complete(key) = esc_state {
-                            // FLUX-TODO addr=0x1a9ee line=1219 flavor=bounds
                             match key {
                                 EscKey::Up | EscKey::Down if COMMAND_HISTORY_LEN >= 1 => {
                                     self.command_history.map(|ht| {
@@ -1345,7 +1344,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 }
                             }
                         } else if read_buf[0] == BS {
-                            // FLUX-TODO addr=0x1a9c4 line=1342 flavor=div_by_zero
                             if cursor > 0 {
                                 // Backspace, echo and remove the byte
                                 // preceding the cursor
@@ -1358,7 +1356,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                     let _ = self.write_byte(command[i]);
                                 }
                                 // We don't want to write the EOL byte, but we want to copy it to the left
-                                // FLUX-TODO addr=0x1a9c4 line=1342 flavor=bounds
+                                // FLUX-TODO addr=0x1aa3c line=1362 flavor=bounds
                                 flux_support::assert(index >= 1 && index < command.len());
                                 command[index - 1] = command[index];
 

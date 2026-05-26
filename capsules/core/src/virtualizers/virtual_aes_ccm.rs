@@ -497,7 +497,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
             return res;
         }
 
-        // FLUX-TODO addr=0x134c2 line=488 flavor=explicit_panic
         self.aes.start_message();
         let crypt_buf = match self.crypt_buf.take() {
             // FLUX-TODO addr=0x134c2 line=488 flavor=explicit_panic
@@ -579,13 +578,12 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     panic!("We lost track of crypt_buf!");
                 },
                 |cbuf| {
-                    // FLUX-TODO addr=0x1d838 line=564 flavor=div_by_zero
                     let (_, m_off, m_len, mic_len) = self.pos.get();
 
                     // Combine unencrypted tag at end of crypt_buf with saved
                     // CTR-encrypted block to obtain encrypted tag
                     let tag_off = self.crypt_enc_len.get() - AES128_BLOCK_SIZE;
-                    // FLUX-TODO addr=0x1d838 line=564 flavor=slice_end
+                    // FLUX-TODO addr=0x1da08 line=589 flavor=slice_end
                     flux_support::assume(mic_len <= self.saved_tag.get().len() && tag_off + mic_len <= cbuf.len());
                     self.saved_tag.get()[..mic_len]
                         .iter()
@@ -876,7 +874,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
         self.crypt_buf.replace(crypt_buf);
         match self.state.get() {
             CCMState::Idle => {}
-            // FLUX-TODO addr=0x1d884 line=853 flavor=div_by_zero
             CCMState::Auth => { flux_support::assert(false); { }
                 if !self.reversed() {
                     if self.confidential.get() {
@@ -893,7 +890,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
                             let auth_last = auth_len - AES128_BLOCK_SIZE;
                             let enc_last = enc_len - AES128_BLOCK_SIZE;
                             for i in 0..AES128_BLOCK_SIZE {
-                                // FLUX-TODO addr=0x1d884 line=853 flavor=bounds
+                                // FLUX-TODO addr=0x1da58 line=897 flavor=bounds
                                 flux_support::assert(auth_last + i < cbuf.len() && enc_last + i < cbuf.len());
                                 cbuf[auth_last + i] = cbuf[enc_last + i];
                             }
