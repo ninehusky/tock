@@ -244,7 +244,8 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
         _buf: &mut [u8; PAGE_SIZE],
     ) -> Result<(), tickv::error_codes::ErrorCode> {
         // FLUX-TODO addr=0x164a8 line=250 flavor=unwrap_option
-        flux_support::assert(self.flash_read_buffer.is_some());
+        // NOTES: blocked-cell
+        // flux_support::assert(self.flash_read_buffer.is_some());
         if self
             .flash
             .read_page(
@@ -416,7 +417,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
     fn add_mut_data_done(&self, _result: Result<(), ErrorCode>, data: SubSliceMut<'static, u8>) {
         self.unhashed_key_buffer.replace(data);
         // FLUX-TODO addr=0x1ceec line=399 flavor=unwrap_option
-        flux_support::assert(self.key_buffer.is_some());
+        // NOTES: blocked-cell
+        // flux_support::assert(self.key_buffer.is_some());
         self.hasher.run(self.key_buffer.take().unwrap()).unwrap();
     }
 

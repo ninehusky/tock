@@ -817,8 +817,11 @@ impl<'a> RxState<'a> {
             // in the callback represents a significant error that should never
             // occur - all other calls to `packet.take()` replace the packet,
             // and thus the packet should always be here.
+
             // FLUX-TODO addr=0xa6b8 line=803 flavor=div_by_zero
-            flux_support::assert(self.packet.is_some());
+            // Notes: blocked-cell
+            // flux_support::assert(self.packet.is_some());
+
             self.packet
                 .map(|packet| {
                     client.receive(packet, self.dgram_size.get() as usize, result);

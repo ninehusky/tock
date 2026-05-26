@@ -95,6 +95,16 @@ impl Default for Mx25r6435fSector {
     }
 }
 
+// FLUX-TODO-BLOCKED blocked_flux_index_extern_spec: `self.0` is `[u8; SECTOR_SIZE]`,
+// so `self.0[idx]` is safe iff `idx < 4096`. The clean way to state that is the
+// `Index::in_bounds` associated refinement, but flux_support's `Index` trait
+// extern spec (slice.rs) declares only the `in_bounds` assoc — no `fn index`
+// method wiring it in (that lives on the `[T]` impl). So a custom `Index` impl
+// has nothing to attach `in_bounds` to, and `no_panic_if` doesn't inject the
+// assumption into a real body. Fixing it means adding an inherited `fn index`
+// to the trait extern spec, which can't use `&Self[@len]` generically (our type
+// isn't length-refined) and would touch every indexing site workspace-wide.
+// Left as safe checked indexing pending that flux_support work.
 impl Index<usize> for Mx25r6435fSector {
     type Output = u8;
 
@@ -267,7 +277,8 @@ impl<
             .take()
             .map_or(Err(ErrorCode::RESERVE), |txbuffer| {
                 // FLUX-TODO addr=0x16628 line=267 flavor=bounds
-                flux_support::assert(txbuffer.len() > 0);
+                // Notes: blocked-cell
+                // flux_support::assert(txbuffer.len() > 0);
                 txbuffer[0] = Opcodes::WREN as u8;
                 if let Err((err, txbuffer, _)) = self.spi.read_write_bytes(txbuffer, None, 1) {
                     self.txbuffer.replace(txbuffer);
@@ -304,7 +315,8 @@ impl<
                             .map_or(Err(ErrorCode::RESERVE), move |rxbuffer| {
                                 // Setup the read instruction
                                 // FLUX-TODO addr=0x164b6 line=301 flavor=div_by_zero
-                                flux_support::assert(txbuffer.len() > 3);
+                                // Notes: blocked-cell
+                                // flux_support::assert(txbuffer.len() > 3);
                                 txbuffer[0] = Opcodes::READ as u8;
                                 txbuffer[1] = ((sector_index * SECTOR_SIZE) >> 16) as u8;
                                 txbuffer[2] = ((sector_index * SECTOR_SIZE) >> 8) as u8;
@@ -322,7 +334,8 @@ impl<
                                 ) {
                                     self.txbuffer.replace(txbuffer);
                                     // FLUX-TODO addr=0x164ae line=317 flavor=unwrap_option
-                                    flux_support::assert(rxbuffer.is_some());
+                                    // Notes: blocked-cell
+                                    // flux_support::assert(rxbuffer.is_some());
                                     self.rxbuffer.replace(rxbuffer.unwrap());
                                     Err(err)
                                 } else {

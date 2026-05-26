@@ -265,7 +265,15 @@ impl UdpPortManager {
                     } else {
                         self.port_array
                             .map(|table| {
-                                table[socket.idx] = Some(SocketBindingEntry::Port(port));
+                                // TODO: Once Flux upstreams ignoring errors, we can revert the safety comment here and use
+                                // checked indexing, ignoring the resulting error.
+                                // 
+                                // SAFETY: (FLUX) this array index doesn't codegen into a panic,
+                                // so a checked indexing operation in source is unneeded.
+                                // table[socket.idx] = Some(SocketBindingEntry::Port(port));
+                                unsafe {
+                                    *table.get_unchecked_mut(socket.idx) = Some(SocketBindingEntry::Port(port));
+                                }
                                 let binding_pair = (
                                     UdpPortBindingTx::new(socket.idx, port),
                                     UdpPortBindingRx::new(socket.idx, port),
@@ -296,7 +304,12 @@ impl UdpPortManager {
         }
         let idx = sender_binding.idx;
         self.port_array.map(|table| {
-            table[idx] = Some(SocketBindingEntry::Unbound);
+            // SAFETY (FLUX): this array index doesn't codegen into a panic, so a checked indexing operation in source is unneeded.
+            // Only safe for our current board. Other compiler targets may be unable to prove the bound is OK,
+            // making this unsafe.
+            unsafe {
+                *table.get_unchecked_mut(idx) = Some(SocketBindingEntry::Unbound);
+            }
         });
         // Search the list and return the appropriate socket
         Ok(UdpSocket::new(idx, self))

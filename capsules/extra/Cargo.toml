@@ -54,6 +54,7 @@ include = [
     "def:result_to_errorcode",
     "def:decompress",
     "def:get_context_0",
+    "def:get_context_from_id",
     # per-fn for panic-bearing fns in otherwise-unverified files:
     # "def:command" — EXCLUDED for the negation-probe measurement (2026-05-23):
     # `def:` is an unanchored substring, so "command" matches all 89 command*/

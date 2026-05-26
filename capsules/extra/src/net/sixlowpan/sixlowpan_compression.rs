@@ -99,12 +99,20 @@ pub struct Context {
 /// that context 0 is always available and contains the mesh-local prefix.
 pub trait ContextStore {
     fn get_context_from_addr(&self, ip_addr: IPAddr) -> Option<Context>;
+
+    #[flux_rs::sig(fn (&Self, ctx_id: u8) -> Option<Context>{b: ctx_id == 0 => b})]
     fn get_context_from_id(&self, ctx_id: u8) -> Option<Context>;
+
     fn get_context_0(&self) -> Context {
         match self.get_context_from_id(0) {
             Some(ctx) => ctx,
-            // FLUX-TODO addr=0x18e14 line=106 flavor=explicit_panic
-            None => { flux_support::assert(false); panic!("Context 0 not found") },
+            None => {
+                // FLUX-OPT addr=0x18e14 line=106 flavor=explicit_panic
+                // Notes: discharged by the `b: ctx_id == 0 => b` postcondition on `get_context_from_id`.
+                // There's only one `impl` of `ContextStore` which returns `Some` for `ctx_id == 0`.
+                flux_support::assert(false);
+                panic!("Context 0 not found")
+            },
         }
     }
     fn get_context_from_prefix(&self, prefix: &[u8], prefix_len: u8) -> Option<Context>;
@@ -139,6 +147,7 @@ impl ContextStore for Context {
         }
     }
 
+    #[flux_rs::sig(fn (&Self, ctx_id: u8) -> Option<Context>{b: ctx_id == 0 => b})]
     fn get_context_from_id(&self, ctx_id: u8) -> Option<Context> {
         if ctx_id == 0 {
             Some(*self)
@@ -828,7 +837,6 @@ pub fn decompress(
                 // Decompress UDP header fields
                 let consumed_before_port_decompress = consumed;
                 flux_support::assume(consumed <= buf.len() && buf.len() - consumed >= 4);
-                // FLUX-TODO addr=0xd16c line=817
                 let (src_port, dst_port) = decompress_udp_ports(nhc_header, buf, &mut consumed);
 
                 //need to add any growth from decompression to the udp length if we used the buf
@@ -901,7 +909,17 @@ pub fn decompress(
                 next_header = new_next_header;
                 written += written_growth;
             }
-            // FLUX-TODO addr=0xd0f0 line=885 flavor=explicit_panic
+            // FLUX-TODO-BLOCKED addr=0xd0f0 line=885 flavor=explicit_panic blocked_flux_loop_carry
+            // This arm IS dead: `next_header` is always a handled `ip6_nh` type.
+            // Closing it needs `decompress_ext_hdr` to tell this loop
+            // `is_nhc => valid_ip6_nh(next_header)`. The refined-tuple return form
+            // `Result<{b. (bool[b], u8{b=>valid}, _)}, _>` is sort-rejected (an
+            // existential-over-tuple can't be a `Result` type arg). The struct
+            // form proves in `decompress_ext_hdr` but this loop did not carry the
+            // relation; the exact cause is not isolated (a minimal repro shows
+            // struct field-extraction *does* carry — suspect is the pre-loop
+            // `if is_nhc { next_header = nhc_to_ip6_nh(..)? }` join flattening the
+            // entry type). See docs/flux_tuple_pack_limitation.md. Left open.
             _ => { flux_support::assert(false); panic!("Unreachable case") },
         }
     }
@@ -1085,6 +1103,20 @@ fn mask_sam(x: u8) -> u8 {
 )]
 fn mask_dam(x: u8) -> u8 {
     x & iphc::DAM_MASK
+}
+
+/// Returns `iphc_header & (SAM_MASK | DAM_MASK)` (= `& 0x33`), refining the
+/// result to the 7 reachable mode values `{0x00, 0x01, 0x02, 0x03, 0x10, 0x20,
+/// 0x30}` so the `_ =>` arms in `decompress_iid_*` are provably dead. Trusted
+/// for the same bitwise-theorem reason as `mask_sam`/`mask_dam`: Flux does not
+/// reason through the inline `&` mask.
+#[flux_rs::trusted(reason = "bitwise theorem: x & 0x33 ∈ {0, 0x01, 0x02, 0x03, 0x10, 0x20, 0x30}")]
+#[flux_rs::sig(
+    fn(x: u8) -> u8{y: y == 0x00 || y == 0x01 || y == 0x02 || y == 0x03
+                    || y == 0x10 || y == 0x20 || y == 0x30}
+)]
+fn mask_sam_dam(x: u8) -> u8 {
+    x & (iphc::SAM_MASK | iphc::DAM_MASK)
 }
 
 #[flux_rs::sig(
@@ -1307,7 +1339,13 @@ fn decompress_iid_link_local(
     buf: &[u8],
     consumed: &mut usize,
 ) -> Result<(), ()> {
-    let mode = addr_mode & (iphc::SAM_MASK | iphc::DAM_MASK);
+    // FLUX implementor's note: there are many assumes here, all of which reason
+    // about hte length of slices and `[T; N]` arrays, both of which
+    // are upstreamed or about to be upstreamed in flux-rs. So don't worry about
+    // the assumes too much here.
+
+
+    let mode = mask_sam_dam(addr_mode);
     match mode {
         // SAM, DAM = 00: Inline
         iphc::SAM_INLINE => {
@@ -1398,7 +1436,7 @@ fn decompress_iid_context(
     buf: &[u8],
     consumed: &mut usize,
 ) -> Result<(), ()> {
-    let mode = addr_mode & (iphc::SAM_MASK | iphc::DAM_MASK);
+    let mode = mask_sam_dam(addr_mode);
     match mode {
         // DAM = 00: Reserved
         // SAM = 0 is handled separately outside this method

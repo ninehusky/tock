@@ -1,8 +1,15 @@
 # Asserts Flux does NOT genuinely check
 
+> **SUPERSEDED 2026-05-24:** this 102 silent/vacuous count was an **ICE artifact**. After
+> de-ICEing capsules-extra and re-measuring ICE-free, the silent/vacuous population was
+> ~entirely the swallowed `UnsolvedEvar` ICE — genuine SILENT ≈ 0, ICE_MASKED = 0. Current
+> headline: **63 PROVEN / 23 FAILING / 0 genuine SILENT** — see `docs/methodology.md`
+> "State of the proof" (table) + `tools/census_2026-05-24.json`. Keep the spans below only as
+> a historical record of the pre-de-ICE run.
+
 From `tools/negation_probe.json` (+ `dead_proven_validate.json`), commented-out sites excluded. cmd-click any `path:line`.
 
-**Silent/vacuous total: 102** = SILENT 83 (closure 26 + in-scope-skipped 57 + out-of-scope 0) + vacuous-dead 19. Plus 38 trusted-blocked (appendix).
+**Silent/vacuous total: 102** = SILENT 83 (closure 26 + in-scope-skipped 57 + out-of-scope 0) + vacuous-dead 19. Plus 38 trusted-blocked (appendix). *(pre-de-ICE; see banner above)*
 
 > Note: the `closure` count is a LOWER bound — the detector misses closures nested in match-arms, so some 'in-scope-skipped' below may actually be closures.
 > The 'in-scope-skipped' set includes the `#[flux_rs::sig]`-with-unsatisfiable-`requires` vacuity (e.g. framer.rs incoming_frame_security).
