@@ -11,12 +11,19 @@ edition.workspace = true
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
+include = [
+    "def:get_remaining_us",
+    "def:write_usize_to_u8_slice",
+    "def:usize_byte_range",
+    "def:unhandled_interrupt",
+    "def:print_cortexm_state",
+]
 
 [dependencies]
 kernel = { path = "../../kernel" }
-flux-rs = { git  = "https://github.com/flux-rs/flux.git" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
-flux-core = { git = "https://github.com/flux-rs/flux.git" }
+flux-core = { path = "/Users/andrew/research/flux/lib/flux-core" }
 
 [lints]
 workspace = true

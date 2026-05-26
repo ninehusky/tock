@@ -222,6 +222,9 @@ global_asm!(
 /// For documentation of this function, please see
 /// `CortexMVariant::switch_to_user`.
 #[cfg(all(target_arch = "arm", target_os = "none"))]
+// FLUX-TODO-FN-LEVEL covers=[0x104c0] flavor=explicit_panic
+// panic somewhere in this fn body; addr2line lost the line
+// (LTO + generic monomorphization). See breadcrumb comments in body.
 pub unsafe fn switch_to_user_arm_v7m(
     mut user_stack: *const usize,
     process_regs: &mut [usize; 8],
@@ -293,6 +296,8 @@ unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
 ) -> ! {
     if stack_overflow != 0 {
         // Panic to show the correct error.
+        // FLUX-TODO addr=0x104da line=296 flavor=explicit_panic
+        flux_support::assert(false);
         panic!("kernel stack overflow");
     } else {
         // Show the normal kernel hardfault message.
@@ -342,6 +347,8 @@ unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
         let thumb_bit = ((stacked_xpsr >> 24) & 0x1) == 1;
         let exception_number = (stacked_xpsr & 0x1ff) as usize;
 
+        // FLUX-TODO addr=0x104c0 line=345 flavor=explicit_panic
+        flux_support::assert(false);
         panic!(
             "{} HardFault.\r\n\
          \tKernel version {}\r\n\

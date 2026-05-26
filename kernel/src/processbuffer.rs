@@ -749,6 +749,7 @@ impl ReadableProcessSlice {
     /// # Panics
     ///
     /// This function will panic if `self.len() != dest.len()`.
+    #[flux_rs::sig(fn(self: &Self[@n], dest: &mut [u8][n]))]
     pub fn copy_to_slice(&self, dest: &mut [u8]) {
         // The panic code path was put into a cold function to not
         // bloat the call site.
@@ -756,6 +757,13 @@ impl ReadableProcessSlice {
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
+            // FLUX-OPT addr=0x11434 line=760 flavor=explicit_panic
+            // Checked: this panic is proven dead at the call site below.
+            // copy_to_slice's `dest: &mut [u8][n]` precondition makes
+            // copy_to_slice_or_err infallible, so the is_err() branch (and this
+            // helper) is unreachable; Flux discharges the witnessing
+            // assert(false) at the call site. This #[cold] helper is verified
+            // standalone where that context is unavailable, so no assert here.
             panic!(
                 "source slice length ({}) does not match destination slice length ({})",
                 src_len, dst_len,
@@ -763,6 +771,7 @@ impl ReadableProcessSlice {
         }
 
         if self.copy_to_slice_or_err(dest).is_err() {
+            flux_support::assert(false);
             len_mismatch_fail(dest.len(), self.len());
         }
     }
@@ -775,7 +784,7 @@ impl ReadableProcessSlice {
     #[flux_rs::trusted(
         reason = "assertion might fail: possible out of bound access (needs spec for Enumerate)"
     )]
-    #[flux_rs::sig(fn (self: &Self, dest: &strg [u8][@n]) -> Result<(), ErrorCode> ensures dest: [u8][n] )]
+    #[flux_rs::sig(fn(self: &Self[@n], dest: &strg [u8][@m]) -> Result<(), ErrorCode>[n == m] ensures dest: [u8][m])]
     pub fn copy_to_slice_or_err(&self, dest: &mut [u8]) -> Result<(), ErrorCode> {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
@@ -798,6 +807,7 @@ impl ReadableProcessSlice {
     }
 
     /// Return the length of the slice in bytes.
+    #[flux_rs::sig(fn(&Self[@n]) -> usize[n])]
     pub fn len(&self) -> usize {
         self.slice.len()
     }
@@ -854,6 +864,17 @@ impl Index<Range<usize>> for ReadableProcessSlice {
     type Output = Self;
 
     fn index(&self, idx: Range<usize>) -> &Self::Output {
+        // FLUX-TODO line=860 flavor=slice_end addrs=[
+        //     0x10fd4, 0x10fdc,
+        // ]
+        // Notes: actionable. Discharge path is known but deferred: give this
+        // impl (and the RangeTo/RangeFrom/usize siblings) an `Index::in_bounds`
+        // assoc refinement + `#[no_panic_if(<Self as Index<_>>::in_bounds(len,
+        // idx))]`, and drop this assert (under no_panic_if the inner
+        // self.slice[idx] is checked directly; a bare `requires` doesn't bind to
+        // the trait method, and the cross-crate flux_support::assert trips a
+        // spurious MightPanic). Cascades to every `rps[range]` call site.
+        // flux_support::assert(idx.end <= self.slice.len());
         cast_byte_slice_to_process_slice(&self.slice[idx])
     }
 }
@@ -992,6 +1013,10 @@ impl WriteableProcessSlice {
     /// # Panics
     ///
     /// This function will panic if `src.len() != self.len()`.
+    #[flux_rs::sig(fn(self: &Self[@n], src: &[u8][n]))]
+    // FLUX-TODO-FN-LEVEL covers=[0x114b8] flavor=explicit_panic
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn copy_from_slice(&self, src: &[u8]) {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
@@ -1003,6 +1028,13 @@ impl WriteableProcessSlice {
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
+            // FLUX-OPT addr=0x1157c line=1038 flavor=explicit_panic
+            // Checked: this panic is proven dead at the call site below.
+            // copy_from_slice's `src: &[u8][n]` precondition makes
+            // copy_from_slice_or_err infallible, so the is_err() branch (and
+            // this helper) is unreachable; Flux discharges the witnessing
+            // assert(false) at the call site. This #[cold] helper is verified
+            // standalone where that context is unavailable, so no assert here.
             panic!(
                 "src slice len ({}) != dest slice len ({})",
                 src_len, dst_len,
@@ -1010,6 +1042,7 @@ impl WriteableProcessSlice {
         }
 
         if self.copy_from_slice_or_err(src).is_err() {
+            flux_support::assert(false);
             len_mismatch_fail(self.len(), src.len());
         }
     }
@@ -1018,6 +1051,7 @@ impl WriteableProcessSlice {
     ///
     /// The length of `src` must be the same as `self`. Subslicing can
     /// be used to obtain a slice of matching length.
+    #[flux_rs::sig(fn(self: &Self[@n], src: &[u8][@m]) -> Result<(), ErrorCode>[n == m])]
     pub fn copy_from_slice_or_err(&self, src: &[u8]) -> Result<(), ErrorCode> {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
@@ -1039,6 +1073,7 @@ impl WriteableProcessSlice {
     }
 
     /// Return the length of the slice in bytes.
+    #[flux_rs::sig(fn(&Self[@n]) -> usize[n])]
     pub fn len(&self) -> usize {
         self.slice.len()
     }

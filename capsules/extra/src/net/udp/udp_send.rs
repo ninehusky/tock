@@ -330,7 +330,12 @@ impl<'a, T: IP6Sender<'a>> UDPSender<'a> for UDPSendStruct<'a, T> {
             .send_to(dest, transport_header, self, net_cap)
         {
             Ok(()) => Ok(()),
-            _ => Err(self.tx_buffer.take().unwrap()),
+            _ => {
+                // FLUX-TODO addr=0x1daae line=333 flavor=unwrap_option
+                // Notes: blocked-cell
+                // flux_support::assert(self.tx_buffer.is_some());
+                Err(self.tx_buffer.take().unwrap())
+            },
         }
     }
 

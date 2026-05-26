@@ -12,6 +12,29 @@ edition.workspace = true
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
 tickv = { path = "../../libraries/tickv" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux_support = { path = "../../flux_support" }
+
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [
+    "src/button.rs",
+    "src/gpio.rs",
+    "src/i2c_master_slave_driver.rs",
+    "src/process_console.rs",
+    "src/spi_controller.rs",
+    "src/virtualizers/virtual_aes_ccm.rs",
+    "src/virtualizers/virtual_uart.rs",
+    # per-fn for panic-bearing fns in otherwise-unverified files
+    # (file-level include would cascade; see memory `feedback_per_fn_chips_arch_recipe`)
+    "def:command",                    # AdcDedicated::command (adc.rs); also matches other ::command in the crate (mostly already in file-included list)
+    "def:sample_ready",               # AdcDedicated::sample_ready (adc.rs)
+    "def:samples_ready",              # AdcDedicated::samples_ready (adc.rs)
+    "def:process_rearm_or_callback",  # AlarmDriver::process_rearm_or_callback (alarm.rs)
+    "def:transmitted_buffer",         # Console::transmitted_buffer (console.rs)
+]
+
 
 [lints]
 workspace = true

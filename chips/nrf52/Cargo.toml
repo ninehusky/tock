@@ -8,10 +8,41 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [
+    "def:inter_endepin",
+    "def:inter_endepout",
+    "def:ctrl_state",
+    "def:bulk_state",
+    "def:start_dma_in",
+    "def:start_dma_out",
+    "def:packet_to_hex",
+    "def:replace_radio_buffer",
+    "def:debug_in_packet",
+    "def:debug_out_packet",
+    "def:handle_endepout",
+    "def:handle_ep0setup",
+    "def:handle_epdata",
+    "def:handle_interrupt",
+    "def:set_pending_dma",
+    "def:setup_frequency",
+    "def:transmit_out",
+    "def:transmit_in_ep0",     # usbd.rs (already partially covered via def:transmit_out substring? add to be safe)
+    "def:sample_highspeed",    # nrf52::adc sample_highspeed (adc.rs)
+    "def:handle_endepin",      # usbd.rs
+    "def:service_pending_interrupts",  # chip.rs
+    "def:status_epin",         # usbd.rs
+    "def:transmit_in",         # usbd.rs (also covered as a substring of transmit_in_ep0; explicit)
+]
+
 [dependencies]
 cortexm4 = { path = "../../arch/cortex-m4" }
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux_support = { path = "../../flux_support" }
 
 [dependencies.nrf5x]
 path = "../nrf5x"

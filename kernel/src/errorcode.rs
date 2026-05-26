@@ -49,9 +49,12 @@ impl From<ErrorCode> for usize {
     }
 }
 
+// `out` is only `Ok` if the given input was `Err`.
+#[flux_rs::assoc(fn succeeds(s: Result, out: Result) -> bool { out.b == !s.b })]
 impl TryFrom<Result<(), ErrorCode>> for ErrorCode {
     type Error = ();
 
+    #[flux_rs::sig(fn(rc: Result<(), ErrorCode>[@s]) -> Result<Self, Self::Error>{out: <Self as TryFrom<Result<(), ErrorCode>>>::succeeds(s, out)})]
     fn try_from(rc: Result<(), ErrorCode>) -> Result<Self, Self::Error> {
         match rc {
             Ok(()) => Err(()),

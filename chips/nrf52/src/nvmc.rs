@@ -242,6 +242,7 @@ impl Nvmc {
         self.registers.ready.is_set(Ready::READY)
     }
 
+    #[flux_rs::trusted(reason = "blocked_ice: flux ICE infer.rs:1034 dyn-predicate assert_eq")]
     pub fn handle_interrupt(&self) {
         let state = self.state.get();
         self.state.set(FlashState::Ready);

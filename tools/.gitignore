@@ -6,3 +6,5 @@ local_cargo/
 *.svd
 .format_fresh
 ci-artifacts
+tools/flux_health_logs/
+tools/negation_probe_logs/

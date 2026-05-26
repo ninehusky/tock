@@ -11,13 +11,19 @@ edition.workspace = true
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
+# no_panic = true
+# include = ["src/collections/ring_buffer.rs"]
+# NOTE: kernel must stay WHOLE-CRATE. Narrowing `include` to specific fns drops
+# kernel's type/enum/trait specs, which dependents reference — causing
+# "use of kernel::X not included when checking external crate" across all
+# downstream crates. So whole-crate is load-bearing, not over-examination.
 
 [dependencies]
 tock-registers = { path = "../libraries/tock-register-interface" }
 tock-cells = { path = "../libraries/tock-cells" }
 tock-tbf = { path = "../libraries/tock-tbf" }
 flux_support = { path = "../flux_support" }
-flux-rs = { git  = "https://github.com/flux-rs/flux.git" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 
 # In general, Tock discourages the use of cargo features. However for certain
 # kernel crate configuration, we have not found reasonable alternatives to

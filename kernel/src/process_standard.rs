@@ -282,10 +282,14 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             || self.state.get() == State::Running
     }
 
+    // FLUX-TODO-FN-LEVEL covers=[0x3cfc] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn remove_pending_upcalls(&self, upcall_id: UpcallId) {
         self.tasks.map(|tasks| {
             let count_before = tasks.len();
             // VTOCK-TODO: prove tasks.retain() reduces number of tasks
+            // FLUX-TODO addr=0x3cfc line=289
             tasks.retain(|task| match task {
                 // Remove only tasks that are function calls with an id equal
                 // to `upcall_id`.
@@ -367,6 +371,11 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             FaultAction::Panic => {
                 // process faulted. Panic and print status
                 self.state.set(State::Faulted);
+                // FLUX-TODO addr=0x3206 line=370 flavor=explicit_panic
+                // Notes: blocked-fault-state
+                //        To discharge this, you'd need to ensure this function itself is unreachable if
+                //        the fault policy's `action()` returns `FaultAction::Panic`.
+                // flux_support::assert(false);
                 panic!("Process {} had a fault", self.get_process_name());
             }
             FaultAction::Restart => {
@@ -457,6 +466,8 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         self.tasks.map_or(None, |tasks| tasks.dequeue())
     }
 
+    // FLUX-TODO-BLOCKED addr=0x2e94 line=462 reason=impl_scope
+    // flux_support::assert(false);
     fn remove_upcall(&self, upcall_id: UpcallId) -> Option<Task> {
         self.tasks.map_or(None, |tasks| {
             tasks.remove_first_matching(|task| match task {
@@ -528,6 +539,9 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
     }
 
     fn setup_mpu(&self) -> MpuConfiguredCapability {
+        // FLUX-TODO addr=0x463a line=531 flavor=unwrap_result
+        // Notes: blocked-cell
+        // flux_support::assert(self.app_memory_allocator.is_some());
         self.app_memory_allocator
             .map_or(Err(()), |am| Ok(am.configure_mpu(self.chip.mpu())))
             .expect("Fatal kernel bug in setting up MPU - cannot branch to process as it would be unsafe")
@@ -1571,6 +1585,13 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
         // - `unused_memory`: the rest of the `remaining_memory`, not assigned
         //   to this app.
         //
+        // FLUX-TODO addr=0x9074 line=1575 flavor=explicit_panic
+        // Notes: actionable. The split_at_mut below panics unless
+        // app_memory_start_offset + allocation_size <= remaining_memory.len().
+        // Discharging needs this function's own MPU-layout reasoning (how the
+        // allocation sizes relate to remaining_memory) plus a split_at_mut
+        // extern spec; deferred, not an infra blocker.
+        // flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
         let (_allocated_padded_memory, unused_memory) =
             remaining_memory.split_at_mut(app_memory_start_offset + allocation_size);
 

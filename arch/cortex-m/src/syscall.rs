@@ -68,8 +68,16 @@ const REGS_IDX: usize = 6;
 const REGS_RANGE: Range<usize> = REGS_IDX..REGS_IDX + 8;
 
 const USIZE_SZ: usize = size_of::<usize>();
+
+#[flux_rs::trusted(reason = "This 4 represents `USIZE_SZ` on cortex-M")]
+#[flux_rs::sig(fn() -> usize[4])]
+fn my_usize_range() -> usize {
+    4
+}
+
+#[flux_rs::sig(fn(usize[@i]) -> Range<usize>[i * 4, (i + 1) * 4] requires i < 256)]
 fn usize_byte_range(index: usize) -> Range<usize> {
-    index * USIZE_SZ..(index + 1) * USIZE_SZ
+    index * my_usize_range()..(index + 1) * my_usize_range()
 }
 
 fn usize_from_u8_slice(slice: &[u8], index: usize) -> Result<usize, ErrorCode> {
@@ -83,9 +91,23 @@ fn usize_from_u8_slice(slice: &[u8], index: usize) -> Result<usize, ErrorCode> {
     ))
 }
 
+// Trust only the cross-target length-match: src is `&val.to_le_bytes()` =
+// `[u8; size_of::<usize>()]`, which equals 4 on the 32-bit Cortex-M target but
+// is 8 on the 64-bit host Flux runs against.
+#[flux_rs::trusted(reason = "copy_from_slice explodes: `dest` has length 4, but `to_le_bytes` returns `[u8; 8]` on my machine.")]
+#[flux_rs::sig(fn(val: usize, dest: &mut [u8]{n: n == 4}))]
+fn copy_le_into(val: usize, dest: &mut [u8]) {
+    dest.copy_from_slice(&val.to_le_bytes());
+}
+
+#[flux_rs::sig(fn(val: usize, slice: &mut [u8]{n: n >= (i + 1) * 4}, usize[@i]) requires i < 256)]
 fn write_usize_to_u8_slice(val: usize, slice: &mut [u8], index: usize) {
     let range = usize_byte_range(index);
-    slice[range].copy_from_slice(&val.to_le_bytes());
+    // FLUX-TODO line=106 flavor=slice_end addrs=[
+    //     0xf768, 0xf772,
+    // ]
+    flux_support::assert(range.start <= range.end && range.end <= slice.len());
+    copy_le_into(val, &mut slice[range]);
 }
 
 impl core::convert::TryFrom<&[u8]> for CortexMStoredState {

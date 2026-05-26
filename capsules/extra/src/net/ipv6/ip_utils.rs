@@ -92,22 +92,40 @@ impl IPAddr {
     pub fn set_unicast_link_local(&mut self) {
         self.0[0] = 0xfe;
         self.0[1] = 0x80;
-        for i in 2..8 {
+        // for i in 2..8 {
+        //     self.0[i] = 0;
+        // }
+        let mut i = 2;
+        while i < 8 {
             self.0[i] = 0;
+            i += 1;
         }
     }
 
     // Panics if prefix slice does not contain enough bits
+    // `prefix_len` is in _bits_.
+    #[flux_rs::sig(
+        fn(self: &mut Self, prefix: &[u8][@n], prefix_len: u8{p: p <= 128 && 8 * n >= p}) // we may want to make this `8 * n == p`.
+    )]
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice. flux_support::assert ensures the next assert fine.")]
     pub fn set_prefix(&mut self, prefix: &[u8], prefix_len: u8) {
         let full_bytes = (prefix_len / 8) as usize;
-        let remaining = (prefix_len & 0x7) as usize;
+        let remaining = (prefix_len % 8) as usize;
         let bytes = full_bytes + usize::from(remaining != 0);
+        // Because this `assert` goes through, we can change the 
+        // following `assert!` to `assert_unchecked` at a later stage.
+        flux_support::assert(bytes <= prefix.len() && bytes <= 16);
+        // FLUX-OPT addr=0xd6a0 line=118 flavor=explicit_panic
         assert!(bytes <= prefix.len() && bytes <= 16);
 
         self.0[0..full_bytes].copy_from_slice(&prefix[0..full_bytes]);
         if remaining != 0 {
             let mask = 0xff_u8 << (8 - remaining);
+            // FLUX-TODO addr=0xd6de line=123 flavor=bounds
+            flux_support::assert(full_bytes < self.0.len());
             self.0[full_bytes] &= !mask;
+            // FLUX-TODO addr=0xd6de line=123 flavor=bounds
+            flux_support::assert(full_bytes < self.0.len() && full_bytes < prefix.len());
             self.0[full_bytes] |= mask & prefix[full_bytes];
         }
     }
@@ -117,6 +135,16 @@ impl IPAddr {
     }
 }
 
+#[flux_rs::sig(
+    fn(
+        ip6_header: &IP6Header,
+        udp_header: &UDPHeader,
+        // u >= 8 required b/c of subtraction on line 182,
+        // u - 8 <= n b/c of indexing into payload on line 184
+        udp_length: u16{u: u >= 8 && u - 8 <= n},
+        payload: &[u8][@n],
+    ) -> u16
+)]
 pub fn compute_udp_checksum(
     ip6_header: &IP6Header,
     udp_header: &UDPHeader,
@@ -159,9 +187,13 @@ pub fn compute_udp_checksum(
     {
         let mut i: usize = 0;
         while i < ((udp_length - 8) as usize) {
+            // FLUX-TODO addr=0xb604 line=185 flavor=bounds
+            flux_support::assert(i < payload.len());
             let msb_dat: u16 = ((payload[i]) as u16) << 8;
             let mut lsb_dat: u16 = 0;
             if i + 1 < udp_length as usize - 8 {
+                // FLUX-TODO addr=0xb60c line=188 flavor=bounds
+                flux_support::assert(i + 1 < payload.len());
                 lsb_dat = payload[i + 1] as u16;
             }
             let temp_dat: u16 = msb_dat + lsb_dat;
@@ -184,6 +216,14 @@ pub fn compute_udp_checksum(
     sum as u16 //Return result as u16 in host byte order */
 }
 
+#[flux_rs::sig(
+    fn(
+        ipv6_header: &IP6Header,
+        icmp_header: &ICMP6Header[@l],
+        payload: &[u8][@n],
+    ) -> u16
+    requires l >= 8 && l - 8 <= n && (l - 8) % 2 == 0
+)]
 pub fn compute_icmp_checksum(
     ipv6_header: &IP6Header,
     icmp_header: &ICMP6Header,
@@ -234,6 +274,9 @@ pub fn compute_ipv6_ph_sum(ip6_header: &IP6Header) -> u32 {
     // sum over src/dest addresses
     let mut i = 0;
     while i < 16 {
+        flux_rs::defs! {
+            invariant qualifier ParityIpv6PhSum(i: int) { i % 2 == 0 }
+        }
         let msb_src = (ip6_header.src_addr.0[i] as u32) << 8;
         let lsb_src = ip6_header.src_addr.0[i + 1] as u32;
         sum += msb_src + lsb_src;
@@ -251,11 +294,17 @@ pub fn compute_ipv6_ph_sum(ip6_header: &IP6Header) -> u32 {
     sum
 }
 
+#[flux_rs::sig(fn(buf: &[u8][@n], len: u16{l: l <= n && l % 2 == 0}) -> u32)]
+// There is an out-of-bounds read if the length's odd:
+// consider len == 1: the `lsb` line will read buf[1]
 pub fn compute_sum(buf: &[u8], len: u16) -> u32 {
     let mut sum: u32 = 0;
 
     let mut i: usize = 0;
     while i < (len as usize) {
+        flux_rs::defs! {
+            invariant qualifier ParityComputeSum(i: int) { i % 2 == 0 }
+        }
         let msb = (buf[i] as u32) << 8;
         let lsb = buf[i + 1] as u32;
         sum += msb + lsb;

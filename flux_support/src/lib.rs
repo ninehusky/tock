@@ -27,9 +27,12 @@ macro_rules! const_assume {
 #[flux_rs::sig(fn(x: bool[true]))]
 pub const fn assert(_x: bool) {}
 
+#[flux_rs::trusted(reason = "assume() is the canonical Flux escape hatch: sig `ensures b` is the verification interface; the body's runtime panic on !b is by design and can't be discharged from inside the function")]
 #[flux_rs::sig(fn(b:bool) ensures b)]
 pub const fn assume(b: bool) {
     if !b {
+        // FLUX-TODO addr=0x10584 line=33 flavor=explicit_panic
+        crate::assert(false);
         panic!("assume fails")
     }
 }

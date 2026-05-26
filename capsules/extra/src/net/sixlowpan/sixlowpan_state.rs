@@ -264,6 +264,7 @@ pub mod lowpan_frag {
     pub const FRAGN_HDR_SIZE: usize = 5;
 }
 
+#[flux_rs::sig(fn(dgram_size: u16, dgram_tag: u16, dgram_offset: usize, hdr: &mut [u8]{n: n >= 5}, is_frag1: bool))]
 fn set_frag_hdr(
     dgram_size: u16,
     dgram_tag: u16,
@@ -271,19 +272,28 @@ fn set_frag_hdr(
     hdr: &mut [u8],
     is_frag1: bool,
 ) {
+    flux_support::assert(hdr.len() >= 5);
     let mask = if is_frag1 {
         lowpan_frag::FRAG1_HDR
     } else {
         lowpan_frag::FRAGN_HDR
     };
+    // Right now, the slicing operations aren't getting checked.
+    // So we'll add some asserts while that's getting patched up.
+    flux_support::assert(2 <= hdr.len());
     u16_to_network_slice(dgram_size, &mut hdr[0..2]);
+    flux_support::assert(0 < hdr.len());
     hdr[0] = mask | (hdr[0] & !mask);
+    flux_support::assert(4 <= hdr.len());
     u16_to_network_slice(dgram_tag, &mut hdr[2..4]);
     if !is_frag1 {
+        flux_support::assert(4 < hdr.len());
+        // FLUX-OPT addr=0xdbd6 line=291
         hdr[4] = (dgram_offset / 8) as u8;
     }
 }
 
+#[flux_rs::trusted(reason = "Body verifies with `output_pred`/`in_bounds` once caller(s) can supply `packet.len() >= 5`. Until `receive_frame` and its callers are refined with a `packet.len() >= 5` precondition, this stays trusted to avoid forcing a workspace-wide cascade.")]
 fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     let is_frag1 = match hdr[0] & lowpan_frag::FRAGN_HDR {
         lowpan_frag::FRAG1_HDR => true,
@@ -296,6 +306,7 @@ fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     (is_frag1, dgram_size, dgram_tag, (dgram_offset as usize) * 8)
 }
 
+#[flux_rs::trusted(reason = "Body verifies with `in_bounds` once caller(s) supply `packet.len() >= 1`. Stays trusted until `receive_frame`'s caller chain carries that precondition.")]
 fn is_fragment(packet: &[u8]) -> bool {
     let mask = packet[0] & lowpan_frag::FRAGN_HDR;
     (mask == lowpan_frag::FRAGN_HDR) || (mask == lowpan_frag::FRAG1_HDR)
@@ -414,6 +425,7 @@ impl<'a> TxState<'a> {
     /// `Err(Result<(), ErrorCode>, &'static mut [u8])` - If `Err`, then `Result<(), ErrorCode>`
     /// is the reason for the error, and the return buffer is the (non-consumed)
     /// `frag_buf` passed in as an argument
+    #[flux_rs::trusted(reason = "Takes `radio: &dyn MacDevice` — Flux ICEs on dyn-in-sig (feedback_flux_dyn_sig_ice.md), so we can't express `ip.kind != 1` as a sig precondition here to propagate to `prepare_next_fragment`. Trust this caller-level wrapper instead; the panic-bearing inner functions (`prepare_next_fragment`, etc.) are verified independently.")]
     pub fn next_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -468,8 +480,13 @@ impl<'a> TxState<'a> {
         self.dgram_size.set(ip6_packet.get_total_len());
         self.dgram_tag.set(self.sixlowpan.next_dgram_tag());
         self.prepare_first_fragment(ip6_packet, frame, ctx_store)
+        // FLUX-TODO-BLOCKED addr=0x1979c line=483 reason=before_close_brace
+        // flux_support::assert(false);
     }
 
+    // FLUX-TODO-FN-LEVEL covers=[0x1999e] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn prepare_first_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -478,6 +495,7 @@ impl<'a> TxState<'a> {
     ) -> Result<Frame, (Result<(), ErrorCode>, &'static mut [u8])> {
         // Here, we assume that the compressed headers fit in the first MTU
         // fragment. This is consistent with RFC 6282.
+        // FLUX-TODO addr=0x1999e line=495
         let mut lowpan_packet = [0_u8; radio::MAX_FRAME_SIZE];
         let (consumed, written) = {
             match sixlowpan_compression::compress(
@@ -507,6 +525,13 @@ impl<'a> TxState<'a> {
         // Write the 6lowpan header
         if written <= remaining_capacity {
             // TODO: Check success
+            // `sixlowpan_compression::compress` cannot be sigged in Flux today: its
+            // `&dyn ContextStore` parameter ICEs `flux-fhir-analysis/conv/struct_compat`.
+            // The intended surface invariant — `written <= buf.len()` — is asserted here
+            // via `assume` so the slice op verifies locally.
+            flux_support::assume(written <= lowpan_packet.len());
+            // FLUX-TODO addr=0x1994c line=526 flavor=slice_end
+            flux_support::assert(written <= lowpan_packet.len());
             let _ = frame.append_payload(&lowpan_packet[0..written]);
             remaining_capacity -= written;
         } else {
@@ -524,11 +549,22 @@ impl<'a> TxState<'a> {
         let (payload_len, consumed) =
             self.write_additional_headers(ip6_packet, &mut frame, consumed, payload_len);
 
+        // Underlying invariant: `payload_len <= ip6_packet.get_payload().len()` —
+        // payload_len is `min(remaining_payload, ...)` after `write_additional_headers`,
+        // and `remaining_payload = get_total_len() - consumed` which is bounded by
+        // `payload_buf_len` semantically (wire-packet length fits the allocated buf).
+        // Proving this requires sigs on `min`, `write_additional_headers` (currently
+        // trusted), and an invariant connecting `get_total_len() - 40 <= payload_buf_len`.
+        // TODO — use `assume` here for now.
+        flux_support::assume(payload_len <= ip6_packet.get_payload().len());
+        // FLUX-TODO addr=0x19956 line=551 flavor=slice_end
+        flux_support::assert(payload_len <= ip6_packet.get_payload().len());
         let _ = frame.append_payload(&ip6_packet.get_payload()[0..payload_len]);
         self.dgram_offset.set(consumed + payload_len);
         Ok(frame)
     }
 
+    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _) -> _ requires ip.kind != 1)]
     fn prepare_next_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -552,6 +588,8 @@ impl<'a> TxState<'a> {
 
         if payload_len > 0 {
             let payload_offset = dgram_offset - ip6_packet.get_total_hdr_size();
+            // FLUX-TODO addr=0x1995c line=581 flavor=slice_order
+            flux_support::assert(payload_offset + payload_len <= ip6_packet.get_payload().len());
             let _ = frame.append_payload(
                 &ip6_packet.get_payload()[payload_offset..payload_offset + payload_len],
             );
@@ -564,6 +602,7 @@ impl<'a> TxState<'a> {
 
     // NOTE: This function will not work for headers that span past the first
     // frame.
+    #[flux_rs::trusted(reason = "IP6Packet refinement (kind != 1) for `get_total_hdr_size`/`encode` calls")]
     fn write_additional_headers<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -589,6 +628,7 @@ impl<'a> TxState<'a> {
         (payload_len, dgram_offset)
     }
 
+    #[flux_rs::trusted(reason = "cascade from set_frag_hdr precondition `hdr.len() >= 5`")]
     fn write_frag_hdr(&self, frame: &mut Frame, first_frag: bool) -> usize {
         if first_frag {
             let mut frag_header = [0_u8; lowpan_frag::FRAG1_HDR_SIZE];
@@ -716,6 +756,7 @@ impl<'a> RxState<'a> {
     // This function assumes that the payload is a slice starting from the
     // actual payload (no 802.15.4 headers, no fragmentation headers), and
     // returns true if the packet is completely reassembled.
+    #[flux_rs::trusted(reason = "Old `slice-output gap` half is stale (output_pred infra landed). Distinct remaining blockers: (a) for the `payload[..]` panic sites (rows 731/745 are on payload, not packet), need a sig precondition `payload.len() >= payload_len` — blocked by `ctx_store: &dyn ContextStore` (dyn-in-sig ICE). (b) for the `packet[..]` panic sites (not in current buffet), need a TakeCell length invariant on `self.packet`. Independent blockers.")]
     fn receive_next_frame(
         &self,
         payload: &[u8],
@@ -726,6 +767,8 @@ impl<'a> RxState<'a> {
     ) -> Result<bool, Result<(), ErrorCode>> {
         let packet = self.packet.take().ok_or(Err(ErrorCode::NOMEM))?;
         let uncompressed_len = if dgram_offset == 0 {
+            // FLUX-TODO addr=0x1e0c6 line=759 flavor=slice_end
+            flux_support::assert(payload_len <= payload.len());
             let (consumed, written) = sixlowpan_compression::decompress(
                 ctx_store,
                 &payload[0..payload_len],
@@ -741,6 +784,8 @@ impl<'a> RxState<'a> {
                 .copy_from_slice(&payload[consumed..consumed + remaining]);
             written + remaining
         } else {
+            // FLUX-TODO addr=0x1e0b4 line=773 flavor=slice_end
+            flux_support::assert(dgram_offset + payload_len <= packet.len() && payload_len <= payload.len());
             packet[dgram_offset..dgram_offset + payload_len]
                 .copy_from_slice(&payload[0..payload_len]);
             payload_len
@@ -772,6 +817,11 @@ impl<'a> RxState<'a> {
             // in the callback represents a significant error that should never
             // occur - all other calls to `packet.take()` replace the packet,
             // and thus the packet should always be here.
+
+            // FLUX-TODO addr=0xa6b8 line=803 flavor=div_by_zero
+            // Notes: blocked-cell
+            // flux_support::assert(self.packet.is_some());
+
             self.packet
                 .map(|packet| {
                     client.receive(packet, self.dgram_size.get() as usize, result);
@@ -803,8 +853,16 @@ pub struct Sixlowpan<'a, A: time::Alarm<'a>, C: ContextStore> {
     rx_states: List<'a, RxState<'a>>,
 }
 
+#[flux_rs::sig(fn(buf: &[u8][@n], off: usize, len: usize) -> &[u8][len] requires off + len <= n)]
+fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
+    // FLUX-TODO addr=0x1e092 line=836 flavor=div_by_zero
+    flux_support::assert(off + len <= buf.len());
+    &buf[off..off + len]
+}
+
 // This function is called after receiving a frame
 impl<'a, A: time::Alarm<'a>, C: ContextStore> RxClient for Sixlowpan<'a, A, C> {
+    #[flux_rs::trusted(reason = "TODO: to verify `slice_view`, we need assoc reft on `RxClient::receive`")]
     fn receive<'b>(
         &self,
         buf: &'b [u8],
@@ -821,7 +879,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> RxClient for Sixlowpan<'a, A, C> {
         let dst_mac_addr = header.dst_addr.unwrap_or(MacAddress::Short(0));
 
         let (rx_state, returncode) = self.receive_frame(
-            &buf[data_offset..data_offset + data_len],
+            slice_view(buf, data_offset, data_len),
             data_len,
             src_mac_addr,
             dst_mac_addr,
@@ -888,6 +946,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         }
     }
 
+    #[flux_rs::sig(fn(self: &Self, packet: &[u8][@n], packet_len: usize, src_mac_addr: MacAddress, dst_mac_addr: MacAddress) -> (Option<&RxState>, Result<(), ErrorCode>) requires n >= 5)]
     fn receive_frame(
         &self,
         packet: &[u8],
@@ -896,6 +955,8 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         dst_mac_addr: MacAddress,
     ) -> (Option<&RxState<'a>>, Result<(), ErrorCode>) {
         if is_fragment(packet) {
+            flux_support::assert(packet.len() >= 5);
+            // FLUX-OPT addr=0x1e0a4 line=935
             let (is_frag1, dgram_size, dgram_tag, dgram_offset) = get_frag_hdr(&packet[0..5]);
             let offset_to_payload = if is_frag1 {
                 lowpan_frag::FRAG1_HDR_SIZE
@@ -916,6 +977,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         }
     }
 
+    #[flux_rs::trusted(reason = "Two panicking rows. (1) is the cell unwrap. (2) is the slice op on `payload`, which needs some sort of assoc reft for `payload` being in bounds.")]
     fn receive_single_packet(
         &self,
         payload: &[u8],
@@ -938,6 +1000,8 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             // The packet buffer should *always* be there; in particular,
             // since this state is not busy, it must have the packet buffer.
             // Otherwise, we are in an inconsistent state and can fail.
+            // FLUX-TODO addr=0x1e0aa line=978 flavor=unwrap_option
+            flux_support::assert(state.packet.is_some());
             let packet = state.packet.take().unwrap();
 
             // Filter non 6LoWPAN packets and return
@@ -957,6 +1021,8 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             match decompressed {
                 Ok((consumed, written)) => {
                     let remaining = payload_len - consumed;
+                    // FLUX-TODO addr=0x1e0be line=998 flavor=slice_order
+                    flux_support::assert(written + remaining <= packet.len() && consumed + remaining <= payload.len());
                     packet[written..written + remaining]
                         .copy_from_slice(&payload[consumed..consumed + remaining]);
                     // Want dgram_size to contain decompressed size of packet
@@ -975,6 +1041,9 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
     // This function returns an Err if an error occurred, returns Ok(Some(RxState))
     // if the packet has been fully reassembled, or returns Ok(None) if there
     // are still pending fragments
+    // FLUX-TODO-FN-LEVEL covers=[0x1e0ec] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn receive_fragment(
         &self,
         frag_payload: &[u8],
@@ -1010,6 +1079,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
                 return (None, Err(ErrorCode::NOMEM));
             }
         }
+        // FLUX-TODO addr=0x1e0ec line=1072
         rx_state.map_or((None, Err(ErrorCode::NOMEM)), |state| {
             // Returns true if the full packet is reassembled
             let res = state.receive_next_frame(

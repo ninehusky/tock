@@ -155,6 +155,13 @@ fn encode_key_id(key_id: &KeyId, buf: &mut [u8]) -> SResult {
 }
 
 /// Decodes a key ID that is in the format produced by the userland driver.
+// FLUX-TODO-BLOCKED blocked_flux_stream_combinator: the `dec_try!`/`dec_consume!`
+// slice ops (`&buf[offset..]`) are believed-safe — the SResult stream combinators
+// maintain `offset <= buf.len()` (they return Error/NeedMore rather than advance
+// past the end) — but Flux has no extern specs threading that invariant through
+// the combinators, so it cannot prove the slices in-bounds. Trusted (not proven)
+// pending stream-combinator specs. See docs/flux_tuple_pack_limitation.md siblings.
+#[flux_rs::trusted(reason = "blocked_flux_stream_combinator: SResult offset<=len invariant not Flux-tracked")]
 fn decode_key_id(buf: &[u8]) -> SResult<KeyId> {
     stream_len_cond!(buf, 1);
     let mode = stream_from_option!(KeyIdModeUserland::from_u8(buf[0]));
@@ -208,6 +215,7 @@ impl Default for KeyDescriptor {
 }
 
 impl KeyDescriptor {
+    #[flux_rs::trusted(reason = "ICE")]
     fn decode(buf: &[u8]) -> SResult<KeyDescriptor> {
         stream_len_cond!(buf, 27);
         let level = stream_from_option!(SecurityLevel::from_scf(buf[0]));
@@ -310,9 +318,12 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     /// for one, returning its new index. If the neighbor already exists,
     /// returns the index of the existing neighbor. Returns `None` if there is
     /// no remaining space.
+    #[flux_rs::trusted(reason = "ICE-dodge (2026-05-24): self.neighbors closure + array index -> UnsolvedEvar at infer.rs:427. See ice_trusted_manifest.md.")]
     fn add_neighbor(&self, new_neighbor: DeviceDescriptor) -> Option<usize> {
         self.neighbors.and_then(|neighbors| {
             let num_neighbors = self.num_neighbors.get();
+            // FLUX-TODO addr=0x724c line=316 flavor=slice_end
+            flux_support::assert(num_neighbors <= neighbors.len());
             let position = neighbors[..num_neighbors]
                 .iter()
                 .position(|neighbor| *neighbor == new_neighbor);
@@ -335,6 +346,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     /// `Ok()`. Otherwise, returns `Err(ErrorCode::INVAL)`.  Ensures
     /// that the `neighbors` list is compact by shifting forward any elements
     /// after the index.
+    #[flux_rs::trusted(reason = "ICE-dodge (2026-05-24): self.neighbors closure + array index -> UnsolvedEvar at infer.rs:427. See ice_trusted_manifest.md.")]
     fn remove_neighbor(&self, index: usize) -> Result<(), ErrorCode> {
         let num_neighbors = self.num_neighbors.get();
         if index < num_neighbors {
@@ -352,6 +364,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
 
     /// Gets the `DeviceDescriptor` corresponding to the neighbor at a
     /// particular `index`, if the `index` is valid. Otherwise, returns `None`
+    #[flux_rs::trusted(reason = "ICE-dodge (2026-05-24): self.neighbors closure + array index -> UnsolvedEvar at infer.rs:427. See ice_trusted_manifest.md.")]
     fn get_neighbor(&self, index: usize) -> Option<DeviceDescriptor> {
         if index < self.num_neighbors.get() {
             self.neighbors.map(|neighbors| neighbors[index])
@@ -366,9 +379,12 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     /// for one, returning its new index. If the key already exists,
     /// returns the index of the existing key. Returns `None` if there
     /// is no remaining space.
+    #[flux_rs::trusted(reason = "ICE-dodge (2026-05-24): self.keys closure + array index -> UnsolvedEvar at infer.rs:427. See ice_trusted_manifest.md.")]
     fn add_key(&self, new_key: KeyDescriptor) -> Option<usize> {
         self.keys.and_then(|keys| {
             let num_keys = self.num_keys.get();
+            // FLUX-TODO addr=0x727e line=372 flavor=slice_end
+            flux_support::assert(num_keys <= keys.len());
             let position = keys[..num_keys].iter().position(|key| *key == new_key);
             match position {
                 Some(index) => Some(index),
@@ -389,6 +405,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     /// `Ok(())`. Otherwise, returns `Err(ErrorCode::INVAL)`.  Ensures
     /// that the `keys` list is compact by shifting forward any elements
     /// after the index.
+    #[flux_rs::trusted(reason = "ICE-dodge (2026-05-24): self.keys closure + array index -> UnsolvedEvar at infer.rs:427. See ice_trusted_manifest.md.")]
     fn remove_key(&self, index: usize) -> Result<(), ErrorCode> {
         let num_keys = self.num_keys.get();
         if index < num_keys {
@@ -406,6 +423,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
 
     /// Gets the `DeviceDescriptor` corresponding to the key at a
     /// particular `index`, if the `index` is valid. Otherwise, returns `None`
+    #[flux_rs::trusted(reason = "ICE-dodge (2026-05-24): `self.keys.map(|keys| keys[index])` at L415 throws UnsolvedEvar(?91e) at flux-infer/src/infer.rs:427, swallowed per-def. Trusting the body makes capsules-extra ICE-free so the rest of the crate can be measured. See tools/ice_trusted_manifest.md.")]
     fn get_key(&self, index: usize) -> Option<KeyDescriptor> {
         if index < self.num_keys.get() {
             self.keys.map(|keys| keys[index])
@@ -453,6 +471,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     /// returned immediately to the app. Assumes that the driver is currently
     /// idle and the app has a pending transmission.
     #[inline]
+    #[flux_rs::trusted(reason = "ICE")]
     fn perform_tx_sync(&self, processid: ProcessId) -> Result<(), ErrorCode> {
         self.apps.enter(processid, |app, kerel_data| {
             let (dst_addr, security_needed) = match app.pending_tx.take() {
@@ -564,6 +583,8 @@ impl<'a, M: device::MacDevice<'a>> framer::DeviceProcedure for RadioDriver<'a, M
     fn lookup_addr_long(&self, addr: MacAddress) -> Option<[u8; 8]> {
         self.neighbors
             .and_then(|neighbors| {
+                // FLUX-TODO addr=0x1c362 line=567 flavor=slice_end
+                flux_support::assert(self.num_neighbors.get() <= neighbors.len());
                 neighbors[..self.num_neighbors.get()]
                     .iter()
                     .find(|neighbor| match addr {
@@ -589,9 +610,12 @@ impl<'a, M: device::MacDevice<'a>> framer::KeyProcedure for RadioDriver<'a, M> {
     /// Gets the key corresponding to the key that matches the given security
     /// level `level` and key ID `key_id`. If no such key matches, returns
     /// `None`.
+    #[flux_rs::trusted(reason = "ICE-dodge (2026-05-24): self.keys closure + array index -> UnsolvedEvar at infer.rs:427. See ice_trusted_manifest.md.")]
     fn lookup_key(&self, level: SecurityLevel, key_id: KeyId) -> Option<[u8; 16]> {
         self.keys
             .and_then(|keys| {
+                // FLUX-TODO addr=0x1c42c line=595 flavor=div_by_zero
+                flux_support::assert(self.num_keys.get() <= keys.len());
                 keys[..self.num_keys.get()]
                     .iter()
                     .find(|key| key.level == level && key.key_id == key_id)
@@ -668,6 +692,11 @@ impl<'a, M: device::MacDevice<'a>> SyscallDriver for RadioDriver<'a, M> {
     ///        parameters to encrypt, form headers, and transmit the frame.
     /// - `28`: Set long address.
     /// - `29`: Get the long MAC address.
+    // FLUX-TODO reason=lto-inlined-fn-entry covers=[0x720a, 0x7268]
+    // master enclosing fn known (<RadioDriver as SyscallDriver>::command);
+    // 0x720a flavor=unwrap_option, 0x7268 flavor=explicit_panic;
+    // panic source lines lost to LTO.
+    #[flux_rs::trusted(reason = "ICE")]
     fn command(
         &self,
         command_number: usize,
@@ -919,6 +948,8 @@ impl<'a, M: device::MacDevice<'a>> SyscallDriver for RadioDriver<'a, M> {
                                         return None;
                                     }
                                     let dst_addr = arg1 as u16;
+                                    // FLUX-TODO addr=0x724e flavor=bounds
+                                    // cfg[0] bounds check; only one bounds expr in fn body matches.
                                     let level = match SecurityLevel::from_scf(cfg[0].get()) {
                                         Some(level) => level,
                                         None => {
@@ -1057,6 +1088,8 @@ impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
 
                         // Copy the entire frame over to userland, preceded by three metadata bytes:
                         // the header length, the data length, and the MIC length.
+                        // FLUX-TODO addr=0x1c154 line=1062 flavor=slice_end
+                        flux_support::assert(offset + frame_len + USER_FRAME_METADATA_SIZE <= rbuf.len());
                         rbuf[(offset + USER_FRAME_METADATA_SIZE)
                             ..(offset + frame_len + USER_FRAME_METADATA_SIZE)]
                             .copy_from_slice(&buf[..frame_len]);

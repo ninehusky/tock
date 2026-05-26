@@ -112,12 +112,18 @@ impl<'a, T: ?Sized> TakeCell<'a, T> {
     /// // but potentially changed.
     /// assert_eq!(y.take(), Some(&mut 1235));
     /// ```
+    // FLUX-TODO-FN-LEVEL covers=[(no addr)] flavor=mixed
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn map<F, R>(&self, closure: F) -> Option<R>
     where
         F: FnOnce(&mut T) -> R,
     {
         let maybe_val = self.take();
         maybe_val.map(|val| {
+            // FLUX-TODO line=121 addrs=[
+            //     0x1a88a, 0x1a8a0, 0x1a8b0, 0x1a8d0,
+            // ]
             let res = closure(val);
             self.replace(val);
             res

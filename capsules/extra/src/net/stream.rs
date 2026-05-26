@@ -3,24 +3,30 @@
 // Copyright Tock Contributors 2022.
 
 #[derive(Debug)]
+#[flux_rs::refined_by(is_done: bool, offset: int)]
 pub enum SResult<Output = (), Error = ()> {
     // `Done(off, out)`: No errors encountered. We are currently at `off` in the
     // buffer, and the previous encoder/decoder produced output `out`.
+    #[variant((usize[@o], Output) -> SResult<Output, Error>[true, o])]
     Done(usize, Output),
 
     // `Needed(bytes)`: Could not proceed because we needed to have `bytes`
     // bytes in the buffer, but there weren't.
+    #[variant((usize) -> SResult<Output, Error>[false, 0])]
     Needed(usize),
 
     // `Error(err)`: Some other error occurred.
+    #[variant((Error) -> SResult<Output, Error>[false, 0])]
     Error(Error),
 }
 
 impl<Output, Error> SResult<Output, Error> {
+    #[flux_rs::sig(fn(&Self[@b, @_off]) -> bool[b])]
     pub fn is_done(&self) -> bool {
         match *self {
             SResult::Done(_, _) => true,
-            _ => false,
+            SResult::Needed(_) => false,
+            SResult::Error(_) => false,
         }
     }
 
@@ -38,10 +44,12 @@ impl<Output, Error> SResult<Output, Error> {
         }
     }
 
+    #[flux_rs::sig(fn(Self[@b, @off]) -> Option<(usize[off], Output)>[b])]
     pub fn done(self) -> Option<(usize, Output)> {
         match self {
             SResult::Done(offset, out) => Some((offset, out)),
-            _ => None,
+            SResult::Needed(_) => None,
+            SResult::Error(_) => None,
         }
     }
 
@@ -234,12 +242,14 @@ macro_rules! dec_consume {
     } };
 }
 
+#[flux_rs::sig(fn(&mut [u8][@n], u8) -> SResult{r: (r.is_done <=> n >= 1) && (r.is_done => r.offset == 1)})]
 pub fn encode_u8(buf: &mut [u8], b: u8) -> SResult {
     stream_len_cond!(buf, 1);
     buf[0] = b;
     stream_done!(1);
 }
 
+#[flux_rs::sig(fn(&mut [u8][@n], u16) -> SResult{r: (r.is_done <=> n >= 2) && (r.is_done => r.offset == 2)})]
 pub fn encode_u16(buf: &mut [u8], b: u16) -> SResult {
     stream_len_cond!(buf, 2);
     buf[0] = (b >> 8) as u8;
@@ -247,6 +257,7 @@ pub fn encode_u16(buf: &mut [u8], b: u16) -> SResult {
     stream_done!(2);
 }
 
+#[flux_rs::sig(fn(&mut [u8][@n], u32) -> SResult{r: (r.is_done <=> n >= 4) && (r.is_done => r.offset == 4)})]
 pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_len_cond!(buf, 4);
     buf[0] = (b >> 24) as u8;
@@ -256,8 +267,14 @@ pub fn encode_u32(buf: &mut [u8], b: u32) -> SResult {
     stream_done!(4);
 }
 
+#[flux_rs::sig(fn(&mut [u8][@n], &[u8][@m]) -> SResult{r: (r.is_done <=> n >= m) && (r.is_done => r.offset == m)})]
 pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
+    // Explicit assert is load-bearing: `flux_support`'s `IndexMut::index_mut`
+    // extern_spec puts `in_bounds` in `#[no_panic_if]` (opt-in per call-site),
+    // not in the sig's `requires`. Without `#[flux_rs::no_panic]` on this fn,
+    // the slice-op bounds check wouldn't fire without this explicit assert.
+    flux_support::assert(bs.len() <= buf.len());
     buf[..bs.len()].copy_from_slice(bs);
     stream_done!(bs.len());
 }
@@ -265,8 +282,14 @@ pub fn encode_bytes(buf: &mut [u8], bs: &[u8]) -> SResult {
 // This function assumes that the host is little-endian
 pub fn encode_bytes_be(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_len_cond!(buf, bs.len());
-    for (i, b) in bs.iter().rev().enumerate() {
-        buf[i] = *b;
+    // While-loop instead of `for (i, b) in bs.iter().rev().enumerate()` so Flux
+    // can bound `i` against `bs.len()` without needing Iterator/Rev/Enumerate
+    // extern_specs (the trait-level spec conflicts with other Iterator impls in
+    // the workspace — see attempt in the iter.rs extern spec).
+    let mut i = 0;
+    while i < bs.len() {
+        buf[i] = bs[bs.len() - 1 - i];
+        i += 1;
     }
     stream_done!(bs.len());
 }
@@ -287,6 +310,8 @@ pub fn decode_u32(buf: &[u8]) -> SResult<u32> {
     stream_done!(4, b);
 }
 
+
+#[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
 pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     let len = out.len();
@@ -295,6 +320,7 @@ pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
+#[flux_rs::trusted(reason = "missing spec: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `out.len()`")]
 pub fn decode_bytes_be(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     for (i, b) in buf[..out.len()].iter().rev().enumerate() {

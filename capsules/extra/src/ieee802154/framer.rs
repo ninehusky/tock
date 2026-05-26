@@ -110,7 +110,9 @@ pub struct Frame {
 /// These offsets are relative to the PSDU or `buf[radio::PSDU_OFFSET..]` so
 /// that the mac frame length is `data_offset + data_len`
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[flux_rs::refined_by(fcf: int)]
 struct FrameInfo {
+    #[field(FrameType[fcf])]
     frame_type: FrameType,
 
     // The MAC payload, including Payload IEs
@@ -138,6 +140,7 @@ impl Frame {
     }
 
     /// Appends payload bytes into the frame if possible
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
     pub fn append_payload(&mut self, payload: &[u8]) -> Result<(), ErrorCode> {
         if payload.len() > self.remaining_data_capacity() {
             return Err(ErrorCode::NOMEM);
@@ -151,6 +154,7 @@ impl Frame {
 
     /// Appends payload bytes from a process slice into the frame if
     /// possible
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
     pub fn append_payload_process(
         &mut self,
         payload_buf: &ReadableProcessSlice,
@@ -184,6 +188,7 @@ impl FrameInfo {
     /// fields, not including the MIC. The a data is always the remaining prefix
     /// of the header, so it can be determined implicitly.
     #[allow(dead_code)]
+    #[flux_rs::sig(fn (&Self[@slf]) -> (usize, usize) requires slf.fcf != 0 && slf.fcf != 3)]
     fn ccm_encrypt_ranges(&self) -> (usize, usize) {
         // IEEE 802.15.4-2015: Table 9-1. Exceptions to Private Payload field
         // The boundary between open and private payload fields depends
@@ -191,10 +196,14 @@ impl FrameInfo {
         let private_payload_offset = match self.frame_type {
             FrameType::Beacon => {
                 // Beginning of beacon payload field
+                // FLUX-TODO addr=0xdc1a line=199 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!()
             }
             FrameType::MACCommand => {
                 // Beginning of MAC command content field
+                // FLUX-TODO addr=0xdc24 line=203 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!()
             }
             _ => {
@@ -223,18 +232,32 @@ impl FrameInfo {
     }
 }
 
+// Helper extracted from `get_ccm_nonce`'s closure so we can give it a Flux sig.
+// The CCM nonce layout is fixed: 8-byte device_addr + 4-byte frame_counter +
+// 1-byte level = 13 bytes total. With buf.len() >= 13, every `enc_consume!`
+// step returns Done and the closure returns Done.
+#[flux_rs::trusted(reason = "Body uses `encode_bytes(buf, &device_addr[..])` which works in principle, but the chain of `enc_consume!` macros + the `[u8; N] -> &[u8]` coercion drop length info similar to IP6Header::encode's gap. Sig captures the Done-iff-buf-fits invariant; the panic site at the call site is locally proven via this sig.")]
+#[flux_rs::sig(fn(buf: &mut [u8][@n], _, _, _) -> SResult{r: (r.is_done <=> n >= 13) && (r.is_done => r.offset == 13)})]
+fn encode_ccm_nonce_buf(
+    buf: &mut [u8],
+    device_addr: &[u8; 8],
+    frame_counter: u32,
+    level: SecurityLevel,
+) -> SResult {
+    let off = enc_consume!(buf; encode_bytes, &device_addr[..]);
+    let off = enc_consume!(buf, off; encode_u32, frame_counter);
+    let off = enc_consume!(buf, off; encode_u8, level as u8);
+    stream_done!(off);
+}
+
 /// Generate a 15.4 CCM nonce from the device address, frame counter, and SecurityLevel
 pub fn get_ccm_nonce(device_addr: &[u8; 8], frame_counter: u32, level: SecurityLevel) -> [u8; 13] {
     let mut nonce = [0u8; 13];
-    let encode_ccm_nonce = |buf: &mut [u8]| {
-        let off = enc_consume!(buf; encode_bytes, device_addr.as_ref());
-        let off = enc_consume!(buf, off; encode_u32, frame_counter);
-        let off = enc_consume!(buf, off; encode_u8, level as u8);
-        stream_done!(off);
-    };
-    match encode_ccm_nonce(&mut nonce).done() {
+    match encode_ccm_nonce_buf(&mut nonce, device_addr, frame_counter, level).done() {
         None => {
             // This should not be possible
+            // FLUX-TODO addr=0xc650 line=255 flavor=explicit_panic
+            flux_support::assert(false);
             panic!("Failed to produce ccm nonce");
         }
         Some(_) => nonce,
@@ -404,6 +427,10 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// IEEE 802.15.4-2015, 9.2.3, incoming frame security procedure
+    // #[flux_rs::sig(
+    //     fn(&Self, buf: &mut [u8][@n], usize, u8) -> RxState
+    //     requires n >= radio::PSDU_OFFSET + LQI_SIZE
+    // )]
     fn incoming_frame_security(
         &self,
         buf: &'static mut [u8],
@@ -418,6 +445,11 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
 
         // The buffer containing the 15.4 packet also contains the PSDU bytes and an LQI
         // byte. We only pass the 15.4 packet up the stack and slice buf accordingly.
+        flux_support::assert(false);
+        flux_support::assert(buf.len() >= radio::PSDU_OFFSET + LQI_SIZE);
+        // FLUX-OPT line=443 addrs=[
+        //     0x1c752, 0x1c75c,
+        // ]
         let frame_buffer = &buf[radio::PSDU_OFFSET..(buf.len() - LQI_SIZE)];
 
         let result = Header::decode(frame_buffer, false)
@@ -521,7 +553,10 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// Advances the transmission pipeline if it can be advanced.
+    #[flux_rs::trusted(reason = "need to prove precondition about cell so that ccm_encrypt_ranges won't panic")]
     fn step_transmit_state(&self) -> Result<(), (ErrorCode, &'static mut [u8])> {
+        // FLUX-TODO addr=0x15fa2 line=548 flavor=explicit_panic
+        flux_support::assert(self.tx_state.is_some());
         self.tx_state.take().map_or_else(
             || panic!("missing tx_state"),
             |state| {
@@ -593,6 +628,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// Advances the reception pipeline if it can be advanced.
+    #[flux_rs::trusted(reason = "missing spec: copy_from_slice; ccm_encrypt_ranges precondition is on cell")]
     fn step_receive_state(&self) {
         self.rx_state.take().map(|state| {
             let next_state = match state {
@@ -691,6 +727,8 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
                     // Hence, we can only use the unsecured length from the
                     // frame info, but not the offsets.
                     let frame_len = info.unsecured_length();
+                    // FLUX-TODO addr=0x18b70 line=719 flavor=slice_end
+                    flux_support::assert(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE <= buf.len());
                     if let Some((data_offset, (header, _))) = Header::decode(
                         &buf[radio::PSDU_OFFSET..(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)],
                         true,
@@ -886,6 +924,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::TxClient for Framer<'a, M, A> {
 }
 
 impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::RxClient for Framer<'a, M, A> {
+    #[flux_rs::trusted(reason = "missing: needs a way to generically specify precondition on top of `incoming_frame_security`")]
     fn receive(
         &self,
         buf: &'static mut [u8],

@@ -625,26 +625,34 @@ pub enum UsbState {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[flux_rs::refined_by(kind: int)]
 pub enum EndpointState {
+    #[variant(EndpointState[0])]
     Disabled,
+    #[variant((CtrlState) -> EndpointState[1])]
     Ctrl(CtrlState),
+    #[variant((TransferType, Option<BulkInState>, Option<BulkOutState>) -> EndpointState[2])]
     Bulk(TransferType, Option<BulkInState>, Option<BulkOutState>),
 }
 
 impl EndpointState {
+    #[flux_rs::sig(fn(EndpointState[@k]) -> CtrlState requires k == 1)]
     fn ctrl_state(self) -> CtrlState {
         match self {
             EndpointState::Ctrl(state) => state,
-            _ => panic!("Expected EndpointState::Ctrl"),
+            // FLUX-TODO addr=0x12580 line=643 flavor=explicit_panic
+            _ => { flux_support::assert(false); panic!("Expected EndpointState::Ctrl") },
         }
     }
 
+    #[flux_rs::sig(fn(EndpointState[@k]) -> (TransferType, Option<BulkInState>, Option<BulkOutState>) requires k == 2)]
     fn bulk_state(self) -> (TransferType, Option<BulkInState>, Option<BulkOutState>) {
         match self {
             EndpointState::Bulk(transfer_type, in_state, out_state) => {
                 (transfer_type, in_state, out_state)
             }
-            _ => panic!("Expected EndpointState::Bulk"),
+            // FLUX-TODO addr=0x115c8 line=653 flavor=explicit_panic
+            _ => { flux_support::assert(false); panic!("Expected EndpointState::Bulk") },
         }
     }
 }
@@ -999,6 +1007,10 @@ impl<'a> Usbd<'a> {
     fn set_pending_dma(&self) {
         debug_packets!("set_pending_dma()");
         if self.dma_pending.get() {
+            // FLUX-TODO line=1010 flavor=explicit_panic addrs=[
+            //     0x1174e, 0x11864,
+            // ]
+            flux_support::assert(false);
             internal_err!("Pending DMA already in flight");
         }
         self.apply_errata_199(0x82);
@@ -1362,6 +1374,9 @@ impl<'a> Usbd<'a> {
             1..=7 => {
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[endpoint].state.get().bulk_state();
+                // FLUX-TODO addr=0x113ca reason=monomorph-at-caller flavor=assert
+                // assert_failed::<Option<BulkInState>> wrapper fired here.
+                // flux_support::assert(false);
                 assert_eq!(in_state, Some(BulkInState::InDma));
                 self.descriptors[endpoint].state.set(EndpointState::Bulk(
                     transfer_type,
@@ -1457,6 +1472,8 @@ impl<'a> Usbd<'a> {
                 // Notify the client about the new packet.
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[endpoint].state.get().bulk_state();
+                // FLUX-TODO addr=0x1cf4 line=1466 flavor=explicit_panic
+                flux_support::assert(matches!(out_state, Some(BulkOutState::OutDma { .. })));
                 assert!(matches!(out_state, Some(BulkOutState::OutDma { .. })));
 
                 let packet_bytes = if let Some(BulkOutState::OutDma { size }) = out_state {
@@ -1553,6 +1570,8 @@ impl<'a> Usbd<'a> {
             if epdatastatus.is_set(status_epin(endpoint)) {
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[endpoint].state.get().bulk_state();
+                // FLUX-TODO addr=0x1d20 line=1562 flavor=explicit_panic
+                flux_support::assert(in_state.is_some());
                 assert!(in_state.is_some());
                 match in_state.unwrap() {
                     BulkInState::InData => {
@@ -1584,6 +1603,8 @@ impl<'a> Usbd<'a> {
             if epdatastatus.is_set(status_epout(ep)) {
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[ep].state.get().bulk_state();
+                // FLUX-TODO addr=0x1d2a line=1593 flavor=explicit_panic
+                flux_support::assert(out_state.is_some());
                 assert!(out_state.is_some());
 
                 // We need to read the size at this point in the process (i.e.
@@ -1625,6 +1646,8 @@ impl<'a> Usbd<'a> {
                 // We are idle, and ready for any control transfer.
 
                 let ep_buf = &self.descriptors[endpoint].slice_out;
+                // FLUX-TODO addr=0x132e line=1634 flavor=explicit_panic
+                flux_support::assert(ep_buf.is_some());
                 let ep_buf = ep_buf.unwrap_or_panic(); // Unwrap fail = No OUT slice set for this descriptor
                 if ep_buf.len() < 8 {
                     panic!("EP0 DMA buffer length < 8");
@@ -1816,6 +1839,9 @@ impl<'a> Usbd<'a> {
         self.client.map(|client| {
             let (transfer_type, in_state, out_state) =
                 self.descriptors[endpoint].state.get().bulk_state();
+            // FLUX-TODO addr=0x113ca reason=monomorph-at-caller flavor=assert
+            // assert_failed::<Option<BulkInState>> wrapper fired here.
+            // flux_support::assert(false);
             assert_eq!(in_state, Some(BulkInState::Init));
 
             let result = client.packet_in(transfer_type, endpoint);
@@ -1855,6 +1881,8 @@ impl<'a> Usbd<'a> {
         let (transfer_type, in_state, out_state) =
             self.descriptors[endpoint].state.get().bulk_state();
         // Starting the DMA can only happen in the OutData state, i.e. after an EPDATA event.
+        // FLUX-TODO addr=0x1d5e line=1864 flavor=explicit_panic
+        flux_support::assert(matches!(out_state, Some(BulkOutState::OutData { .. })));
         assert!(matches!(out_state, Some(BulkOutState::OutData { .. })));
         self.start_dma_out(endpoint);
 
@@ -1871,18 +1899,25 @@ impl<'a> Usbd<'a> {
         ));
     }
 
+    #[flux_rs::trusted(reason = "To prove `slice[..size]` safe, we need to prove that `self.descriptors[endpoint].slice_in.is_some()`, and something about the length of its contents.")]
     fn start_dma_in(&self, endpoint: usize, size: usize) {
+        // FLUX-TODO addr=0x11610 line=1882 flavor=unwrap_option
+        flux_support::assert(self.descriptors[endpoint].slice_in.is_some());
         let slice = self.descriptors[endpoint].slice_in.unwrap_or_panic(); // Unwrap fail = No IN slice set for this descriptor
         self.debug_in_packet(size, endpoint);
 
         // Start DMA transfer
         self.set_pending_dma();
+        // FLUX-TODO addr=0x1167e line=1887 flavor=slice_end
+        flux_support::assert(size <= slice.len());
         self.registers.epin[endpoint].set_buffer(&slice[..size]);
         debug_tasks!("- task: startepin[{}]", endpoint);
         self.registers.task_startepin[endpoint].write(Task::ENABLE::SET);
     }
 
     fn start_dma_out(&self, endpoint: usize) {
+        // FLUX-TODO addr=0x125e4 line=1893 flavor=unwrap_option
+        flux_support::assert(self.descriptors[endpoint].slice_out.is_some());
         let slice = self.descriptors[endpoint].slice_out.unwrap_or_panic(); // Unwrap fail = No OUT slice set for this descriptor
 
         // Start DMA transfer
@@ -1894,8 +1929,12 @@ impl<'a> Usbd<'a> {
 
     // Debug-only function
     fn debug_in_packet(&self, size: usize, endpoint: usize) {
+        // FLUX-TODO addr=0x1161e line=1904 flavor=explicit_panic
+        flux_support::assert(self.descriptors[endpoint].slice_in.is_some());
         let slice = self.descriptors[endpoint].slice_in.unwrap_or_panic(); // Unwrap fail = No IN slice set for this descriptor
         if size > slice.len() {
+            // FLUX-TODO addr=0x116a0 line=1906 flavor=explicit_panic
+            flux_support::assert(false);
             panic!("Packet is too large: {}", size);
         }
 
@@ -1909,6 +1948,8 @@ impl<'a> Usbd<'a> {
 
     // Debug-only function
     fn debug_out_packet(&self, size: usize, endpoint: usize) {
+        // FLUX-TODO addr=0xf7a line=1919 flavor=explicit_panic
+        flux_support::assert(self.descriptors[endpoint].slice_out.is_some());
         let slice = self.descriptors[endpoint].slice_out.unwrap_or_panic(); // Unwrap fail = No OUT slice set for this descriptor
         if size > slice.len() {
             panic!("Packet is too large: {}", size);
@@ -2131,6 +2172,8 @@ fn status_epin(ep: usize) -> Field<u32, EndpointStatus::Register> {
         6 => EndpointStatus::EPIN6,
         7 => EndpointStatus::EPIN7,
         8 => EndpointStatus::EPIN8,
+        // FLUX-TODO-BLOCKED addr=0x12326 line=2175 reason=match_arm flavor=explicit_panic
+        // flux_support::assert(false);
         _ => unreachable!(),
     }
 }
@@ -2150,6 +2193,7 @@ fn status_epout(ep: usize) -> Field<u32, EndpointStatus::Register> {
     }
 }
 
+#[flux_rs::sig(fn(ep: usize{e: e < 8}) -> Field<u32, Interrupt::Register>)]
 fn inter_endepin(ep: usize) -> Field<u32, Interrupt::Register> {
     match ep {
         0 => Interrupt::ENDEPIN0,
@@ -2160,10 +2204,12 @@ fn inter_endepin(ep: usize) -> Field<u32, Interrupt::Register> {
         5 => Interrupt::ENDEPIN5,
         6 => Interrupt::ENDEPIN6,
         7 => Interrupt::ENDEPIN7,
-        _ => unreachable!(),
+        // FLUX-TODO addr=0x12556 line=2171 flavor=explicit_panic
+        _ => { flux_support::assert(false); unreachable!() },
     }
 }
 
+#[flux_rs::sig(fn(ep: usize{e: e < 8}) -> Field<u32, Interrupt::Register>)]
 fn inter_endepout(ep: usize) -> Field<u32, Interrupt::Register> {
     match ep {
         0 => Interrupt::ENDEPOUT0,
@@ -2174,11 +2220,13 @@ fn inter_endepout(ep: usize) -> Field<u32, Interrupt::Register> {
         5 => Interrupt::ENDEPOUT5,
         6 => Interrupt::ENDEPOUT6,
         7 => Interrupt::ENDEPOUT7,
-        _ => unreachable!(),
+        // FLUX-TODO addr=0x12536 line=2186 flavor=explicit_panic
+        _ => { flux_support::assert(false); unreachable!() },
     }
 }
 
 // Debugging functions.
+#[flux_rs::sig(fn(packet: &[VolatileCell<u8>][@p], packet_hex: &mut [u8][@h]) requires 2 * p <= h)]
 fn packet_to_hex(packet: &[VolatileCell<u8>], packet_hex: &mut [u8]) {
     let hex_char = |x: u8| {
         if x < 10 {
@@ -2188,10 +2236,17 @@ fn packet_to_hex(packet: &[VolatileCell<u8>], packet_hex: &mut [u8]) {
         }
     };
 
-    for (i, x) in packet.iter().enumerate() {
-        let x = x.get();
+    // While-loop instead of `for (i, x) in packet.iter().enumerate()` so Flux
+    // can bound `i` against `packet.len()` without an Iterator extern_spec
+    // (see feedback_iterator_extern_spec_conflicts.md).
+    let mut i = 0;
+    while i < packet.len() {
+        let x = packet[i].get();
+        // FLUX-TODO addr=0x1171c line=2207 flavor=bounds
+        flux_support::assert(2 * i + 1 < packet_hex.len());
         packet_hex[2 * i] = hex_char(x >> 4);
         packet_hex[2 * i + 1] = hex_char(x & 0x0f);
+        i += 1;
     }
 }
 

@@ -8,10 +8,20 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [
+    "def:handle_interrupt",
+    "def:rx",
+    "def:service_interrupt",   # interrupt_service.rs — holds FLUX-TODO-BLOCKED marker
+]
+
 [dependencies]
 cortexm4 = { path = "../../arch/cortex-m4" }
 kernel = { path = "../../kernel" }
 nrf52 = { path = "../nrf52" }
+flux_support = { path = "../../flux_support" }
 
 [lints]
 workspace = true

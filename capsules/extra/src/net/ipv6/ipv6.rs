@@ -160,6 +160,8 @@ impl IP6Header {
     /// # Return Value
     ///
     /// `SResult<usize>` - The offset wrapped in an SResult
+    #[flux_rs::trusted(reason = "Sig captures Done iff buf.len() >= 40 (IPv6 header is fixed 40 bytes). Body is `stream_len_cond!(buf, 40)` + 6 `enc_consume!`s writing 4+2+1+1+16+16 = 40 bytes. UDPHeader::encode/ICMP6Header::encode (in the same Done-iff-fits-buffer pattern) verify their bodies for real; IP6Header::encode does not because Flux's current extern specs for `[u8; N]` → `&[u8]` coercion (via `version_class_flow` / `src_addr.0` / `dst_addr.0` array fields) drop length info into `encode_bytes`. When that extern spec gap closes, the trust can be removed.")]
+    #[flux_rs::sig(fn(&Self, &mut [u8][@n]) -> SResult<usize>{r: (r.is_done <=> n >= 40) && (r.is_done => r.offset == 40)})]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
         stream_len_cond!(buf, 40);
 
@@ -266,6 +268,7 @@ impl IP6Header {
     /// Utility function for verifying whether a transport layer checksum of a received
     /// packet is correct. Is called on the assocaite IPv6 Header, and passed the buffer
     /// containing the remainder of the packet.
+    #[flux_rs::trusted(reason = "Pre-existing flux errors on copy_from_slice + UDPHeader::decode + checksum-compute calls; not in target panic_sites rows.")]
     pub fn check_transport_checksum(&self, buf: &[u8]) -> Result<(), ErrorCode> {
         match self.next_header {
             ip6_nh::UDP => {
@@ -313,17 +316,37 @@ impl IP6Header {
 /// Currently we accept the overhead of copying these structs in/out of an OptionalCell
 /// in `udp_send.rs`.
 #[derive(Copy, Clone)]
+#[flux_rs::refined_by(kind: int, len: int)]
 pub enum TransportHeader {
+    #[variant((UDPHeader[@l]) -> TransportHeader[0, l])]
     UDP(UDPHeader),
+    // TCP headers aren't implemented yet, so we cannot rely on its length at all in our proofs.
+    #[variant((TCPHeader) -> TransportHeader[1, 0])]
     TCP(TCPHeader),
+    #[variant((ICMP6Header[@l]) -> TransportHeader[2, l])]
     ICMP(ICMP6Header),
 }
 
 /// The `IPPayload` struct contains a `TransportHeader` and a mutable buffer
 /// (the payload).
+#[flux_rs::refined_by(kind: int, hdr_len: int, payload_buf_len: int)]
+#[flux_rs::invariant(hdr_len >= 8 => hdr_len - 8 <= payload_buf_len)]
 pub struct IPPayload<'a> {
+    #[field(TransportHeader[kind, hdr_len])]
     pub header: TransportHeader,
+    #[field(&mut [u8][payload_buf_len])]
     pub payload: &'a mut [u8],
+}
+
+#[flux_rs::sig(fn(dst: &mut [u8][@n], src: &SubSliceMut<u8>[@p]) requires p.hi - p.lo <= n)]
+fn copy_subslice_into(dst: &mut [u8], src: &SubSliceMut<'_, u8>) {
+    let mut i = 0;
+    while i < src.len() {
+        // FLUX-TODO addr=0x19d96 line=345 flavor=bounds
+        flux_support::assert(i < dst.len() && i < src.len());
+        dst[i] = src[i];
+        i += 1;
+    }
 }
 
 impl<'a> IPPayload<'a> {
@@ -333,6 +356,7 @@ impl<'a> IPPayload<'a> {
     ///
     /// `header` - A `TransportHeader` for the `IPPayload`
     /// `payload` - A reference to a mutable buffer for the raw payload
+    #[flux_rs::sig(fn(TransportHeader[@k, @l], &mut [u8][@p]) -> IPPayload[k, l, p] requires l >= 8 => l - 8 <= p)]
     pub fn new(header: TransportHeader, payload: &'a mut [u8]) -> IPPayload<'a> {
         IPPayload { header, payload }
     }
@@ -350,14 +374,13 @@ impl<'a> IPPayload<'a> {
     /// `(u8, u16)` - Returns a tuple of the `ip6_nh` type of the
     /// `transport_header` and the total length of the `IPPayload`
     /// (when serialized)
+    #[flux_rs::trusted(reason = "Gap (2): match arms do `udp_header.set_len(length)` on a destructured `mut` binding from a `Copy` enum variant — the mutation is lost — then `self.header = transport_header` writes the ORIGINAL length back. Likely a real Tock bug: the computed `length` returned in the tuple doesn't match the length stored in `self.header`. Maintaining the IPPayload invariant after the assignment would require a precondition on `transport_header.len`, but the bug itself stays. Gap (1) — the bytewise-copy loop's bounds — is now discharged separately in `copy_subslice_into`.")]
     pub fn set_payload(
         &mut self,
         transport_header: TransportHeader,
         payload: &SubSliceMut<'static, u8>,
     ) -> (u8, u16) {
-        for i in 0..payload.len() {
-            self.payload[i] = payload[i];
-        }
+        copy_subslice_into(self.payload, payload);
         match transport_header {
             TransportHeader::UDP(mut udp_header) => {
                 let length = (payload.len() + udp_header.get_hdr_size()) as u16;
@@ -386,19 +409,46 @@ impl<'a> IPPayload<'a> {
     ///
     /// `SResult<usize>` - The final offset into the buffer `buf` is returned
     /// wrapped in an SResult
+    #[flux_rs::trusted(reason = "thread 'rustc' (32885569) panicked at crates/flux-refineck/src/type_env.rs:553:17: assertion failed: !scope.has_free_vars(arg)")]
+    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 8 + offset)]
+    // FLUX-TODO-FN-LEVEL covers=[0xdad8] flavor=slice_end
+    // panic somewhere in this fn body; addr2line lost the line
+    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let (offset, _) = match self.header {
-            TransportHeader::UDP(udp_header) => udp_header.encode(buf, offset).done().unwrap(),
-            TransportHeader::ICMP(icmp_header) => icmp_header.encode(buf, offset).done().unwrap(),
+            // The `unwrap` is safe because we require that `buf >= 8 + offset`, which is the
+            // exact condition under which `.encode()` returns a `Done`.
+            // FLUX-TODO addr=0xdae8 line=415 flavor=unwrap_option
+            TransportHeader::UDP(udp_header) => {
+                let done = udp_header.encode(buf, offset).done();
+                flux_support::assert(done.is_some());
+                done.unwrap()
+            }
+            // FLUX-TODO addr=0xdaee line=416 flavor=unwrap_option
+            TransportHeader::ICMP(icmp_header) => {
+                let done = icmp_header.encode(buf, offset).done();
+                flux_support::assert(done.is_some());
+                done.unwrap()
+            }
             _ => {
+                // FLUX-TODO addr=0xdae2 line=418 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!();
             }
         };
         let payload_length = self.get_payload_length();
+        // Andrew: the `&self.payload[..payload_length]` is now safe because of the invariant.
+        // `payload_length` is just `hdr_len - 8`, and we have that `hdr_len >= 8 => hdr_len - 8 <= payload_buf_len`.
+        // Explicit assert is load-bearing: `flux_support`'s `Index::index` extern_spec puts `in_bounds` in
+        // `#[no_panic_if]` (opt-in per call-site), not in the sig's `requires`. Since this function isn't
+        // marked `#[flux_rs::no_panic]`, the slice-op bounds check wouldn't fire without this explicit assert.
+        flux_support::assert(payload_length <= self.payload.len());
+        // FLUX-OPT addr=0xdaa8 line=448 flavor=slice_end
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)
     }
 
+    #[flux_rs::sig(fn(&Self[@p]) -> usize[p.hdr_len - 8] requires p.kind != 1 && p.hdr_len >= 8)]
     fn get_payload_length(&self) -> usize {
         match self.header {
             TransportHeader::UDP(udp_header) => {
@@ -416,8 +466,10 @@ impl<'a> IPPayload<'a> {
 
 /// This struct defines the `IP6Packet` format, and contains an `IP6Header`
 /// and an `IPPayload`.
+#[flux_rs::refined_by(kind: int, hdr_len: int, payload_buf_len: int)]
 pub struct IP6Packet<'a> {
     pub header: IP6Header,
+    #[field(IPPayload[kind, hdr_len, payload_buf_len])]
     pub payload: IPPayload<'a>,
 }
 
@@ -448,19 +500,26 @@ impl<'a> IP6Packet<'a> {
         40 + self.header.get_payload_len()
     }
 
+    #[flux_rs::sig(fn(self: &Self[@p]) -> &[u8][p.payload_buf_len])]
     pub fn get_payload(&self) -> &[u8] {
         self.payload.payload
+        // FLUX-TODO-BLOCKED addr=0xdb5e line=504 reason=before_close_brace
+        // flux_support::assert(false);
     }
 
+    #[flux_rs::sig(fn(self: &Self[@p]) -> usize requires p.kind != 1)]
     pub fn get_total_hdr_size(&self) -> usize {
         let transport_hdr_size = match self.payload.header {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),
             TransportHeader::ICMP(icmp_header) => icmp_header.get_hdr_size(),
-            _ => unimplemented!(),
+            // FLUX-TODO addr=0xdb52 line=494 flavor=explicit_panic
+            _ => { flux_support::assert(false); unimplemented!() },
         };
         40 + transport_hdr_size
     }
 
+    #[flux_rs::trusted(reason = "Pre-existing flux errors on compute_udp_checksum/compute_icmp_checksum preconditions (lines 484/493); the targeted unimplemented!() at line 486 is locally proven via the sig precondition `kind != 1`.")]
+    #[flux_rs::sig(fn(self: &mut Self[@p]) requires p.kind != 1)]
     pub fn set_transport_checksum(&mut self) {
         // Looks at internal buffer assuming
         // it contains a valid IP packet, checks the payload type. If the payload
@@ -483,6 +542,8 @@ impl<'a> IP6Packet<'a> {
                 icmp_header.set_cksum(cksum);
             }
             _ => {
+                // FLUX-TODO addr=0x19d8c line=523 flavor=explicit_panic
+                flux_support::assert(false);
                 unimplemented!();
             }
         }
@@ -513,12 +574,17 @@ impl<'a> IP6Packet<'a> {
     }
 
     // TODO: Do we need a decode equivalent? I don't think so, but we might
+    // FLUX-TODO-BLOCKED addr=0xdb00 line=573 reason=impl_scope
+    // flux_support::assert(false);
 
+    #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n]) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 48)]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
-        let ip6_header = self.header;
 
-        // TODO: Handle unwrap safely
-        let (off, _) = ip6_header.encode(buf).done().unwrap();
+        let ip6_header = self.header;
+        let done = ip6_header.encode(buf).done();
+        flux_support::assert(done.is_some());
+        // FLUX-OPT addr=0xdaf4 line=560 flavor=unwrap_option
+        let (off, _) = done.unwrap();
         self.payload.encode(buf, off)
     }
 }

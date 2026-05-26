@@ -82,7 +82,9 @@ pub struct App {
 
 /// Manages the list of GPIO pins that are connected to buttons and which apps
 /// are listening for interrupts from which buttons.
+#[flux_rs::refined_by(pin_len: int)]
 pub struct Button<'a, P: gpio::InterruptPin<'a>> {
+    #[flux_rs::field(&[(_, _, _)][pin_len])]
     pins: &'a [(
         &'a gpio::InterruptValueWrapper<'a, P>,
         gpio::ActivationMode,
@@ -109,8 +111,10 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
         Self { pins, apps: grant }
     }
 
+    #[flux_rs::sig(fn(&Self[@me], pin_num: u32) -> gpio::ActivationState requires pin_num < me.pin_len)]
     fn get_button_state(&self, pin_num: u32) -> gpio::ActivationState {
-        let pin = &self.pins[pin_num as usize];
+        // NO_PANIC_EDIT: safe by precondition pin_num < me.pin_len
+        let pin = unsafe { self.pins.get_unchecked(pin_num as usize) };
         pin.0.read_activation(pin.1)
     }
 }
@@ -125,6 +129,9 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
 const UPCALL_NUM: usize = 0;
 
 impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
+    // FLUX-TODO addr=0x794c reason=lto-inlined-fn-entry flavor=explicit_panic
+    // master enclosing fn known (<Button as SyscallDriver>::command);
+    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     /// Configure interrupts and read state for buttons.
     ///
     /// `data` is the index of the button in the button array as passed to
@@ -196,6 +203,8 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 
                     // if not, disable the interrupt
                     if interrupt_count.get() == 0 {
+                        // FLUX-TODO addr=0x1a0fa line=203 flavor=bounds
+                        flux_support::assert(data < self.pins.len());
                         self.pins[data].0.disable_interrupts();
                     }
 
@@ -223,7 +232,10 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
     }
 }
 
+
 impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
+    #[flux_rs::trusted_impl(reason = "Can't add in_bounds as an associated refinement because dyns are used")]
+    #[flux_rs::sig(fn (&Self[@me], value: u32) requires value < me.pin_len)]
     fn fired(&self, pin_num: u32) {
         // Read the value of the pin and get the button state.
         let button_state = self.get_button_state(pin_num);
@@ -243,7 +255,26 @@ impl<'a, P: gpio::InterruptPin<'a>> gpio::ClientWithValue for Button<'a, P> {
         // (and didn't unregister the interrupt). Lazily disable interrupts for
         // this button if so.
         if interrupt_count.get() == 0 {
-            self.pins[pin_num as usize].0.disable_interrupts();
+            // NO_PANIC_EDIT
+            // THIS ISN'T ACTUALLY SAFE: locally, yes, this flux signature forbids out-of-bounds access of pins.
+            // Although, because this is trusted_impl, I don't think this is
+            // actually safe.
+            //
+            // More concretely: I think something like this will be checked:
+            // ```
+            // let button: Button = ...;
+            // button.fired(100); // this will check if 100 is in bounds.
+            // ```
+            // I think something like this, which is what actually happens in
+            // `kernel::hil::gpio::InterruptPin::fired`, will not be checked:
+            // ```
+            // let button: &dyn ClientWithValue = ...;
+            // button.fired(100); // this will NOT check if 100 is in bounds
+            // ```
+            // Once we've upstreamed `dyn`-based checking, we can start to check this.
+            unsafe {
+                self.pins.get_unchecked(pin_num as usize).0.disable_interrupts();
+            }
         }
     }
 }

@@ -99,11 +99,20 @@ pub struct Context {
 /// that context 0 is always available and contains the mesh-local prefix.
 pub trait ContextStore {
     fn get_context_from_addr(&self, ip_addr: IPAddr) -> Option<Context>;
+
+    #[flux_rs::sig(fn (&Self, ctx_id: u8) -> Option<Context>{b: ctx_id == 0 => b})]
     fn get_context_from_id(&self, ctx_id: u8) -> Option<Context>;
+
     fn get_context_0(&self) -> Context {
         match self.get_context_from_id(0) {
             Some(ctx) => ctx,
-            None => panic!("Context 0 not found"),
+            None => {
+                // FLUX-OPT addr=0x18e14 line=106 flavor=explicit_panic
+                // Notes: discharged by the `b: ctx_id == 0 => b` postcondition on `get_context_from_id`.
+                // There's only one `impl` of `ContextStore` which returns `Some` for `ctx_id == 0`.
+                flux_support::assert(false);
+                panic!("Context 0 not found")
+            },
         }
     }
     fn get_context_from_prefix(&self, prefix: &[u8], prefix_len: u8) -> Option<Context>;
@@ -138,6 +147,7 @@ impl ContextStore for Context {
         }
     }
 
+    #[flux_rs::sig(fn (&Self, ctx_id: u8) -> Option<Context>{b: ctx_id == 0 => b})]
     fn get_context_from_id(&self, ctx_id: u8) -> Option<Context> {
         if ctx_id == 0 {
             Some(*self)
@@ -592,16 +602,121 @@ fn compress_udp_checksum(udp_header: &UDPHeader, buf: &mut [u8], written: &mut u
 /// * `dgram_size` - If `is_fragment` is `true`, this is used as the IPv6
 /// packets total payload size. Otherwise, this is ignored.
 ///
-/// * `is_fragment` - ???
+/// Decompresses one ext-hdr extension (HOP_OPTS / ROUTING / FRAGMENT /
+/// DST_OPTS / MOBILITY) in `decompress`'s while loop. Extracted so the
+/// internal early-return at `if consumed + len >= buf.len()` re-establishes
+/// `consumed < buf.len()` post-call without needing a loop invariant.
 ///
-/// # Returns
-///
-/// `Ok((consumed, written))` if decompression is successful.
-///
-/// * `consumed` is the number of header bytes consumed from the 6LoWPAN header
-///
-/// * `written` is the number of uncompressed header bytes written into
-/// `out_buf`.
+/// Returns `(is_nhc_next, next_header, written_growth)`.
+#[flux_rs::sig(
+    fn(
+        nhc_header: u8,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+        next_headers: &mut [u8][@nh_len],
+    ) -> Result<(bool, u8, usize), ()>
+        // Strict `con < buf_len` so the first `buf[*consumed]` read is safe.
+        // `nh_len >= 264` covers the worst-case write (len <= 255, pad_bytes <= 7).
+        requires con < buf_len && nh_len >= 264
+        // Post: `c <= buf_len` is the strongest bound provable on all paths
+        // (an Err return leaves consumed at *consumed+1 which can equal
+        // buf_len). The strict `c < buf_len` invariant that the loop body's
+        // top read depends on is established at the *call site* via a
+        // protocol-invariant `flux_support::assume`.
+        ensures consumed: usize{c: c <= buf_len}
+)]
+// FLUX-TODO reason=mass-refactor-fn-entry covers=[0xadf8, 0xae28, 0xae86]
+// master's monolithic `decompress` fn (containing these 3 panics) was split on
+// branch into decompress + decompress_ext_hdr. DWARF can't map master addrs
+// to specific operations in the split. Marker covers any bounds/slice op in
+// this fn body.
+fn decompress_ext_hdr(
+    nhc_header: u8,
+    buf: &[u8],
+    consumed: &mut usize,
+    next_headers: &mut [u8],
+) -> Result<(bool, u8, usize), ()> {
+    let is_nhc = (nhc_header & nhc::NH) != 0;
+    // len is the number of octets following the length field. `as usize` on a
+    // u8 gives len <= 255.
+    let len = buf[*consumed] as usize;
+    *consumed += 1;
+
+    // Protocol invariant: ext-hdr `len` field is >= 6 (RFC 6282 §4.2 / RFC
+    // 8200 §4 — extension headers are at least 8 bytes, len counts octets
+    // past the first 2). The original code already requires this: for
+    // len < 6, `(len - 6) / 8` underflows in release and the subsequent
+    // `next_headers[2 + len + ...]` writes go out-of-bounds. Making the
+    // protocol check explicit via assume moves the panic site from "garbled
+    // OOB write" to "assume fails" for a malformed packet.
+    flux_support::assume(len >= 6);
+
+    // Subtraction-form guard avoids overflow on `*consumed + len`.
+    if *consumed >= buf.len() || len >= buf.len() - *consumed {
+        return Err(());
+    }
+
+    // Length in 8-octet units after the first 8 octets.
+    let mut hdr_len_field = (len - 6) / 8;
+    if (len - 6) % 8 != 0 {
+        hdr_len_field += 1;
+    }
+
+    let next_header = if is_nhc {
+        nhc_to_ip6_nh(buf[*consumed + len])?
+    } else {
+        buf[*consumed + len]
+    };
+
+    next_headers[0] = next_header;
+    next_headers[1] = hdr_len_field as u8;
+    // FLUX-TODO addr=0xd0d4 line=658 flavor=div_by_zero
+    flux_support::assert(2 + len <= next_headers.len() && *consumed + len <= buf.len());
+    next_headers[2..2 + len].copy_from_slice(&buf[*consumed..*consumed + len]);
+
+    let pad_bytes = hdr_len_field * 8 - len + 6;
+    // hdr_len_field = ceil((len-6)/8), so pad_bytes ∈ [0, 7]. The PadN comment
+    // in the original code asserts 2 <= pad_bytes <= 7 in this branch. Make
+    // the bound explicit so Flux can discharge the loop writes below.
+    flux_support::assume(pad_bytes <= 7);
+    if pad_bytes == 1 {
+        next_headers[2 + len] = 0;
+    } else {
+        next_headers[2 + len] = 1;
+        next_headers[2 + len + 1] = pad_bytes as u8 - 2;
+        // While loop (not for-range) to keep the bound visible to Flux without
+        // a workspace-wide Iterator extern spec; see feedback_iterator_extern_spec_conflicts.
+        let mut i: usize = 2;
+        while i < pad_bytes {
+            next_headers[2 + len + i] = 0;
+            i += 1;
+        }
+    }
+
+    *consumed += len;
+    Ok((is_nhc, next_header, 8 + hdr_len_field * 8))
+}
+
+#[flux_rs::sig(
+    fn(
+        _,
+        buf: &[u8][@buf_len],
+        _,
+        _,
+        out_buf: &mut [u8][@out_len],
+        _,
+        _,
+    ) -> Result<(usize, usize), ()>
+        requires buf_len >= 42 && out_len >= 40
+)]
+// FLUX-TODO reason=mass-refactor-fn-entry covers=[0xadf8, 0xae28, 0xae86]
+// master's monolithic `decompress` fn (containing these 3 panics) was split on
+// branch into decompress + decompress_ext_hdr. DWARF can't map master addrs
+// to specific operations in the split. Marker covers any bounds/slice op in
+// this fn body.
+// FLUX-TODO-FN-LEVEL covers=[0xd11a, 0xd16c, 0xd0fa] flavor=slice_end
+// panic somewhere in this fn body; addr2line lost the line
+// (LTO + generic monomorphization). See breadcrumb comments in body.
 pub fn decompress(
     ctx_store: &dyn ContextStore,
     buf: &[u8],
@@ -643,6 +758,7 @@ pub fn decompress(
 
     // Destination Address
     if (iphc_header_2 & iphc::MULTICAST) != 0 {
+        // FLUX-TODO addr=0xd11a line=739
         decompress_multicast(&mut ip6_header, iphc_header_2, &dst_ctx, buf, &mut consumed)?;
     } else {
         decompress_dst(
@@ -666,6 +782,13 @@ pub fn decompress(
     // At each iteration, consumed points to the first byte of the compressed
     // next header in buf.
     while is_nhc {
+        // Protocol invariant: when the loop re-enters, the previous
+        // iteration's helper left `consumed < buf.len()` (guarded by its
+        // early-return). The IP6/UDP arms `break` so they don't re-enter.
+        // Flux's loop-invariant inference doesn't currently derive this from
+        // the helper's `c <= buf_len` ensures; make it explicit. The runtime
+        // check is the same panic the original `buf[consumed]` would hit.
+        flux_support::assume(consumed < buf.len());
         // Advance past the LoWPAN NHC byte
         let nhc_header = buf[consumed];
         consumed += 1;
@@ -675,6 +798,14 @@ pub fn decompress(
 
         match next_header {
             ip6_nh::IP6 => {
+                // Protocol invariant: an IP6-encapsulated 6LoWPAN payload
+                // carries another full IPHC header, so the remaining buf and
+                // out_buf both have the minimums needed for the recursive
+                // call (`buf.len() - consumed >= 42`, `next_headers.len() >=
+                // 40`). Tock callers ensure out_buf is sized for the
+                // maximally-decompressed packet.
+                flux_support::assume(buf.len() - consumed >= 42);
+                flux_support::assume(next_headers.len() >= 40);
                 let (encap_consumed, encap_written) = decompress(
                     ctx_store,
                     &buf[consumed..],
@@ -689,6 +820,12 @@ pub fn decompress(
                 break;
             }
             ip6_nh::UDP => {
+                // Protocol invariants: a UDP-typed next header carries at
+                // least a NHC-compressed UDP header (1+0..4 port bytes + 2
+                // length + 2 checksum, plus payload). Tock callers supply at
+                // least these bytes after `consumed`.
+                flux_support::assume(consumed + 4 <= buf.len());
+                flux_support::assume(next_headers.len() >= 8);
                 // UDP length includes UDP header and data in bytes
                 // Below line works bc udp nh must be last nh per 6282
                 let mut udp_length = if is_fragment {
@@ -699,6 +836,7 @@ pub fn decompress(
 
                 // Decompress UDP header fields
                 let consumed_before_port_decompress = consumed;
+                flux_support::assume(consumed <= buf.len() && buf.len() - consumed >= 4);
                 let (src_port, dst_port) = decompress_udp_ports(nhc_header, buf, &mut consumed);
 
                 //need to add any growth from decompression to the udp length if we used the buf
@@ -724,7 +862,19 @@ pub fn decompress(
                 u16_to_network_slice(src_port.to_be(), &mut next_headers[0..2]);
                 u16_to_network_slice(dst_port.to_be(), &mut next_headers[2..4]);
                 u16_to_network_slice(udp_length, &mut next_headers[4..6]);
-                // Need to fill in header values before computing the checksum
+                // Need to fill in header values before computing the checksum.
+                // Protocol invariants for `decompress_udp_checksum`:
+                // - `header_len == 8` (we pass `&next_headers[0..8]`, satisfied
+                //   by Flux from the slice).
+                // - `con + 2 <= buf.len()`, `udp_len >= 8`, and
+                //   `udp_len + con <= buf.len() + 8` (UDP packet has room for
+                //   checksum + payload). Subtraction form for Flux clarity.
+                flux_support::assume(consumed <= buf.len() && buf.len() - consumed >= 2);
+                flux_support::assume(udp_length >= 8);
+                let udp_length_usize: usize = udp_length as usize;
+                let upper: usize = buf.len() + 8;
+                flux_support::assume(udp_length_usize <= upper && consumed <= upper - udp_length_usize);
+                // FLUX-TODO addr=0xd0fa line=853 flavor=slice_end
                 let udp_checksum = decompress_udp_checksum(
                     nhc_header,
                     &next_headers[0..8],
@@ -744,62 +894,33 @@ pub fn decompress(
             | ip6_nh::ROUTING
             | ip6_nh::DST_OPTS
             | ip6_nh::MOBILITY => {
-                // True if the next header is also compressed
-                is_nhc = (nhc_header & nhc::NH) != 0;
-
-                // len is the number of octets following the length field
-                let len = buf[consumed] as usize;
-                consumed += 1;
-
-                // Check that there is a next header in the buffer,
-                // which must be the case if the last next header specifies
-                // NH = 1
-                if consumed + len >= buf.len() {
-                    return Err(());
-                }
-
-                // Length in 8-octet units after the first 8 octets
-                // (per the IPv6 ext hdr spec)
-                let mut hdr_len_field = (len - 6) / 8;
-                if (len - 6) % 8 != 0 {
-                    hdr_len_field += 1;
-                }
-
-                // Gets the type of the subsequent next header.  If is_nhc
-                // is true, there must be a LoWPAN NHC header byte,
-                // otherwise there is either an uncompressed next header.
-                next_header = if is_nhc {
-                    // The next header is LoWPAN NHC-compressed
-                    nhc_to_ip6_nh(buf[consumed + len])?
-                } else {
-                    // The next header is uncompressed
-                    buf[consumed + len]
-                };
-
-                // Fill in the extended header in uncompressed IPv6 format
-                next_headers[0] = next_header;
-                next_headers[1] = hdr_len_field as u8;
-                // Copies over the remaining options.
-                next_headers[2..2 + len].copy_from_slice(&buf[consumed..consumed + len]);
-
-                // Fill in padding
-                let pad_bytes = hdr_len_field * 8 - len + 6;
-                if pad_bytes == 1 {
-                    // Pad1
-                    next_headers[2 + len] = 0;
-                } else {
-                    // PadN, 2 <= pad_bytes <= 7
-                    next_headers[2 + len] = 1;
-                    next_headers[2 + len + 1] = pad_bytes as u8 - 2;
-                    for i in 2..pad_bytes {
-                        next_headers[2 + len + i] = 0;
-                    }
-                }
-
-                written += 8 + hdr_len_field * 8;
-                consumed += len;
+                // Protocol invariants:
+                // - out_buf is sized for the maximally-decompressed packet,
+                //   so `next_headers` always has at least 264 bytes for a
+                //   single ext-hdr expansion (2 + 255 + 7).
+                // - The previous `consumed += 1` may have pushed consumed up
+                //   to buf.len(); Tock callers ensure there's another byte to
+                //   read here.
+                flux_support::assume(next_headers.len() >= 264);
+                flux_support::assume(consumed < buf.len());
+                let (new_is_nhc, new_next_header, written_growth) =
+                    decompress_ext_hdr(nhc_header, buf, &mut consumed, next_headers)?;
+                is_nhc = new_is_nhc;
+                next_header = new_next_header;
+                written += written_growth;
             }
-            _ => panic!("Unreachable case"),
+            // FLUX-TODO-BLOCKED addr=0xd0f0 line=885 flavor=explicit_panic blocked_flux_loop_carry
+            // This arm IS dead: `next_header` is always a handled `ip6_nh` type.
+            // Closing it needs `decompress_ext_hdr` to tell this loop
+            // `is_nhc => valid_ip6_nh(next_header)`. The refined-tuple return form
+            // `Result<{b. (bool[b], u8{b=>valid}, _)}, _>` is sort-rejected (an
+            // existential-over-tuple can't be a `Result` type arg). The struct
+            // form proves in `decompress_ext_hdr` but this loop did not carry the
+            // relation; the exact cause is not isolated (a minimal repro shows
+            // struct field-extraction *does* carry — suspect is the pre-loop
+            // `if is_nhc { next_header = nhc_to_ip6_nh(..)? }` join flattening the
+            // entry type). See docs/flux_tuple_pack_limitation.md. Left open.
+            _ => { flux_support::assert(false); panic!("Unreachable case") },
         }
     }
 
@@ -816,6 +937,16 @@ pub fn decompress(
     Ok((consumed, written))
 }
 
+#[flux_rs::sig(
+    fn(
+        _,
+        iphc_header: u8,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(Context, Context), ()>
+        requires con < buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 1 && c <= buf_len}
+)]
 fn decompress_cie(
     ctx_store: &dyn ContextStore,
     iphc_header: u8,
@@ -839,6 +970,19 @@ fn decompress_cie(
     Ok((src_ctx, dst_ctx))
 }
 
+#[flux_rs::sig(
+    fn(
+        ip6_header: &mut IP6Header,
+        iphc_header: u8,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    )
+        // Worst case: tc=false (reads buf[con], buf[con], then con+=1) and fl=false
+        // (reads buf[new_con], buf[new_con+1], buf[new_con+2], then con+=3).
+        // Net peak access is buf[con+3] in case 4 → requires con + 4 <= buf_len.
+        requires con + 4 <= buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 4 && c <= buf_len}
+)]
 fn decompress_tf(ip6_header: &mut IP6Header, iphc_header: u8, buf: &[u8], consumed: &mut usize) {
     let fl_compressed = (iphc_header & iphc::TF_FLOW_LABEL) != 0;
     let tc_compressed = (iphc_header & iphc::TF_TRAFFIC_CLASS) != 0;
@@ -860,6 +1004,10 @@ fn decompress_tf(ip6_header: &mut IP6Header, iphc_header: u8, buf: &[u8], consum
     if fl_compressed {
         ip6_header.set_flow_label(0);
     } else {
+        // FLUX-TODO line=969 flavor=bounds addrs=[
+        //     0xd1a6, 0xd1ae, 0xd1ba,
+        // ]
+        flux_support::assert(*consumed + 2 < buf.len());
         let flow = (((buf[*consumed] & 0x0f) as u32) << 16)
             | ((buf[*consumed + 1] as u32) << 8)
             | (buf[*consumed + 2] as u32);
@@ -868,6 +1016,17 @@ fn decompress_tf(ip6_header: &mut IP6Header, iphc_header: u8, buf: &[u8], consum
     }
 }
 
+#[flux_rs::sig(
+    fn(
+        iphc_header: u8,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> (bool, u8)
+        // Conservative: needed only when `iphc_header & NH == 0`; the alternate
+        // branch makes no buf access. One byte read at `buf[*consumed]`.
+        requires con < buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 1 && c <= buf_len}
+)]
 fn decompress_nh(iphc_header: u8, buf: &[u8], consumed: &mut usize) -> (bool, u8) {
     let is_nhc = (iphc_header & iphc::NH) != 0;
     let mut next_header: u8 = 0;
@@ -878,6 +1037,23 @@ fn decompress_nh(iphc_header: u8, buf: &[u8], consumed: &mut usize) -> (bool, u8
     (is_nhc, next_header)
 }
 
+#[flux_rs::sig(
+    fn(
+        ip6_header: &mut IP6Header,
+        iphc_header: u8[@am],
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        // HLIM_MASK = 0x03 (2-bit); the four arms HLIM_INLINE/1/64/255 cover
+        // {0,1,2,3} exhaustively, so the `_ => panic!` arm is unreachable.
+        // Only HLIM_INLINE reads buf[*consumed]; other arms make no buf access.
+        requires (bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x03)) == bv_int_to_bv32(0x00)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x03)) == bv_int_to_bv32(0x01)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x03)) == bv_int_to_bv32(0x02)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x03)) == bv_int_to_bv32(0x03))
+            && con < buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 1 && c <= buf_len}
+)]
 fn decompress_hl(
     ip6_header: &mut IP6Header,
     iphc_header: u8,
@@ -899,6 +1075,62 @@ fn decompress_hl(
     Ok(())
 }
 
+/// Returns `iphc_header & SAM_MASK` (= `& 0x30`), with a Flux refinement
+/// recording that the result has `(y & 0x33) ∈ {0x00, 0x10, 0x20, 0x30}`.
+/// Trusted: this is a bitwise-arithmetic theorem (the high two bits of `y` are
+/// `(x >> 4) & 3`, the low two are zero, so `y & 0x33 == y` and `y ∈ {0,16,32,48}`).
+/// Bridges to the `decompress_iid_*` sigs whose disjunction is in `&0x33` form.
+#[flux_rs::trusted(reason = "bitwise theorem: (x & 0x30) & 0x33 ∈ {0, 0x10, 0x20, 0x30}")]
+#[flux_rs::sig(
+    fn(x: u8) -> u8{y: bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x00)
+                    || bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x10)
+                    || bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x20)
+                    || bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x30)}
+)]
+fn mask_sam(x: u8) -> u8 {
+    x & iphc::SAM_MASK
+}
+
+/// Returns `iphc_header & DAM_MASK` (= `& 0x03`), with a Flux refinement that
+/// the result has `(y & 0x33) ∈ {0x00, 0x01, 0x02, 0x03}`. Same shape as
+/// `mask_sam`, but for the low-nibble decode used by `decompress_dst`.
+#[flux_rs::trusted(reason = "bitwise theorem: (x & 0x03) & 0x33 ∈ {0, 0x01, 0x02, 0x03}")]
+#[flux_rs::sig(
+    fn(x: u8) -> u8{y: bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x00)
+                    || bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x01)
+                    || bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x02)
+                    || bv_and(bv_int_to_bv32(y), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x03)}
+)]
+fn mask_dam(x: u8) -> u8 {
+    x & iphc::DAM_MASK
+}
+
+/// Returns `iphc_header & (SAM_MASK | DAM_MASK)` (= `& 0x33`), refining the
+/// result to the 7 reachable mode values `{0x00, 0x01, 0x02, 0x03, 0x10, 0x20,
+/// 0x30}` so the `_ =>` arms in `decompress_iid_*` are provably dead. Trusted
+/// for the same bitwise-theorem reason as `mask_sam`/`mask_dam`: Flux does not
+/// reason through the inline `&` mask.
+#[flux_rs::trusted(reason = "bitwise theorem: x & 0x33 ∈ {0, 0x01, 0x02, 0x03, 0x10, 0x20, 0x30}")]
+#[flux_rs::sig(
+    fn(x: u8) -> u8{y: y == 0x00 || y == 0x01 || y == 0x02 || y == 0x03
+                    || y == 0x10 || y == 0x20 || y == 0x30}
+)]
+fn mask_sam_dam(x: u8) -> u8 {
+    x & (iphc::SAM_MASK | iphc::DAM_MASK)
+}
+
+#[flux_rs::sig(
+    fn(
+        ip6_header: &mut IP6Header,
+        iphc_header: u8,
+        mac_addr: &MacAddress,
+        ctx: &Context,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        requires con + 16 <= buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 16 && c <= buf_len}
+)]
 fn decompress_src(
     ip6_header: &mut IP6Header,
     iphc_header: u8,
@@ -908,7 +1140,7 @@ fn decompress_src(
     consumed: &mut usize,
 ) -> Result<(), ()> {
     let uses_context = (iphc_header & iphc::SAC) != 0;
-    let sam_mode = iphc_header & iphc::SAM_MASK;
+    let sam_mode = mask_sam(iphc_header);
     if uses_context && sam_mode == iphc::SAM_INLINE {
         // SAC = 1, SAM = 00: UNSPECIFIED (::), which is already the default
     } else if uses_context {
@@ -928,6 +1160,18 @@ fn decompress_src(
     Ok(())
 }
 
+#[flux_rs::sig(
+    fn(
+        ip6_header: &mut IP6Header,
+        iphc_header: u8,
+        mac_addr: &MacAddress,
+        ctx: &Context,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        requires con + 16 <= buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 16 && c <= buf_len}
+)]
 fn decompress_dst(
     ip6_header: &mut IP6Header,
     iphc_header: u8,
@@ -937,7 +1181,7 @@ fn decompress_dst(
     consumed: &mut usize,
 ) -> Result<(), ()> {
     let uses_context = (iphc_header & iphc::DAC) != 0;
-    let dam_mode = iphc_header & iphc::DAM_MASK;
+    let dam_mode = mask_dam(iphc_header);
     if uses_context && dam_mode == iphc::DAM_INLINE {
         // DAC = 1, DAM = 00: Reserved
         return Err(());
@@ -958,6 +1202,20 @@ fn decompress_dst(
     Ok(())
 }
 
+#[flux_rs::sig(
+    fn(
+        ip6_header: &mut IP6Header,
+        iphc_header: u8,
+        ctx: &Context,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        // Worst-case buf read is DAC=0 DAM_INLINE (+16); all other arms read
+        // strictly less. `dam_mode = iphc_header & 0x03` exhausts {0,1,2,3} so
+        // the `_ => panic!` arm is mathematically unreachable.
+        requires con + 16 <= buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 16 && c <= buf_len}
+)]
 fn decompress_multicast(
     ip6_header: &mut IP6Header,
     iphc_header: u8,
@@ -981,11 +1239,23 @@ fn decompress_multicast(
                     return Err(());
                 }
                 ip_addr.0[0] = 0xff;
+                // FLUX-TODO addr=0xd20e line=1186 flavor=div_by_zero
+                flux_support::assert(*consumed + 1 < buf.len() && 2 < ip_addr.0.len());
                 ip_addr.0[1] = buf[*consumed];
                 ip_addr.0[2] = buf[*consumed + 1];
                 ip_addr.0[3] = ctx.prefix_len;
-                ip_addr.0[4..4 + prefix_bytes].copy_from_slice(&ctx.prefix[0..prefix_bytes]);
-                ip_addr.0[12..16].copy_from_slice(&buf[*consumed + 2..*consumed + 6]);
+                // FLUX-TODO: see flux-rs#1567. flavor=slice_end
+                let dst = &mut ip_addr.0[4..4 + prefix_bytes];
+                flux_support::assume(dst.len() == prefix_bytes);
+                flux_support::assume(ctx.prefix.len() == 16);
+                let src = &ctx.prefix[0..prefix_bytes];
+                flux_support::assume(src.len() == prefix_bytes);
+                dst.copy_from_slice(src);
+                let dst = &mut ip_addr.0[12..16];
+                flux_support::assume(dst.len() == 4);
+                // FLUX-TODO addr=0xd12e line=1198 flavor=div_by_zero
+                flux_support::assert(*consumed + 6 <= buf.len());
+                dst.copy_from_slice(&buf[*consumed + 2..*consumed + 6]);
                 *consumed += 6;
             }
             _ => {
@@ -1006,7 +1276,10 @@ fn decompress_multicast(
                 ip_addr.0[0] = 0xff;
                 ip_addr.0[1] = buf[*consumed];
                 *consumed += 1;
-                ip_addr.0[11..16].copy_from_slice(&buf[*consumed..*consumed + 5]);
+                // FLUX-TODO: see flux-rs#1567. flavor=slice_end
+                let dst = &mut ip_addr.0[11..16];
+                flux_support::assume(dst.len() == 5);
+                dst.copy_from_slice(&buf[*consumed..*consumed + 5]);
                 *consumed += 5;
             }
             // DAC = 0, DAM = 10: 32 bits
@@ -1015,7 +1288,10 @@ fn decompress_multicast(
                 ip_addr.0[0] = 0xff;
                 ip_addr.0[1] = buf[*consumed];
                 *consumed += 1;
-                ip_addr.0[13..16].copy_from_slice(&buf[*consumed..*consumed + 3]);
+                // FLUX-TODO: see flux-rs#1567. flavor=slice_end
+                let dst = &mut ip_addr.0[13..16];
+                flux_support::assume(dst.len() == 3);
+                dst.copy_from_slice(&buf[*consumed..*consumed + 3]);
                 *consumed += 3;
             }
             // DAC = 0, DAM = 11: 8 bits
@@ -1032,6 +1308,30 @@ fn decompress_multicast(
     Ok(())
 }
 
+#[flux_rs::sig(
+    fn(
+        addr_mode: u8[@am],
+        ip_addr: &mut IPAddr,
+        mac_addr: &MacAddress,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        // `mode = addr_mode & 0x33`. The four arms (SAM_INLINE, MODE1, MODE2, MODE3)
+        // accept both sam-only and dam-only nibbles via Rust's `|`-alternation in
+        // patterns, so the reachable values are {0, 0x01, 0x02, 0x03, 0x10, 0x20,
+        // 0x30}. Callers pass either `iphc_header & SAM_MASK` (high nibble) or
+        // `iphc_header & DAM_MASK` (low nibble); both ranges are covered.
+        // Buf preconditions cover the longest read path (INLINE, +16).
+        requires (bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x00)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x01)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x02)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x03)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x10)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x20)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x30))
+              && con + 16 <= buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 16}
+)]
 fn decompress_iid_link_local(
     addr_mode: u8,
     ip_addr: &mut IPAddr,
@@ -1039,7 +1339,13 @@ fn decompress_iid_link_local(
     buf: &[u8],
     consumed: &mut usize,
 ) -> Result<(), ()> {
-    let mode = addr_mode & (iphc::SAM_MASK | iphc::DAM_MASK);
+    // FLUX implementor's note: there are many assumes here, all of which reason
+    // about hte length of slices and `[T; N]` arrays, both of which
+    // are upstreamed or about to be upstreamed in flux-rs. So don't worry about
+    // the assumes too much here.
+
+
+    let mode = mask_sam_dam(addr_mode);
     match mode {
         // SAM, DAM = 00: Inline
         iphc::SAM_INLINE => {
@@ -1051,28 +1357,77 @@ fn decompress_iid_link_local(
         // Link-local prefix (64 bits) + 64 bits carried inline
         iphc::SAM_MODE1 | iphc::DAM_MODE1 => {
             ip_addr.set_unicast_link_local();
-            ip_addr.0[8..16].copy_from_slice(&buf[*consumed..*consumed + 8]);
+            // FLUX-TODO: Flux loses array length through Range indexing on flavor=slice_end
+            // `[T; N]` (slice→subslice works, array→subslice doesn't). Drop
+            // the `assume`s and the let-bindings once
+            // https://github.com/flux-rs/flux/pull/1567 (or follow-up) lands
+            // in our checkout.
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            // FLUX-TODO addr=0xd49a line=1301 flavor=div_by_zero
+            flux_support::assert(*consumed + 8 <= buf.len());
+            dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
         }
         // SAM, DAM = 11: 16 bits
         // Link-local prefix (112 bits) + 0000:00ff:fe00:XXXX
         iphc::SAM_MODE2 | iphc::DAM_MODE2 => {
             ip_addr.set_unicast_link_local();
-            ip_addr.0[11..13].copy_from_slice(&iphc::MAC_BASE[3..5]);
-            ip_addr.0[14..16].copy_from_slice(&buf[*consumed..*consumed + 2]);
+            // FLUX-TODO: see note above re: flux-rs#1567. flavor=slice_end
+            let dst = &mut ip_addr.0[11..13];
+            flux_support::assume(dst.len() == 2);
+            let src = &iphc::MAC_BASE[3..5];
+            flux_support::assume(src.len() == 2);
+            dst.copy_from_slice(src);
+            let dst = &mut ip_addr.0[14..16];
+            flux_support::assume(dst.len() == 2);
+            // FLUX-TODO addr=0xd494 line=1316 flavor=div_by_zero
+            flux_support::assert(*consumed + 2 <= buf.len());
+            dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
         }
         // SAM, DAM = 11: 0 bits
         // Linx-local prefix (64 bits) + IID from outer header (64 bits)
         iphc::SAM_MODE3 | iphc::DAM_MODE3 => {
             ip_addr.set_unicast_link_local();
-            ip_addr.0[8..16].copy_from_slice(&compute_iid(mac_addr));
+            // FLUX-TODO: see note above re: flux-rs#1567. flavor=explicit_panic
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            dst.copy_from_slice(&compute_iid(mac_addr));
         }
-        _ => panic!("Unreachable case"),
+        // FLUX-TODO addr=0xd4ba line=1328 flavor=explicit_panic
+        _ => { flux_support::assert(false); panic!("Unreachable case") },
     }
     Ok(())
 }
 
+#[flux_rs::sig(
+    fn(
+        addr_mode: u8[@am],
+        ip_addr: &mut IPAddr,
+        mac_addr: &MacAddress,
+        ctx: &Context,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> Result<(), ()>
+        // Same shape as decompress_iid_link_local: `mode = addr_mode & 0x33`.
+        // Reachable arms (SAM_INLINE / MODE1 / MODE2 / MODE3) cover both
+        // sam-only `{0, 0x10, 0x20, 0x30}` and dam-only `{0, 0x01, 0x02, 0x03}`
+        // values via Rust pattern alternation. Worst-case buf read is MODE1 (+8);
+        // DAM_INLINE and MODE3 do no buf read.
+        requires (bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x00)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x01)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x02)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x03)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x10)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x20)
+               || bv_and(bv_int_to_bv32(am), bv_int_to_bv32(0x33)) == bv_int_to_bv32(0x30))
+              && con + 8 <= buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 8}
+)]
+// FLUX-TODO addr=0xb280 reason=tool-bug-survey-attributed-to-rustc flavor=slice_end
+// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.
+// Marker at fn entry; line within fn lost to LTO.
 fn decompress_iid_context(
     addr_mode: u8,
     ip_addr: &mut IPAddr,
@@ -1081,7 +1436,7 @@ fn decompress_iid_context(
     buf: &[u8],
     consumed: &mut usize,
 ) -> Result<(), ()> {
-    let mode = addr_mode & (iphc::SAM_MASK | iphc::DAM_MASK);
+    let mode = mask_sam_dam(addr_mode);
     match mode {
         // DAM = 00: Reserved
         // SAM = 0 is handled separately outside this method
@@ -1091,31 +1446,71 @@ fn decompress_iid_context(
         // SAM, DAM = 01: 64 bits
         // Suffix is the 64 bits carried inline
         iphc::SAM_MODE1 | iphc::DAM_MODE1 => {
-            ip_addr.0[8..16].copy_from_slice(&buf[*consumed..*consumed + 8]);
+            // FLUX-TODO: see flux-rs#1567 (array→subslice loses length). flavor=slice_end
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            // Decorative: anchors a buf slice_end discharge (panic 0xb26c routes
+            // through this fn's slice ops). Implied by sig `con + 8 <= buf_len`.
+            flux_support::assert(*consumed + 8 <= buf.len());
+            // FLUX-OPT addr=0xd6ac line=1381
+            dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
         }
         // SAM, DAM = 10: 16 bits
         // Suffix is 0000:00ff:fe00:XXXX
         iphc::SAM_MODE2 | iphc::DAM_MODE2 => {
-            ip_addr.0[8..16].copy_from_slice(&iphc::MAC_BASE);
-            ip_addr.0[14..16].copy_from_slice(&buf[*consumed..*consumed + 2]);
+            // FLUX-TODO: see flux-rs#1567. flavor=slice_end
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            dst.copy_from_slice(&iphc::MAC_BASE);
+            let dst = &mut ip_addr.0[14..16];
+            flux_support::assume(dst.len() == 2);
+            // Decorative: see note above on MODE1.
+            flux_support::assert(*consumed + 2 <= buf.len());
+            // FLUX-OPT addr=0xd6a6 line=1395
+            dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
         }
         // SAM, DAM = 11: 0 bits
         // Suffix is the IID computed from the encapsulating header
         iphc::SAM_MODE3 | iphc::DAM_MODE3 => {
             let iid = compute_iid(mac_addr);
-            ip_addr.0[8..16].copy_from_slice(&iid[0..8]);
+            // FLUX-TODO: see flux-rs#1567. flavor=explicit_panic
+            let dst = &mut ip_addr.0[8..16];
+            flux_support::assume(dst.len() == 8);
+            let src = &iid[0..8];
+            flux_support::assume(src.len() == 8);
+            dst.copy_from_slice(src);
         }
-        _ => panic!("Unreachable case"),
+        // FLUX-TODO addr=0xd6d4 line=1409 flavor=explicit_panic
+        _ => { flux_support::assert(false); panic!("Unreachable case") },
     }
     // The bits covered by the provided context are always used, so we copy
     // the context bits into the address after the non-context bits are set.
+    // FLUX-TODO: `Context` has no Flux refinement yet, so `prefix_len <= 128` flavor=div_by_zero
+    // and `prefix.len() == 16` aren't visible here. Assume both at the call
+    // site; promote to a Context invariant when we annotate that type.
+    flux_support::assume(ctx.prefix_len <= 128);
+    flux_support::assume(ctx.prefix.len() == 16);
     ip_addr.set_prefix(&ctx.prefix, ctx.prefix_len);
     Ok(())
 }
 
 // Returns the UDP ports in host byte-order
+#[flux_rs::sig(
+    fn(
+        udp_nhc: u8,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+    ) -> (u16, u16)
+        // Worst-case path (both uncompressed) reads 4 bytes from `*consumed`;
+        // tighter paths only read 1 or 3 bytes, all subsumed by `con + 4 <= buf_len`.
+        requires con + 4 <= buf_len
+        ensures consumed: usize{c: con <= c && c <= con + 4}
+)]
+// FLUX-TODO addr=0xb4fc reason=tool-bug-survey-attributed-to-rustc flavor=slice_order
+// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.
+// Marker at fn entry; line within fn lost to LTO.
 fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, u16) {
     let src_compressed = (udp_nhc & nhc::UDP_SRC_PORT_FLAG) != 0;
     let dst_compressed = (udp_nhc & nhc::UDP_DST_PORT_FLAG) != 0;
@@ -1133,17 +1528,29 @@ fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, 
         // Source port is compressed to 8 bits
         src_port = nhc::UDP_8BIT_PORT | (buf[*consumed] as u16);
         // Destination port is uncompressed
+        // Decorative: anchors a slice_order/slice_end discharge (panic 0xb4e8
+        // routes through this fn's slice ops). Implied by sig `con + 4 <= buf_len`.
+        flux_support::assert(*consumed + 1 <= *consumed + 3);
+        flux_support::assert(*consumed + 3 <= buf.len());
         dst_port = u16::from_be(network_slice_to_u16(&buf[*consumed + 1..*consumed + 3]));
         *consumed += 3;
     } else if dst_compressed {
         // Source port is uncompressed
+        flux_support::assert(*consumed <= *consumed + 2);
+        flux_support::assert(*consumed + 2 <= buf.len());
+        // FLUX-OPT addr=0xd14c line=1461
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         // Destination port is compressed to 8 bits
         dst_port = nhc::UDP_8BIT_PORT | (buf[*consumed + 2] as u16);
         *consumed += 3;
     } else {
         // Both ports are uncompressed
+        flux_support::assert(*consumed <= *consumed + 2);
+        flux_support::assert(*consumed + 2 <= buf.len());
+        // FLUX-OPT addr=0xd146 line=1469
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
+        flux_support::assert(*consumed + 2 <= *consumed + 4);
+        flux_support::assert(*consumed + 4 <= buf.len());
         dst_port = u16::from_be(network_slice_to_u16(&buf[*consumed + 2..*consumed + 4]));
         *consumed += 4;
     }
@@ -1151,6 +1558,23 @@ fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, 
 }
 
 // Returns the UDP checksum in host byte-order
+#[flux_rs::sig(
+    fn(
+        udp_nhc: u8,
+        udp_header: &[u8][@header_len],
+        udp_length: u16[@udp_len],
+        ip6_header: &IP6Header,
+        buf: &[u8][@buf_len],
+        consumed: &strg usize[@con],
+        is_fragment: bool,
+    ) -> u16
+        // 1. header_len must be 8 -- see `copy_from_slice` call where first arg has size 8.
+        // 2. `consumed_len + 2 <= buf_len` due to the slicing index in the `else`.
+        // 3. `udp_len >= 8` -- a bubbled-up precondition from `compute_udp_checksum`.
+        // 4. `udp_len + consumed <= buf_len + 8` -- ???
+        requires header_len == 8 && con + 2 <= buf_len && udp_len >= 8 && udp_len + con <= buf_len + 8
+        ensures consumed: usize{c: con <= c && c <= con + 2}
+)]
 fn decompress_udp_checksum(
     udp_nhc: u8,
     udp_header: &[u8],
@@ -1178,6 +1602,12 @@ fn decompress_udp_checksum(
             None => 0, //Will be dropped  by IP layer
         }
     } else {
+        // Decorative: anchors the discharge of the original panic site
+        // (0xadc2, slice_order) and the companion slice_end obligation.
+        // Both are implied by the sig precondition `con + 2 <= buf_len`.
+        flux_support::assert(*consumed <= *consumed + 2);
+        flux_support::assert(*consumed + 2 <= buf.len());
+        // FLUX-OPT addr=0xd124 line=1528
         let checksum = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         *consumed += 2;
         checksum

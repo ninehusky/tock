@@ -76,6 +76,19 @@ mod rw_allow {
     pub const COUNT: u8 = 3;
 }
 
+// Helper fn that converts a Result.. the precondition
+// implies that the `unwrap` will succeed.
+// TODO: this should be checked at the `command` callsite..
+// I had it originally (and it didn't throw an error), but I didn't include `driver.rs`
+// in the `Cargo.toml` because it was also giving errors for non-panic-row statements.
+#[flux_rs::sig(fn(rc: Result<(), kernel::ErrorCode>{r: !r.b}) -> kernel::ErrorCode)]
+fn result_to_errorcode(rc: Result<(), kernel::ErrorCode>) -> kernel::ErrorCode {
+    // FLUX-TODO addr=0xbdd0 line=86 flavor=unwrap_result
+    let rc_into: Result<kernel::ErrorCode, _> = rc.try_into();
+    flux_support::assert(rc_into.is_ok());
+    rc_into.unwrap()
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct UDPEndpoint {
     addr: IPAddr,
@@ -377,6 +390,10 @@ impl<'a> SyscallDriver for UDPDriver<'a> {
     ///        This represents the size of the payload buffer in the kernel. Apps can use this
     ///        syscall to ensure they do not attempt to send too-large messages.
 
+    // FLUX-TODO addr=0xd04c reason=monomorph-at-caller flavor=explicit_panic
+    // enclosing-fn dyn-dispatched via SyscallDriver vtable; DWARF line lost
+    // during LTO inlining of panic helper; marker placed at fn entry.
+    // flux_support::assert(false);
     fn command(
         &self,
         command_num: usize,
@@ -540,7 +557,7 @@ impl<'a> SyscallDriver for UDPDriver<'a> {
                             }
                         })
                     }
-                    Err(retcode) => CommandReturn::failure(retcode.try_into().unwrap()),
+                    Err(retcode) => CommandReturn::failure(result_to_errorcode(retcode)),
                 }
             }
             4 => CommandReturn::success_u32(self.max_tx_pyld_len as u32),

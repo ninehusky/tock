@@ -10,4 +10,4 @@ check_overflow = "lazy"
 
 [dependencies]
 tock-registers = { path = "../libraries/tock-register-interface" }
-flux-rs = { git  = "https://github.com/flux-rs/flux.git" }
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }

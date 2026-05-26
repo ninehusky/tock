@@ -8,9 +8,22 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 
+[package.metadata.flux]
+enabled = true
+check_overflow = "lazy"
+include = [
+    "def:copy_plaintext",
+    "def:crypt",
+    "def:handle_interrupt",
+    "def:disable_interrupts",
+    "def:enable_interrupts",
+    "src/pinmux.rs",
+]
+
 [dependencies]
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
+flux_support = { path = "../../flux_support" }
 
 [features]
 default = []

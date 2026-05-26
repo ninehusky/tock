@@ -38,3 +38,9 @@ impl usize {
     #[sig(fn(num: usize, rhs: usize) -> usize[(num + rhs - 1) / rhs] requires rhs > 0)]
     fn div_ceil(self, rhs: usize) -> usize;
 }
+
+#[flux_rs::extern_spec(core::convert)]
+impl From<bool> for usize {
+    #[sig(fn(b: bool) -> usize[if b { 1 } else { 0 }])]
+    fn from(b: bool) -> usize;
+}

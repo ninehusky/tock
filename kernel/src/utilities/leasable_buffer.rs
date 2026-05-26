@@ -178,11 +178,12 @@ use flux_support::*;
 /// A leasable buffer can be used to pass a section of a larger mutable buffer
 /// but still get the entire buffer back in a callback.
 #[derive(Debug, PartialEq)]
-// #[flux_rs::refined_by(lo: int, hi: int, len: int)]
+#[flux_rs::refined_by(lo: int, hi: int, len: int)]
+#[flux_rs::invariant(lo <= hi && hi <= len)]
 pub struct SubSliceMut<'a, T> {
-    // #[field(&mut [T][len])]
+    #[field(&mut [T][len])]
     internal: &'a mut [T],
-    // #[field(FluxRange[lo, hi])]
+    #[field(FluxRange[lo, hi])]
     active_range: FluxRange,
 }
 
@@ -250,6 +251,7 @@ where
 
 impl<'a, T> SubSliceMut<'a, T> {
     /// Create a SubSlice from a passed reference to a raw buffer.
+    #[flux_rs::sig(fn(&mut [T][@n]) -> SubSliceMut<T>[0, n, n])]
     pub fn new(buffer: &'a mut [T]) -> Self {
         let len = buffer.len();
         SubSliceMut {
@@ -258,7 +260,10 @@ impl<'a, T> SubSliceMut<'a, T> {
         }
     }
 
+    #[flux_rs::sig(fn(&Self[@s]) -> &[T][s.hi - s.lo])]
     fn active_slice(&self) -> &[T] {
+        // FLUX-TODO addr=0xa0e4 line=265 flavor=slice_order
+        flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end]
     }
 
@@ -286,6 +291,7 @@ impl<'a, T> SubSliceMut<'a, T> {
     }
 
     /// Returns the length of the currently accessible portion of the SubSlice.
+    #[flux_rs::sig(fn(&Self[@s]) -> usize[s.hi - s.lo])]
     pub fn len(&self) -> usize {
         self.active_slice().len()
     }
@@ -326,6 +332,7 @@ impl<'a, T> SubSliceMut<'a, T> {
     /// s.slice(0..250);
     /// network.send(s);
     /// ```
+    #[flux_rs::trusted(reason = "Generic over `RangeBounds<usize>`, so the new (start, end) can't be statically bounded without refining the RangeBounds trait itself. Body re-establishes the SubSliceMut invariant at runtime via wrapping/saturating math (any out-of-bounds caller will hit the underlying slice's bounds checks later, which Flux still tracks).")]
     #[flux_rs::spec(fn(self: &mut Self, range: R) ensures self: Self)]
     pub fn slice<R: RangeBounds<usize>>(&mut self, range: R) {
         let start = match range.start_bound() {
@@ -358,6 +365,10 @@ where
     type Output = <I as SliceIndex<[T]>>::Output;
 
     fn index(&self, idx: I) -> &Self::Output {
+        // FLUX-TODO line=366 flavor=slice_order addrs=[
+        //     0x1f89c, 0x1f8a6, 0x1f8b0, 0x19d78, 0x19d82, 0x19da0, 0x14f96, 0x14fa0,
+        // ]
+        flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end][idx]
     }
 }
@@ -366,6 +377,7 @@ impl<'a, T, I> IndexMut<I> for SubSliceMut<'a, T>
 where
     I: SliceIndex<[T]>,
 {
+    #[flux_rs::trusted(reason = "Pending SubSliceMut refinement: this impl chains two refined index ops and we don't yet expose SubSliceMut's active-range length to Flux, so the output_pred postcondition can't be discharged. Body is a one-liner that delegates to the inner slice's IndexMut.")]
     fn index_mut(&mut self, idx: I) -> &mut Self::Output {
         &mut self.internal[self.active_range.start..self.active_range.end][idx]
     }

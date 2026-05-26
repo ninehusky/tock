@@ -59,14 +59,22 @@ mod frame_control {
 
 #[repr(u16)]
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[flux_rs::refined_by(fcf: int)]
 pub enum FrameType {
     // Reserved = 0b100,
+    #[variant(FrameType[0])]
     Beacon = 0b000,
+    #[variant(FrameType[1])]
     Data = 0b001,
+    #[variant(FrameType[2])]
     Acknowledgement = 0b010,
+    #[variant(FrameType[3])]
     MACCommand = 0b011,
+    #[variant(FrameType[5])]
     Multipurpose = 0b101,
+    #[variant(FrameType[6])]
     Fragment = 0b110,
+    #[variant(FrameType[7])]
     Extended = 0b111,
 }
 

@@ -103,6 +103,9 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> I2CMasterSlaveDriver<'a, I> {
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
     for I2CMasterSlaveDriver<'a, I>
 {
+    // FLUX-TODO addr=0x19fd4 reason=lto-inlined-fn-entry flavor=explicit_panic
+    // master enclosing fn known (I2CHwMasterClient::command_complete);
+    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     fn command_complete(&self, buffer: &'static mut [u8], status: Result<(), hil::i2c::Error>) {
         // Map I2C error to a number we can pass back to the application
         let status = kernel::errorcode::into_statuscode(match status {
@@ -139,7 +142,10 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
                                 master_rx.mut_enter(move |app_buffer| {
                                     let len = cmp::min(app_buffer.len(), read_len as usize);
 
+                                    // FLUX-TODO addr=0x1ea64 line=142 flavor=slice_end
+                                    flux_support::assume(len <= buffer.len());
                                     for (i, c) in buffer[0..len].iter().enumerate() {
+                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         app_buffer[i].set(*c);
                                     }
 
@@ -168,6 +174,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
                             .and_then(|master_rx| {
                                 master_rx.mut_enter(move |app_buffer| {
                                     let len = cmp::min(app_buffer.len(), read_len as usize);
+                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     app_buffer[..len].copy_from_slice(&buffer[..len]);
                                     self.master_buffer.replace(buffer);
                                     0
@@ -192,6 +199,10 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
     for I2CMasterSlaveDriver<'a, I>
 {
+    // FLUX-TODO addr=0x1ec5a reason=monomorph-at-caller flavor=explicit_panic
+    // enclosing-fn dyn-dispatched via I2CHwSlaveClient vtable; DWARF line lost
+    // during LTO inlining of panic helper; marker placed at fn entry.
+    // flux_support::assert(false);
     fn command_complete(
         &self,
         buffer: &'static mut [u8],
@@ -223,6 +234,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
                                     let read_len = cmp::min(buf_len, length);
 
                                     for (i, c) in buffer[0..read_len].iter_mut().enumerate() {
+                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         app_rx[i].set(*c);
                                     }
 
@@ -276,6 +288,9 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
 }
 
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> SyscallDriver for I2CMasterSlaveDriver<'a, I> {
+    // FLUX-TODO addr=0x554a reason=lto-inlined-fn-entry flavor=explicit_panic
+    // master enclosing fn known (<I2CMasterSlaveDriver as SyscallDriver>::command);
+    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     fn command(
         &self,
         command_num: usize,
@@ -327,6 +342,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> SyscallDriver for I2CMasterSlaveDriver
                                     let write_len = cmp::min(buf_len, len);
 
                                     for (i, c) in kernel_tx[0..write_len].iter_mut().enumerate() {
+                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         *c = app_tx[i].get();
                                     }
 
@@ -369,6 +385,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> SyscallDriver for I2CMasterSlaveDriver
                                     let read_len = cmp::min(buf_len, len);
 
                                     for (i, c) in kernel_tx[0..read_len].iter_mut().enumerate() {
+                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         *c = app_rx[i].get();
                                     }
 
@@ -429,6 +446,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> SyscallDriver for I2CMasterSlaveDriver
                                     let read_len = cmp::min(buf_len, len);
 
                                     for (i, c) in kernel_tx[0..read_len].iter_mut().enumerate() {
+                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         *c = app_tx[i].get();
                                     }
 
@@ -491,6 +509,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> SyscallDriver for I2CMasterSlaveDriver
                                     let buf_len = cmp::min(app_tx.len(), kernel_tx.len());
                                     let write_len = cmp::min(buf_len, write_len);
                                     let read_len = cmp::min(buf_len, read_len);
+                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     app_tx[..write_len].copy_to_slice(&mut kernel_tx[..write_len]);
                                     self.master_action
                                         .set(MasterAction::WriteRead(read_len as u8));
