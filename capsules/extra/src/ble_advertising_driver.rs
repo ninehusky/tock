@@ -500,7 +500,7 @@ where
                         .get_readwrite_processbuffer(rw_allow::SCAN_BUFFER)
                         .and_then(|scan_buffer| {
                             scan_buffer.mut_enter(|userland| {
-                                // FLUX-TODO addr=0x1e784 line=504 flavor=slice_end
+                                // FLUX-TODO addr=0x1f098 flavor=slice_end
                                 flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                 userland[0..len as usize]
                                     .copy_from_slice_or_err(&buf[0..len as usize])
@@ -607,9 +607,6 @@ where
     B: ble_advertising::BleAdvertisementDriver<'a> + ble_advertising::BleConfig,
     A: kernel::hil::time::Alarm<'a>,
 {
-    // FLUX-TODO addr=0x6386 reason=lto-inlined-fn-entry flavor=explicit_panic
-    // master enclosing fn known (<BLE as SyscallDriver>::command);
-    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     fn command(
         &self,
         command_num: usize,

@@ -158,7 +158,7 @@ impl<'a, R: radio::Radio<'a>> Mac<'a> for AwakeMac<'a, R> {
         }
 
         flux_support::assert(full_mac_frame.len() >= frame_len + PSDU_OFFSET);
-        // FLUX-OPT addr=0x15f8c line=161 flavor=slice_end
+        // FLUX-OPT addr=0x160e8 flavor=slice_end
         full_mac_frame.copy_within(0..frame_len, PSDU_OFFSET);
         self.radio.transmit(full_mac_frame, frame_len)
     }

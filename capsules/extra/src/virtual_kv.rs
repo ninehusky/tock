@@ -120,11 +120,9 @@ impl<'a, V: kv::KVPermissions<'a>> VirtualKVPermissions<'a, V> {
         self.key.replace(key);
         self.value.replace(value);
 
-        // FLUX-TODO line=125 flavor=unwrap_option addrs=[
-        //     0x14578, 0x1457e,
-        // ]
         // Notes: blocked-cell
         // flux_support::assert(self.key.is_some() && self.value.is_some());
+        // FLUX-TODO flavor=unwrap_option addrs=[0x14928, 0x1492e]
         self.mux_kv
             .do_next_op(false)
             .map_err(|e| (self.key.take().unwrap(), self.value.take().unwrap(), e))
@@ -158,11 +156,9 @@ impl<'a, V: kv::KVPermissions<'a>> kv::KVPermissions<'a> for VirtualKVPermission
         self.key.replace(key);
         self.value.replace(value);
 
-        // FLUX-TODO line=158 flavor=unwrap_option addrs=[
-        //     0x18292, 0x18298,
-        // ]
         // Notes: blocked-cell
         // flux_support::assert(self.key.is_some() && self.value.is_some());
+        // FLUX-TODO flavor=unwrap_option addrs=[0x1840e, 0x18414]
         self.mux_kv
             .do_next_op(false)
             .map_err(|e| (self.key.take().unwrap(), self.value.take().unwrap(), e))
@@ -229,7 +225,7 @@ impl<'a, V: kv::KVPermissions<'a>> kv::KVPermissions<'a> for VirtualKVPermission
         self.valid_ids.set(permissions);
         self.key.replace(key);
 
-        // FLUX-TODO addr=0x1828c line=224 flavor=unwrap_option
+        // FLUX-TODO addr=0x18408 flavor=unwrap_option
         // Notes: blocked-cell
         // flux_support::assert(self.key.is_some());
         self.mux_kv

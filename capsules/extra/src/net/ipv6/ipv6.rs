@@ -342,7 +342,6 @@ pub struct IPPayload<'a> {
 fn copy_subslice_into(dst: &mut [u8], src: &SubSliceMut<'_, u8>) {
     let mut i = 0;
     while i < src.len() {
-        // FLUX-TODO addr=0x19d96 line=345 flavor=bounds
         flux_support::assert(i < dst.len() && i < src.len());
         dst[i] = src[i];
         i += 1;
@@ -411,27 +410,24 @@ impl<'a> IPPayload<'a> {
     /// wrapped in an SResult
     #[flux_rs::trusted(reason = "thread 'rustc' (32885569) panicked at crates/flux-refineck/src/type_env.rs:553:17: assertion failed: !scope.has_free_vars(arg)")]
     #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n], offset: usize) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 8 + offset)]
-    // FLUX-TODO-FN-LEVEL covers=[0xdad8] flavor=slice_end
-    // panic somewhere in this fn body; addr2line lost the line
-    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {
         let (offset, _) = match self.header {
             // The `unwrap` is safe because we require that `buf >= 8 + offset`, which is the
             // exact condition under which `.encode()` returns a `Done`.
-            // FLUX-TODO addr=0xdae8 line=415 flavor=unwrap_option
+            // FLUX-TODO addr=0xdab8 flavor=unwrap_option
             TransportHeader::UDP(udp_header) => {
                 let done = udp_header.encode(buf, offset).done();
                 flux_support::assert(done.is_some());
                 done.unwrap()
             }
-            // FLUX-TODO addr=0xdaee line=416 flavor=unwrap_option
+            // FLUX-TODO addr=0xdabe flavor=unwrap_option
             TransportHeader::ICMP(icmp_header) => {
                 let done = icmp_header.encode(buf, offset).done();
                 flux_support::assert(done.is_some());
                 done.unwrap()
             }
             _ => {
-                // FLUX-TODO addr=0xdae2 line=418 flavor=explicit_panic
+                // FLUX-TODO addr=0xdab2 flavor=explicit_panic
                 flux_support::assert(false);
                 unimplemented!();
             }
@@ -443,7 +439,7 @@ impl<'a> IPPayload<'a> {
         // `#[no_panic_if]` (opt-in per call-site), not in the sig's `requires`. Since this function isn't
         // marked `#[flux_rs::no_panic]`, the slice-op bounds check wouldn't fire without this explicit assert.
         flux_support::assert(payload_length <= self.payload.len());
-        // FLUX-OPT addr=0xdaa8 line=448 flavor=slice_end
+        // FLUX-OPT addr=0xdaa8 flavor=slice_end
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)
     }
@@ -503,8 +499,6 @@ impl<'a> IP6Packet<'a> {
     #[flux_rs::sig(fn(self: &Self[@p]) -> &[u8][p.payload_buf_len])]
     pub fn get_payload(&self) -> &[u8] {
         self.payload.payload
-        // FLUX-TODO-BLOCKED addr=0xdb5e line=504 reason=before_close_brace
-        // flux_support::assert(false);
     }
 
     #[flux_rs::sig(fn(self: &Self[@p]) -> usize requires p.kind != 1)]
@@ -512,7 +506,7 @@ impl<'a> IP6Packet<'a> {
         let transport_hdr_size = match self.payload.header {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),
             TransportHeader::ICMP(icmp_header) => icmp_header.get_hdr_size(),
-            // FLUX-TODO addr=0xdb52 line=494 flavor=explicit_panic
+            // FLUX-TODO addr=0xdb22 flavor=explicit_panic
             _ => { flux_support::assert(false); unimplemented!() },
         };
         40 + transport_hdr_size
@@ -542,7 +536,7 @@ impl<'a> IP6Packet<'a> {
                 icmp_header.set_cksum(cksum);
             }
             _ => {
-                // FLUX-TODO addr=0x19d8c line=523 flavor=explicit_panic
+                // FLUX-TODO addr=0x19efa flavor=explicit_panic
                 flux_support::assert(false);
                 unimplemented!();
             }
@@ -573,17 +567,13 @@ impl<'a> IP6Packet<'a> {
         self.header.set_payload_len(payload_len);
     }
 
-    // TODO: Do we need a decode equivalent? I don't think so, but we might
-    // FLUX-TODO-BLOCKED addr=0xdb00 line=573 reason=impl_scope
-    // flux_support::assert(false);
-
     #[flux_rs::sig(fn(self: &Self[@p], &mut [u8][@n]) -> SResult<usize> requires p.kind != 1 && p.hdr_len >= 8 && n >= 48)]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
 
         let ip6_header = self.header;
         let done = ip6_header.encode(buf).done();
         flux_support::assert(done.is_some());
-        // FLUX-OPT addr=0xdaf4 line=560 flavor=unwrap_option
+        // FLUX-OPT addr=0xdac4 flavor=unwrap_option
         let (off, _) = done.unwrap();
         self.payload.encode(buf, off)
     }

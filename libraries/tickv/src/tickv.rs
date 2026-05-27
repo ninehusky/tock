@@ -85,7 +85,7 @@ impl ObjectHeader {
     #[flux_rs::sig(fn(hashed_key: u64, len: u16{len < 0xFFF}) -> Self)]
     fn new(hashed_key: u64, len: u16) -> Self {
         flux_support::assert(len < 0xFFF);
-        // FLUX-OPT addr=0x16b34 line=88 flavor=explicit_panic
+        // FLUX-OPT addr=0x16cc4 flavor=explicit_panic
         assert!(len < 0xFFF);
         Self {
             version: VERSION,
@@ -152,7 +152,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             },
             _ => {
 
-                // FLUX-TODO addr=0x183cc line=152 flavor=explicit_panic
+                // FLUX-TODO addr=0x18548 flavor=explicit_panic
                 // Notes: blocked-cell
                 // flux_support::assert(false);
                 unreachable!()
@@ -226,10 +226,10 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     /// Get region number from a hashed key
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> usize)]
     fn get_region(&self, hash: u64) -> usize {
-        // FLUX-TODO addr=0x1608c flavor=assert reason=assert_ne_macro
-        // master enclosing fn=get_region; the assert_ne! macros below expand to
-        // calls into core::panicking::assert_failed (the u64 monomorph),
-        // attributing to this fn but with no source line. Marker covers both.
+
+
+        flux_support::assert(hash != 0xFFFF_FFFF_FFFF_FFFF);
+        flux_support::assert(hash != 0);
         assert_ne!(hash, 0xFFFF_FFFF_FFFF_FFFF);
         assert_ne!(hash, 0);
 
@@ -237,7 +237,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
         let num_region = self.flash_size / S;
 
         // Determine the block where the data should be
-        // FLUX-TODO addr=0x16238 line=229 flavor=rem_by_zero
+        // FLUX-TODO addr=0x163c8 flavor=rem_by_zero
         flux_support::assert(num_region != 0);
         (hash as usize & 0xFFFF) % num_region
     }
@@ -449,13 +449,13 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 State::AppendKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 },
-                // FLUX-TODO addr=0x16b3e line=439 flavor=explicit_panic
+                // FLUX-TODO addr=0x16cce flavor=explicit_panic
                 _ => { flux_support::assert(false); unreachable!() },
             };
 
             let region_buf_opt = self.read_buffer.take();
 
-            // FLUX-TODO addr=0x16b2a line=442 flavor=unwrap_option
+            // FLUX-TODO addr=0x16cba flavor=unwrap_option
             // Notes: blocked-cell
             // flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
@@ -725,7 +725,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                     KeyState::ReadRegion(reg) => reg,
                 },
                 _ => {
-                    // FLUX-TODO addr=0x16fae line=731 flavor=explicit_panic
+                    // FLUX-TODO addr=0x16fae flavor=explicit_panic
                     // Notes: blocked-cell
                     // flux_support::assert(false);
                     unreachable!()
@@ -735,7 +735,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             // Get the data from that region
             let region_buf_opt = self.read_buffer.take();
 
-            // FLUX-TODO addr=0x16e14 line=707 flavor=unwrap_option
+            // FLUX-TODO addr=0x16fa4 flavor=unwrap_option
             // Notes: blocked-cell
             // flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
@@ -870,7 +870,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                     KeyState::ReadRegion(reg) => reg,
                 },
                 _ => {
-                    // FLUX-TODO addr=0x16386 line=876 flavor=explicit_panic
+                    // FLUX-TODO addr=0x16386 flavor=explicit_panic
                     // Notes: blocked-cell
                     // flux_support::assert(false);
                     unreachable!()
@@ -878,7 +878,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             };
 
             // Get the data from that region
-            // FLUX-TODO addr=0x1637c line=885 flavor=unwrap_option
+            // FLUX-TODO addr=0x1637c flavor=unwrap_option
             // Notes: blocked-cell
             let region_buf_opt = self.read_buffer.take();
             // flux_support::assert(region_buf_opt.is_some());
@@ -983,7 +983,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                     KeyState::ReadRegion(reg) => reg,
                 },
                 _ => {
-                    // FLUX-TODO addr=0x187fc line=931 flavor=explicit_panic
+                    // FLUX-TODO addr=0x18978 flavor=explicit_panic
                     // Notes: blocked-cell
                     // flux_support::assert(false);
                     unreachable!()
@@ -991,7 +991,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             };
 
             // Get the data from that region
-            // FLUX-TODO addr=0x1896e line=998 flavor=unwrap_option
+            // FLUX-TODO addr=0x1896e flavor=unwrap_option
             // Notes: blocked-cell
             let region_buf_opt = self.read_buffer.take();
             // flux_support::assert(region_buf_opt.is_some());
@@ -1069,7 +1069,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
         flash_freed: usize,
     ) -> Result<usize, ErrorCode> {
         // Get the data from that region
-        // FLUX-TODO addr=0x1852c line=1009 flavor=unwrap_option
+        // FLUX-TODO addr=0x186a8 flavor=unwrap_option
         // Notes: blocked-cell
         let region_buf_opt = self.read_buffer.take();
         // flux_support::assert(region_buf_opt.is_some());
@@ -1202,7 +1202,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 }
             },
             _ => {
-                // FLUX-TODO addr=0x18536 line=1137 flavor=explicit_panic
+                // FLUX-TODO addr=0x186b2 flavor=explicit_panic
                 // Notes: blocked-cell
                 // flux_support::assert(false);
                 unreachable!()

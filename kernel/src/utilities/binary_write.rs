@@ -120,7 +120,6 @@ impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
 
             // Actually do the write. This will return how many bytes it was
             // able to print.
-            // FLUX-TODO addr=0x110a4 line=125 flavor=slice_order
             // Notes: actionable. Discharge needs an extern spec tying str::len
             // and str::as_bytes to the same length. The obvious form (both
             // -> &[u8][str_len(s)] using the BUILT-IN str_len theory fn) does
@@ -131,6 +130,7 @@ impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
             // perturb the solver. Deferred. `start <= string_len` already
             // follows from the early-return control flow above.
             // flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
+            // FLUX-TODO addr=0x11168 flavor=slice_order
             let ret = self
                 .binary_writer
                 .write_buffer(&(s).as_bytes()[start..string_len]);

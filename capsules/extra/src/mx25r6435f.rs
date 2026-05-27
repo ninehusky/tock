@@ -95,16 +95,6 @@ impl Default for Mx25r6435fSector {
     }
 }
 
-// FLUX-TODO-BLOCKED blocked_flux_index_extern_spec: `self.0` is `[u8; SECTOR_SIZE]`,
-// so `self.0[idx]` is safe iff `idx < 4096`. The clean way to state that is the
-// `Index::in_bounds` associated refinement, but flux_support's `Index` trait
-// extern spec (slice.rs) declares only the `in_bounds` assoc — no `fn index`
-// method wiring it in (that lives on the `[T]` impl). So a custom `Index` impl
-// has nothing to attach `in_bounds` to, and `no_panic_if` doesn't inject the
-// assumption into a real body. Fixing it means adding an inherited `fn index`
-// to the trait extern spec, which can't use `&Self[@len]` generically (our type
-// isn't length-refined) and would touch every indexing site workspace-wide.
-// Left as safe checked indexing pending that flux_support work.
 impl Index<usize> for Mx25r6435fSector {
     type Output = u8;
 
@@ -276,7 +266,7 @@ impl<
         self.txbuffer
             .take()
             .map_or(Err(ErrorCode::RESERVE), |txbuffer| {
-                // FLUX-TODO addr=0x16628 line=267 flavor=bounds
+                // FLUX-TODO addr=0x167b8 flavor=bounds
                 // Notes: blocked-cell
                 // flux_support::assert(txbuffer.len() > 0);
                 txbuffer[0] = Opcodes::WREN as u8;
@@ -314,7 +304,7 @@ impl<
                             .take()
                             .map_or(Err(ErrorCode::RESERVE), move |rxbuffer| {
                                 // Setup the read instruction
-                                // FLUX-TODO addr=0x164b6 line=301 flavor=div_by_zero
+                                // FLUX-TODO addr=0x16646 flavor=bounds
                                 // Notes: blocked-cell
                                 // flux_support::assert(txbuffer.len() > 3);
                                 txbuffer[0] = Opcodes::READ as u8;
@@ -333,7 +323,7 @@ impl<
                                     (PAGE_SIZE + 4) as usize,
                                 ) {
                                     self.txbuffer.replace(txbuffer);
-                                    // FLUX-TODO addr=0x164ae line=317 flavor=unwrap_option
+                                    // FLUX-TODO addr=0x1663e flavor=unwrap_option
                                     // Notes: blocked-cell
                                     // flux_support::assert(rxbuffer.is_some());
                                     self.rxbuffer.replace(rxbuffer.unwrap());
@@ -389,7 +379,7 @@ impl<
         A: hil::time::Alarm<'a> + 'a,
     > hil::spi::SpiMasterClient for MX25R6435F<'a, S, P, A>
 {
-    // FLUX-TODO reason=multi-candidate-fn-entry covers=[0x1efd6, 0x1efee] flavor=bounds
+    // FLUX-TODO-FN-LEVEL reason=multi-candidate-fn-entry addrs=[0x1f42e] flavor=bounds
     // 2 bounds panics in this fn; 18 candidate arr[i] operations in the body
     // (state-machine dispatcher with many state-specific buffer copies).
     // Cannot disambiguate from DWARF; marker covers fn body.
@@ -553,7 +543,7 @@ impl<
 
                 self.client_sector.map(|sector| {
                     for i in 0..(PAGE_SIZE as usize) {
-                        // FLUX-TODO addr=0x1f1e4 line=529 flavor=bounds
+                        // FLUX-TODO addr=0x1f420 flavor=bounds
                         flux_support::assert(i + 4 < write_buffer.len() && (i + (page_index * PAGE_SIZE) as usize) < SECTOR_SIZE as usize);
                         write_buffer[i + 4] = sector[i + (page_index * PAGE_SIZE) as usize];
                     }
@@ -619,7 +609,7 @@ impl<
         // operation has finished.
         self.txbuffer.take().map(|write_buffer| {
             self.rxbuffer.take().map(move |read_buffer| {
-                // FLUX-TODO addr=0x1f4ba line=592 flavor=bounds
+                // FLUX-TODO addr=0x1f6f6 flavor=bounds
                 flux_support::assert(write_buffer.len() > 0);
                 write_buffer[0] = Opcodes::RDSR as u8;
                 let _ = self

@@ -129,11 +129,6 @@ impl<'a, P: gpio::InterruptPin<'a>> Button<'a, P> {
 const UPCALL_NUM: usize = 0;
 
 impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
-    // FLUX-TODO addr=0x794c reason=lto-inlined-fn-entry flavor=explicit_panic
-    // master enclosing fn known (<Button as SyscallDriver>::command);
-    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
-    /// Configure interrupts and read state for buttons.
-    ///
     /// `data` is the index of the button in the button array as passed to
     /// `Button::new()`.
     ///
@@ -203,7 +198,6 @@ impl<'a, P: gpio::InterruptPin<'a>> SyscallDriver for Button<'a, P> {
 
                     // if not, disable the interrupt
                     if interrupt_count.get() == 0 {
-                        // FLUX-TODO addr=0x1a0fa line=203 flavor=bounds
                         flux_support::assert(data < self.pins.len());
                         self.pins[data].0.disable_interrupts();
                     }

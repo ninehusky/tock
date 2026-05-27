@@ -252,7 +252,6 @@ impl<'a> AesECB<'a> {
                                 for i in 0..take {
                                     // Copy into static mut DMA buffer
                                     unsafe {
-                                        // FLUX-TODO addr=0x21fca line=255 flavor=bounds
                                         flux_support::assume(i + PLAINTEXT_START < 48 && i + start < output.len());
                                         flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         ECB_DATA[i + PLAINTEXT_START] = output[i + start];
@@ -264,7 +263,6 @@ impl<'a> AesECB<'a> {
                             for i in 0..take {
                                 // Copy into static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x21fae line=264 flavor=bounds
                                     flux_support::assume(i + PLAINTEXT_START < 48 && i + start < input.len());
                                     flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     ECB_DATA[i + PLAINTEXT_START] = input[i + start];
@@ -283,7 +281,6 @@ impl<'a> AesECB<'a> {
 
                                     // Copy into static mut DMA buffer
                                     unsafe {
-                                        // FLUX-TODO addr=0x21fd0 line=280 flavor=bounds
                                         flux_support::assume(ecb_idx < 48 && i + start < output.len());
                                         flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         ECB_DATA[ecb_idx] ^= output[i + start];
@@ -296,7 +293,6 @@ impl<'a> AesECB<'a> {
                                 let ecb_idx = i + PLAINTEXT_START;
                                 // Copy into static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x21fb4 line=290 flavor=bounds
                                     flux_support::assume(ecb_idx < 48 && i + start < input.len());
                                     flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     ECB_DATA[ecb_idx] ^= input[i + start];
@@ -313,9 +309,6 @@ impl<'a> AesECB<'a> {
         }
     }
 
-    // FLUX-TODO addr=0x21dbc reason=multi-fn-ambiguous-entry flavor=bounds
-    // master attribution <AesECB>::crypt is ambiguous (2 crypts on AesECB: this
-    // inherent one + the AES128 trait impl at L494). Mark both fn entries.
     fn crypt(&self) {
         match self.mode.get() {
             AESMode::CTR => {}
@@ -354,7 +347,6 @@ impl<'a> AesECB<'a> {
                                 // output buffer.
                                 self.output.map(|output| {
                                     for i in 0..take {
-                                        // FLUX-TODO addr=0x1e80 line=342 flavor=bounds
                                         flux_support::assume(start + i < output.len() && i + PLAINTEXT_END < 48);
                                         flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         let in_byte = output[start + i];
@@ -376,7 +368,6 @@ impl<'a> AesECB<'a> {
                                         flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
-                                        // FLUX-TODO addr=0x1e32 line=357 flavor=bounds
                                         flux_support::assume(start_idx + current_idx + i < output.len());
                                         flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         output[start_idx + current_idx + i] =
@@ -401,7 +392,6 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x1e12 line=379 flavor=bounds
                                     flux_support::assume(dest_idx < output.len() && i + PLAINTEXT_END < 48);
                                     flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
@@ -422,7 +412,6 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x1e1c line=397 flavor=bounds
                                     flux_support::assume(dest_idx < output.len() && i + PLAINTEXT_END < 48 && i + PLAINTEXT_START < 48);
                                     flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
@@ -509,9 +498,6 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
     // not needed by NRF5x
     fn start_message(&self) {}
 
-    // FLUX-TODO addr=0x21dbc reason=multi-fn-ambiguous-entry flavor=bounds
-    // master attribution <AesECB>::crypt is ambiguous (this AES128 trait crypt
-    // + the inherent crypt at L312). Mark both fn entries.
     fn crypt(
         &self,
         source: Option<&'static mut [u8]>,
@@ -529,7 +515,7 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             self.crypt();
             None
         } else {
-            // FLUX-TODO addr=0x220a2 line=498 flavor=unwrap_option
+            // FLUX-TODO addr=0x2234a flavor=unwrap_option
             flux_support::assume(self.output.is_some());
             Some((
                 Err(ErrorCode::INVAL),

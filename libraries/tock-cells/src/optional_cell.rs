@@ -195,8 +195,8 @@ impl<T: Copy> OptionalCell<T> {
     #[flux_rs::trusted(reason = "blocked-cell")]
     #[track_caller]
     pub fn unwrap_or_panic(&self) -> T {
-        // FLUX-TODO line=197 flavor=unwrap_option addrs=[
-        //     0x1251a, 0x116cc, 0x127b6, 0x12cfe, 0x12d04,
+        // FLUX-TODO flavor=unwrap_option addrs=[
+        //     0x11784, 0x125ca, 0x12866, 0x1356a, 0x13570,
         // ]
         flux_support::assert(self.value.get().is_some());
         self.value.get().unwrap()

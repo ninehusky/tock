@@ -468,9 +468,6 @@ impl<'a, V: kv::KVPermissions<'a>> kv::KVClient for KVStoreDriver<'a, V> {
 }
 
 impl<'a, V: kv::KVPermissions<'a>> SyscallDriver for KVStoreDriver<'a, V> {
-    // FLUX-TODO addr=0x4f10 reason=lto-inlined-fn-entry flavor=explicit_panic
-    // master enclosing fn known (<KVStoreDriver as SyscallDriver>::command);
-    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
     fn command(
         &self,
         command_num: usize,

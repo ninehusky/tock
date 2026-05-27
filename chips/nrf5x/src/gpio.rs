@@ -530,7 +530,7 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
             hil::gpio::InterruptEdge::FallingEdge => Config::POLARITY::HiToLo,
         };
         let pin: u32 = (GPIO_PER_PORT as u32 * self.port as u32) + self.pin as u32;
-        // FLUX-TODO addr=0x5858 line=533 flavor=bounds
+        // FLUX-TODO addr=0x5940 flavor=bounds
         flux_support::assume(channel < self.gpiote_registers.config.len());
         self.gpiote_registers.config[channel]
             .write(Config::MODE::Event + Config::PSEL.val(pin) + polarity);
@@ -539,7 +539,7 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
 
     fn disable_interrupts(&self) {
         if let Some(channel) = self.allocated_channel.get() {
-            // FLUX-TODO addr=0x1ba34 line=540 flavor=bounds
+            // FLUX-TODO addr=0x1a4f8 flavor=bounds
             flux_support::assume(channel < self.gpiote_registers.config.len());
             self.gpiote_registers.config[channel]
                 .write(Config::MODE::CLEAR + Config::PSEL::CLEAR + Config::POLARITY::CLEAR);

@@ -737,9 +737,7 @@ impl<'a, A: hil::adc::Adc<'a> + hil::adc::AdcHighSpeed<'a>> hil::adc::Client
     /// Collects the sample and provides a callback to the application.
     ///
     /// - `sample` - analog sample value
-    // FLUX-TODO addr=0x1e182 reason=lto-inlined-fn-entry flavor=explicit_panic
-    // master enclosing fn known (<AdcDedicated as hil::adc::Client>::sample_ready);
-    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
+    // FLUX-TODO-FN-LEVEL addrs=[0x1e5a6] reason=lto-inlined-fn-entry flavor=explicit_panic
     fn sample_ready(&self, sample: u16) {
         let mut calledback = false;
         if self.active.get() && self.mode.get() == AdcMode::SingleSample {
@@ -827,9 +825,7 @@ impl<'a, A: hil::adc::Adc<'a> + hil::adc::AdcHighSpeed<'a>> hil::adc::HighSpeedC
     /// - `buf` - internal buffer filled with analog samples
     /// - `length` - number of valid samples in the buffer, guaranteed to be
     ///   less than or equal to buffer length
-    // FLUX-TODO addr=0x1e7b6 reason=lto-inlined-fn-entry flavor=explicit_panic
-    // master enclosing fn known (<AdcDedicated as hil::adc::HighSpeedClient>::samples_ready);
-    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body.
+    // FLUX-TODO-FN-LEVEL addrs=[0x1ebd6] reason=lto-inlined-fn-entry flavor=explicit_panic
     fn samples_ready(&self, buf: &'static mut [u16], length: usize) {
         let mut unexpected_state = false;
 
@@ -1152,10 +1148,6 @@ impl<'a, A: hil::adc::Adc<'a> + hil::adc::AdcHighSpeed<'a>> SyscallDriver for Ad
     /// - `command_num` - which command call this is
     /// - `data` - value sent by the application, varying uses
     /// - `_processid` - application identifier, unused
-    // FLUX-TODO addr=0x6064 reason=monomorph-at-caller flavor=explicit_panic
-    // enclosing-fn dyn-dispatched via SyscallDriver vtable; DWARF line lost
-    // during LTO inlining of panic helper; marker placed at fn entry.
-    // flux_support::assert(false);
     fn command(
         &self,
         command_num: usize,

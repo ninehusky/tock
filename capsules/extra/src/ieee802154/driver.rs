@@ -155,12 +155,6 @@ fn encode_key_id(key_id: &KeyId, buf: &mut [u8]) -> SResult {
 }
 
 /// Decodes a key ID that is in the format produced by the userland driver.
-// FLUX-TODO-BLOCKED blocked_flux_stream_combinator: the `dec_try!`/`dec_consume!`
-// slice ops (`&buf[offset..]`) are believed-safe — the SResult stream combinators
-// maintain `offset <= buf.len()` (they return Error/NeedMore rather than advance
-// past the end) — but Flux has no extern specs threading that invariant through
-// the combinators, so it cannot prove the slices in-bounds. Trusted (not proven)
-// pending stream-combinator specs. See docs/flux_tuple_pack_limitation.md siblings.
 #[flux_rs::trusted(reason = "blocked_flux_stream_combinator: SResult offset<=len invariant not Flux-tracked")]
 fn decode_key_id(buf: &[u8]) -> SResult<KeyId> {
     stream_len_cond!(buf, 1);
@@ -322,7 +316,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     fn add_neighbor(&self, new_neighbor: DeviceDescriptor) -> Option<usize> {
         self.neighbors.and_then(|neighbors| {
             let num_neighbors = self.num_neighbors.get();
-            // FLUX-TODO addr=0x724c line=316 flavor=slice_end
+            // FLUX-TODO addr=0x7334 flavor=slice_end
             flux_support::assert(num_neighbors <= neighbors.len());
             let position = neighbors[..num_neighbors]
                 .iter()
@@ -383,7 +377,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
     fn add_key(&self, new_key: KeyDescriptor) -> Option<usize> {
         self.keys.and_then(|keys| {
             let num_keys = self.num_keys.get();
-            // FLUX-TODO addr=0x727e line=372 flavor=slice_end
+            // FLUX-TODO addr=0x7366 flavor=slice_end
             flux_support::assert(num_keys <= keys.len());
             let position = keys[..num_keys].iter().position(|key| *key == new_key);
             match position {
@@ -583,7 +577,7 @@ impl<'a, M: device::MacDevice<'a>> framer::DeviceProcedure for RadioDriver<'a, M
     fn lookup_addr_long(&self, addr: MacAddress) -> Option<[u8; 8]> {
         self.neighbors
             .and_then(|neighbors| {
-                // FLUX-TODO addr=0x1c362 line=567 flavor=slice_end
+                // FLUX-TODO addr=0x1c048 flavor=slice_end
                 flux_support::assert(self.num_neighbors.get() <= neighbors.len());
                 neighbors[..self.num_neighbors.get()]
                     .iter()
@@ -614,7 +608,7 @@ impl<'a, M: device::MacDevice<'a>> framer::KeyProcedure for RadioDriver<'a, M> {
     fn lookup_key(&self, level: SecurityLevel, key_id: KeyId) -> Option<[u8; 16]> {
         self.keys
             .and_then(|keys| {
-                // FLUX-TODO addr=0x1c42c line=595 flavor=div_by_zero
+                // FLUX-TODO addr=0x1c112 flavor=slice_end
                 flux_support::assert(self.num_keys.get() <= keys.len());
                 keys[..self.num_keys.get()]
                     .iter()
@@ -692,10 +686,7 @@ impl<'a, M: device::MacDevice<'a>> SyscallDriver for RadioDriver<'a, M> {
     ///        parameters to encrypt, form headers, and transmit the frame.
     /// - `28`: Set long address.
     /// - `29`: Get the long MAC address.
-    // FLUX-TODO reason=lto-inlined-fn-entry covers=[0x720a, 0x7268]
-    // master enclosing fn known (<RadioDriver as SyscallDriver>::command);
-    // 0x720a flavor=unwrap_option, 0x7268 flavor=explicit_panic;
-    // panic source lines lost to LTO.
+    // FLUX-TODO-FN-LEVEL reason=lto-inlined-fn-entry addrs=[0x735c] flavor=explicit_panic
     #[flux_rs::trusted(reason = "ICE")]
     fn command(
         &self,
@@ -948,8 +939,6 @@ impl<'a, M: device::MacDevice<'a>> SyscallDriver for RadioDriver<'a, M> {
                                         return None;
                                     }
                                     let dst_addr = arg1 as u16;
-                                    // FLUX-TODO addr=0x724e flavor=bounds
-                                    // cfg[0] bounds check; only one bounds expr in fn body matches.
                                     let level = match SecurityLevel::from_scf(cfg[0].get()) {
                                         Some(level) => level,
                                         None => {
@@ -1088,7 +1077,7 @@ impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
 
                         // Copy the entire frame over to userland, preceded by three metadata bytes:
                         // the header length, the data length, and the MIC length.
-                        // FLUX-TODO addr=0x1c154 line=1062 flavor=slice_end
+                        // FLUX-TODO addr=0x1be38 flavor=slice_end
                         flux_support::assert(offset + frame_len + USER_FRAME_METADATA_SIZE <= rbuf.len());
                         rbuf[(offset + USER_FRAME_METADATA_SIZE)
                             ..(offset + frame_len + USER_FRAME_METADATA_SIZE)]

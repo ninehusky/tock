@@ -107,7 +107,7 @@ pub trait ContextStore {
         match self.get_context_from_id(0) {
             Some(ctx) => ctx,
             None => {
-                // FLUX-OPT addr=0x18e14 line=106 flavor=explicit_panic
+                // FLUX-OPT addr=0x18f78 flavor=explicit_panic
                 // Notes: discharged by the `b: ctx_id == 0 => b` postcondition on `get_context_from_id`.
                 // There's only one `impl` of `ContextStore` which returns `Some` for `ctx_id == 0`.
                 flux_support::assert(false);
@@ -625,11 +625,6 @@ fn compress_udp_checksum(udp_header: &UDPHeader, buf: &mut [u8], written: &mut u
         // protocol-invariant `flux_support::assume`.
         ensures consumed: usize{c: c <= buf_len}
 )]
-// FLUX-TODO reason=mass-refactor-fn-entry covers=[0xadf8, 0xae28, 0xae86]
-// master's monolithic `decompress` fn (containing these 3 panics) was split on
-// branch into decompress + decompress_ext_hdr. DWARF can't map master addrs
-// to specific operations in the split. Marker covers any bounds/slice op in
-// this fn body.
 fn decompress_ext_hdr(
     nhc_header: u8,
     buf: &[u8],
@@ -670,7 +665,7 @@ fn decompress_ext_hdr(
 
     next_headers[0] = next_header;
     next_headers[1] = hdr_len_field as u8;
-    // FLUX-TODO addr=0xd0d4 line=658 flavor=div_by_zero
+    // FLUX-TODO addr=0xd0a2 flavor=slice_order
     flux_support::assert(2 + len <= next_headers.len() && *consumed + len <= buf.len());
     next_headers[2..2 + len].copy_from_slice(&buf[*consumed..*consumed + len]);
 
@@ -709,14 +704,7 @@ fn decompress_ext_hdr(
     ) -> Result<(usize, usize), ()>
         requires buf_len >= 42 && out_len >= 40
 )]
-// FLUX-TODO reason=mass-refactor-fn-entry covers=[0xadf8, 0xae28, 0xae86]
-// master's monolithic `decompress` fn (containing these 3 panics) was split on
-// branch into decompress + decompress_ext_hdr. DWARF can't map master addrs
-// to specific operations in the split. Marker covers any bounds/slice op in
-// this fn body.
-// FLUX-TODO-FN-LEVEL covers=[0xd11a, 0xd16c, 0xd0fa] flavor=slice_end
-// panic somewhere in this fn body; addr2line lost the line
-// (LTO + generic monomorphization). See breadcrumb comments in body.
+// FLUX-TODO-FN-LEVEL reason=mass-refactor-fn-entry addrs=[0xd170, 0xd17e, 0xd194, 0xd1a0] flavor=bounds
 pub fn decompress(
     ctx_store: &dyn ContextStore,
     buf: &[u8],
@@ -758,7 +746,6 @@ pub fn decompress(
 
     // Destination Address
     if (iphc_header_2 & iphc::MULTICAST) != 0 {
-        // FLUX-TODO addr=0xd11a line=739
         decompress_multicast(&mut ip6_header, iphc_header_2, &dst_ctx, buf, &mut consumed)?;
     } else {
         decompress_dst(
@@ -874,7 +861,7 @@ pub fn decompress(
                 let udp_length_usize: usize = udp_length as usize;
                 let upper: usize = buf.len() + 8;
                 flux_support::assume(udp_length_usize <= upper && consumed <= upper - udp_length_usize);
-                // FLUX-TODO addr=0xd0fa line=853 flavor=slice_end
+                // FLUX-TODO addr=0xd0c8 flavor=slice_end
                 let udp_checksum = decompress_udp_checksum(
                     nhc_header,
                     &next_headers[0..8],
@@ -909,18 +896,12 @@ pub fn decompress(
                 next_header = new_next_header;
                 written += written_growth;
             }
-            // FLUX-TODO-BLOCKED addr=0xd0f0 line=885 flavor=explicit_panic blocked_flux_loop_carry
-            // This arm IS dead: `next_header` is always a handled `ip6_nh` type.
-            // Closing it needs `decompress_ext_hdr` to tell this loop
-            // `is_nhc => valid_ip6_nh(next_header)`. The refined-tuple return form
-            // `Result<{b. (bool[b], u8{b=>valid}, _)}, _>` is sort-rejected (an
-            // existential-over-tuple can't be a `Result` type arg). The struct
-            // form proves in `decompress_ext_hdr` but this loop did not carry the
-            // relation; the exact cause is not isolated (a minimal repro shows
-            // struct field-extraction *does* carry — suspect is the pre-loop
-            // `if is_nhc { next_header = nhc_to_ip6_nh(..)? }` join flattening the
-            // entry type). See docs/flux_tuple_pack_limitation.md. Left open.
-            _ => { flux_support::assert(false); panic!("Unreachable case") },
+
+            _ => {
+                // FLUX-TODO addr=0xd0be flavor=explicit_panic
+                flux_support::assert(false);
+                panic!("Unreachable case")
+            },
         }
     }
 
@@ -1004,9 +985,7 @@ fn decompress_tf(ip6_header: &mut IP6Header, iphc_header: u8, buf: &[u8], consum
     if fl_compressed {
         ip6_header.set_flow_label(0);
     } else {
-        // FLUX-TODO line=969 flavor=bounds addrs=[
-        //     0xd1a6, 0xd1ae, 0xd1ba,
-        // ]
+        // FLUX-TODO addr=0xd176 flavor=bounds
         flux_support::assert(*consumed + 2 < buf.len());
         let flow = (((buf[*consumed] & 0x0f) as u32) << 16)
             | ((buf[*consumed + 1] as u32) << 8)
@@ -1239,12 +1218,10 @@ fn decompress_multicast(
                     return Err(());
                 }
                 ip_addr.0[0] = 0xff;
-                // FLUX-TODO addr=0xd20e line=1186 flavor=div_by_zero
                 flux_support::assert(*consumed + 1 < buf.len() && 2 < ip_addr.0.len());
                 ip_addr.0[1] = buf[*consumed];
                 ip_addr.0[2] = buf[*consumed + 1];
                 ip_addr.0[3] = ctx.prefix_len;
-                // FLUX-TODO: see flux-rs#1567. flavor=slice_end
                 let dst = &mut ip_addr.0[4..4 + prefix_bytes];
                 flux_support::assume(dst.len() == prefix_bytes);
                 flux_support::assume(ctx.prefix.len() == 16);
@@ -1253,7 +1230,7 @@ fn decompress_multicast(
                 dst.copy_from_slice(src);
                 let dst = &mut ip_addr.0[12..16];
                 flux_support::assume(dst.len() == 4);
-                // FLUX-TODO addr=0xd12e line=1198 flavor=div_by_zero
+                // FLUX-TODO addr=0xd0fc flavor=slice_order
                 flux_support::assert(*consumed + 6 <= buf.len());
                 dst.copy_from_slice(&buf[*consumed + 2..*consumed + 6]);
                 *consumed += 6;
@@ -1276,7 +1253,6 @@ fn decompress_multicast(
                 ip_addr.0[0] = 0xff;
                 ip_addr.0[1] = buf[*consumed];
                 *consumed += 1;
-                // FLUX-TODO: see flux-rs#1567. flavor=slice_end
                 let dst = &mut ip_addr.0[11..16];
                 flux_support::assume(dst.len() == 5);
                 dst.copy_from_slice(&buf[*consumed..*consumed + 5]);
@@ -1288,7 +1264,6 @@ fn decompress_multicast(
                 ip_addr.0[0] = 0xff;
                 ip_addr.0[1] = buf[*consumed];
                 *consumed += 1;
-                // FLUX-TODO: see flux-rs#1567. flavor=slice_end
                 let dst = &mut ip_addr.0[13..16];
                 flux_support::assume(dst.len() == 3);
                 dst.copy_from_slice(&buf[*consumed..*consumed + 3]);
@@ -1340,7 +1315,7 @@ fn decompress_iid_link_local(
     consumed: &mut usize,
 ) -> Result<(), ()> {
     // FLUX implementor's note: there are many assumes here, all of which reason
-    // about hte length of slices and `[T; N]` arrays, both of which
+    // about the length of slices and `[T; N]` arrays, both of which
     // are upstreamed or about to be upstreamed in flux-rs. So don't worry about
     // the assumes too much here.
 
@@ -1357,14 +1332,9 @@ fn decompress_iid_link_local(
         // Link-local prefix (64 bits) + 64 bits carried inline
         iphc::SAM_MODE1 | iphc::DAM_MODE1 => {
             ip_addr.set_unicast_link_local();
-            // FLUX-TODO: Flux loses array length through Range indexing on flavor=slice_end
-            // `[T; N]` (slice→subslice works, array→subslice doesn't). Drop
-            // the `assume`s and the let-bindings once
-            // https://github.com/flux-rs/flux/pull/1567 (or follow-up) lands
-            // in our checkout.
             let dst = &mut ip_addr.0[8..16];
             flux_support::assume(dst.len() == 8);
-            // FLUX-TODO addr=0xd49a line=1301 flavor=div_by_zero
+
             flux_support::assert(*consumed + 8 <= buf.len());
             dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
@@ -1373,7 +1343,6 @@ fn decompress_iid_link_local(
         // Link-local prefix (112 bits) + 0000:00ff:fe00:XXXX
         iphc::SAM_MODE2 | iphc::DAM_MODE2 => {
             ip_addr.set_unicast_link_local();
-            // FLUX-TODO: see note above re: flux-rs#1567. flavor=slice_end
             let dst = &mut ip_addr.0[11..13];
             flux_support::assume(dst.len() == 2);
             let src = &iphc::MAC_BASE[3..5];
@@ -1381,7 +1350,7 @@ fn decompress_iid_link_local(
             dst.copy_from_slice(src);
             let dst = &mut ip_addr.0[14..16];
             flux_support::assume(dst.len() == 2);
-            // FLUX-TODO addr=0xd494 line=1316 flavor=div_by_zero
+            // FLUX-TODO addr=0xd464 flavor=slice_order
             flux_support::assert(*consumed + 2 <= buf.len());
             dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
@@ -1390,13 +1359,15 @@ fn decompress_iid_link_local(
         // Linx-local prefix (64 bits) + IID from outer header (64 bits)
         iphc::SAM_MODE3 | iphc::DAM_MODE3 => {
             ip_addr.set_unicast_link_local();
-            // FLUX-TODO: see note above re: flux-rs#1567. flavor=explicit_panic
             let dst = &mut ip_addr.0[8..16];
             flux_support::assume(dst.len() == 8);
             dst.copy_from_slice(&compute_iid(mac_addr));
         }
-        // FLUX-TODO addr=0xd4ba line=1328 flavor=explicit_panic
-        _ => { flux_support::assert(false); panic!("Unreachable case") },
+        _ => {
+            // FLUX-TODO addr=0xd48a flavor=explicit_panic
+            flux_support::assert(false);
+            panic!("Unreachable case")
+        },
     }
     Ok(())
 }
@@ -1425,9 +1396,6 @@ fn decompress_iid_link_local(
               && con + 8 <= buf_len
         ensures consumed: usize{c: con <= c && c <= con + 8}
 )]
-// FLUX-TODO addr=0xb280 reason=tool-bug-survey-attributed-to-rustc flavor=slice_end
-// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.
-// Marker at fn entry; line within fn lost to LTO.
 fn decompress_iid_context(
     addr_mode: u8,
     ip_addr: &mut IPAddr,
@@ -1446,20 +1414,17 @@ fn decompress_iid_context(
         // SAM, DAM = 01: 64 bits
         // Suffix is the 64 bits carried inline
         iphc::SAM_MODE1 | iphc::DAM_MODE1 => {
-            // FLUX-TODO: see flux-rs#1567 (array→subslice loses length). flavor=slice_end
             let dst = &mut ip_addr.0[8..16];
             flux_support::assume(dst.len() == 8);
             // Decorative: anchors a buf slice_end discharge (panic 0xb26c routes
             // through this fn's slice ops). Implied by sig `con + 8 <= buf_len`.
             flux_support::assert(*consumed + 8 <= buf.len());
-            // FLUX-OPT addr=0xd6ac line=1381
             dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
         }
         // SAM, DAM = 10: 16 bits
         // Suffix is 0000:00ff:fe00:XXXX
         iphc::SAM_MODE2 | iphc::DAM_MODE2 => {
-            // FLUX-TODO: see flux-rs#1567. flavor=slice_end
             let dst = &mut ip_addr.0[8..16];
             flux_support::assume(dst.len() == 8);
             dst.copy_from_slice(&iphc::MAC_BASE);
@@ -1467,7 +1432,6 @@ fn decompress_iid_context(
             flux_support::assume(dst.len() == 2);
             // Decorative: see note above on MODE1.
             flux_support::assert(*consumed + 2 <= buf.len());
-            // FLUX-OPT addr=0xd6a6 line=1395
             dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
         }
@@ -1475,19 +1439,19 @@ fn decompress_iid_context(
         // Suffix is the IID computed from the encapsulating header
         iphc::SAM_MODE3 | iphc::DAM_MODE3 => {
             let iid = compute_iid(mac_addr);
-            // FLUX-TODO: see flux-rs#1567. flavor=explicit_panic
             let dst = &mut ip_addr.0[8..16];
             flux_support::assume(dst.len() == 8);
             let src = &iid[0..8];
             flux_support::assume(src.len() == 8);
             dst.copy_from_slice(src);
         }
-        // FLUX-TODO addr=0xd6d4 line=1409 flavor=explicit_panic
+        // FLUX-TODO addr=0xd6a4 flavor=explicit_panic
         _ => { flux_support::assert(false); panic!("Unreachable case") },
     }
     // The bits covered by the provided context are always used, so we copy
     // the context bits into the address after the non-context bits are set.
-    // FLUX-TODO: `Context` has no Flux refinement yet, so `prefix_len <= 128` flavor=div_by_zero
+
+    // TODO: `Context` has no Flux refinement yet, so `prefix_len <= 128`
     // and `prefix.len() == 16` aren't visible here. Assume both at the call
     // site; promote to a Context invariant when we annotate that type.
     flux_support::assume(ctx.prefix_len <= 128);
@@ -1508,9 +1472,6 @@ fn decompress_iid_context(
         requires con + 4 <= buf_len
         ensures consumed: usize{c: con <= c && c <= con + 4}
 )]
-// FLUX-TODO addr=0xb4fc reason=tool-bug-survey-attributed-to-rustc flavor=slice_order
-// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.
-// Marker at fn entry; line within fn lost to LTO.
 fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, u16) {
     let src_compressed = (udp_nhc & nhc::UDP_SRC_PORT_FLAG) != 0;
     let dst_compressed = (udp_nhc & nhc::UDP_DST_PORT_FLAG) != 0;
@@ -1538,7 +1499,6 @@ fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, 
         // Source port is uncompressed
         flux_support::assert(*consumed <= *consumed + 2);
         flux_support::assert(*consumed + 2 <= buf.len());
-        // FLUX-OPT addr=0xd14c line=1461
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         // Destination port is compressed to 8 bits
         dst_port = nhc::UDP_8BIT_PORT | (buf[*consumed + 2] as u16);
@@ -1547,7 +1507,6 @@ fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, 
         // Both ports are uncompressed
         flux_support::assert(*consumed <= *consumed + 2);
         flux_support::assert(*consumed + 2 <= buf.len());
-        // FLUX-OPT addr=0xd146 line=1469
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         flux_support::assert(*consumed + 2 <= *consumed + 4);
         flux_support::assert(*consumed + 4 <= buf.len());
@@ -1607,7 +1566,6 @@ fn decompress_udp_checksum(
         // Both are implied by the sig precondition `con + 2 <= buf_len`.
         flux_support::assert(*consumed <= *consumed + 2);
         flux_support::assert(*consumed + 2 <= buf.len());
-        // FLUX-OPT addr=0xd124 line=1528
         let checksum = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         *consumed += 2;
         checksum

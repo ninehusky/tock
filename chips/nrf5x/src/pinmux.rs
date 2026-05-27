@@ -38,7 +38,7 @@ impl Pinmux {
         flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
         let used_pins = USED_PINS[port].get();
         if used_pins & (1 << pin_idx) != 0 {
-            // FLUX-TODO addr=0x22290 line=40 flavor=explicit_panic
+            // FLUX-TODO addr=0x2254e flavor=explicit_panic
             flux_support::assume(false);
             panic!("Pin {} is already in use!", pin);
         } else {

@@ -107,9 +107,6 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
     // Assumes checks for busy/etc. already done
     // Updates app.index to be index + length of op
-    // FLUX-TODO addr=0x14342 reason=multi-candidate-fn-entry flavor=bounds
-    // 2 kwbuf[i] writes in this fn (branch L122, L159); compiler likely
-    // dedup'd both bls into 0x14342. Marker covers fn body.
     fn do_next_read_write(&self, app: &mut App, kernel_data: &GrantKernelData) {
         let write_len = self.kernel_write.map_or(0, |kwbuf| {
             let mut start = app.index;
@@ -139,7 +136,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
         // TODO verify SPI return value
         let _ = if rlen == 0 {
-            // FLUX-TODO addr=0x15308 line=139 flavor=unwrap_option
+            // FLUX-TODO addr=0x146a6 flavor=unwrap_option
             flux_support::assume(self.kernel_write.is_some());
             self.spi_master
                 .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
@@ -172,7 +169,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         .unwrap_or(0),
                 });
             app.index += read_len;
-            // FLUX-TODO addr=0x15314 line=169 flavor=unwrap_option
+            // FLUX-TODO addr=0x146b2 flavor=unwrap_option
             flux_support::assume(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
@@ -180,7 +177,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                 read_len,
             )
         } else {
-            // FLUX-TODO addr=0x1530e line=175 flavor=unwrap_option
+            // FLUX-TODO addr=0x146ac flavor=unwrap_option
             flux_support::assume(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),

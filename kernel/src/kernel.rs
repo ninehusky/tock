@@ -278,7 +278,7 @@ impl Kernel {
         _capability: &dyn capabilities::MemoryAllocationCapability,
     ) -> Grant<T, Upcalls, AllowROs, AllowRWs> {
         if self.grants_finalized.get() {
-            // FLUX-TODO addr=0x134f2 line=281 flavor=explicit_panic
+            // FLUX-TODO addr=0x135f6 flavor=explicit_panic
             // Notes: blocked-cell
             // flux_support::assert(false);
             panic!("Grants finalized. Cannot create a new grant.");
@@ -430,9 +430,6 @@ impl Kernel {
     ///
     /// Most of the behavior of this loop is controlled by the [`Scheduler`]
     /// implementation in use.
-    // FLUX-TODO addr=0x1d54 reason=tool-bug-generics-parser flavor=explicit_panic
-    // survey enclosing was a monomorph of kernel_loop with many generic args
-    // that broke fn-name extraction. Marker at the generic kernel_loop fn entry.
     pub fn kernel_loop<KR: KernelResources<C>, C: Chip, const NUM_PROCS: u8>(
         &self,
         resources: &KR,
@@ -693,7 +690,7 @@ impl Kernel {
                                     (ccb.argument0, ccb.argument1, ccb.argument2)
                                 }
                                 Task::IPC(_) => {
-                                    // FLUX-TODO addr=0x1d92 line=689 flavor=explicit_panic
+                                    // FLUX-TODO addr=0x1e82 flavor=explicit_panic
                                     // Notes: blocked-kernel-loop
                                     // flux_support::assert(false);
                                     todo!()

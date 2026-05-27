@@ -1243,8 +1243,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // `access_grant()` function will never return `None`.
 
         let grant_opt = self.access_grant(fun, true);
-        // FLUX-TODO line=1244 flavor=unwrap_option addrs=[
-        //     0x17e38, 0xbdd6, 0x77c0, 0x1dec,
+        // FLUX-TODO flavor=unwrap_option addrs=[
+        //     0x17fb4, 0x1edc, 0x7f54, 0xbe9a,
         // ]
         // Notes: blocked-cell
         // flux_support::assert(grant_opt.is_some());
@@ -1356,9 +1356,6 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// If `panic_on_reenter` is `true`, this will panic if the grant region is
     /// already currently entered. If `panic_on_reenter` is `false`, this will
     /// return `None` if the grant region is entered and do nothing.
-    // FLUX-TODO-FN-LEVEL covers=[(no addr)] flavor=mixed
-    // panic somewhere in this fn body; addr2line lost the line
-    // (LTO + generic monomorphization). See breadcrumb comments in body.
     fn access_grant_with_allocator<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData, &mut GrantRegionAllocator) -> R,
@@ -1429,16 +1426,6 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 // region you are currently in before trying to iterate over all
                 // grant regions.
 
-                // FLUX-TODO line=1421 flavor=explicit_panic addrs=[
-                //     0x58ce, 0x4d52, 0x4c34, 0x7ca2, 0x1b9ec, 0x982a, 0x988a, 0x9bd8, 0x1fd42,
-                //     0x5436, 0x1b6dc, 0x4db0, 0x1fc4e, 0x4bd8, 0x4b00, 0x7830, 0x1b630, 0x7452,
-                //     0x7306, 0x1a478, 0x170a6, 0x1e43c, 0x1e79a, 0x1f404, 0x60cc, 0x18dc4,
-                //     0x63f0, 0x1c2a6, 0x1c16e, 0x18286, 0x17d64, 0x1f8c4, 0x1f958, 0x1f718,
-                //     0x1fa7c, 0x1f9ee, 0x494c, 0xbeee, 0xc106, 0xc16a, 0xc26e, 0xc586, 0x1f686,
-                //     0x48ee, 0x4834, 0xa296, 0x174a0, 0x77d4, 0x74b6, 0x12d18,
-                // ]
-                // Notes: We need to prove re-entrance is impossible to remove this panic.
-                // flux_support::assert(false);
                 panic!("Attempted to re-enter a grant region.");
             })
             .ok()?;

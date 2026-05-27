@@ -327,10 +327,6 @@ impl SyscallDriver for Console<'_> {
 }
 
 impl uart::TransmitClient for Console<'_> {
-    // FLUX-TODO addr=0x9aa4 reason=tool-bug-fn-not-found flavor=explicit_panic
-    // survey attributed inner_file to kernel/src/grant.rs (panic was in an
-    // inlined grant helper); enclosing fn is Console::transmitted_buffer.
-    // Marker at fn entry; line lost to LTO.
     fn transmitted_buffer(
         &self,
         buffer: &'static mut [u8],

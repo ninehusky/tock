@@ -1,0 +1,984 @@
+[
+  {
+    "file": "capsules/core/src/alarm.rs",
+    "line": 153,
+    "category": "orphan (redundant FN-LEVEL)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL covers=[0x19046] flavor=mixed",
+      "// panic somewhere in this fn body; addr2line lost the line",
+      "// (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "next_code": "fn process_rearm_or_callback(",
+    "restoration_needed": false,
+    "restoration_note": "panic still annotated by the precise explicit_panic marker (alarm.rs:191, the now-well-formed one).",
+    "source": "session-manual-delete (pre-script)",
+    "assert": null,
+    "assert_disposition": "n/a",
+    "hint": null,
+    "category_detail": null
+  },
+  {
+    "file": "capsules/core/src/button.rs",
+    "line": 146,
+    "category": "orphan (empty-fn FN-LEVEL)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL addrs=[0x794c] reason=lto-inlined-fn-entry flavor=explicit_panic"
+    ],
+    "next_code": "fn command(",
+    "restoration_needed": false,
+    "restoration_note": "fn command has no panic in the binary; invariant 1 will not flag it.",
+    "source": "session-manual-delete (pre-script)",
+    "assert": null,
+    "assert_disposition": "n/a",
+    "hint": null,
+    "category_detail": null
+  },
+  {
+    "file": "capsules/core/src/button.rs",
+    "line": 201,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=201 for (file=capsules/core/src/button.rs, flavor=bounds) within P..P+5",
+    "hint": "no bounds panic anywhere in this file -> panic likely gone (delete; invariant 1 backstops)",
+    "comment": [
+      "                        // FLUX-TODO addr=0x1a0fa line=203 flavor=bounds"
+    ],
+    "assert": "flux_support::assert(data < self.pins.len());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(data < self.pins.len());"
+  },
+  {
+    "file": "capsules/core/src/console.rs",
+    "line": 330,
+    "category": "orphan (empty-fn FN-LEVEL)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL addrs=[0x9aa4] reason=tool-bug-fn-not-found flavor=explicit_panic"
+    ],
+    "next_code": "fn transmitted_buffer(",
+    "restoration_needed": false,
+    "restoration_note": "fn transmitted_buffer has no panic in the binary.",
+    "source": "session-manual-delete (pre-script)",
+    "assert": null,
+    "assert_disposition": "n/a",
+    "hint": null,
+    "category_detail": null
+  },
+  {
+    "file": "capsules/core/src/i2c_master_slave_driver.rs",
+    "line": 106,
+    "category": "double",
+    "category_detail": "shares address 0x1a378 with capsules/core/src/i2c_master_slave_driver.rs:200",
+    "hint": null,
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL addrs=[0x19fd4] reason=lto-inlined-fn-entry flavor=explicit_panic"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn command_complete(&self, buffer: &'static mut [u8], status: Result<(), hil::i2c::Error>) {"
+  },
+  {
+    "file": "capsules/core/src/i2c_master_slave_driver.rs",
+    "line": 200,
+    "category": "double",
+    "category_detail": "shares address 0x1a378 with capsules/core/src/i2c_master_slave_driver.rs:200",
+    "hint": null,
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL addrs=[0x1ec5a] reason=monomorph-at-caller flavor=explicit_panic",
+      "    // enclosing-fn dyn-dispatched via I2CHwSlaveClient vtable; DWARF line lost",
+      "    // during LTO inlining of panic helper; marker placed at fn entry.",
+      "    // flux_support::assert(false);"
+    ],
+    "assert": "// flux_support::assert(false);",
+    "assert_disposition": "removed (commented-out, part of block)",
+    "next_code": "fn command_complete("
+  },
+  {
+    "file": "capsules/core/src/i2c_master_slave_driver.rs",
+    "line": 289,
+    "category": "orphan (empty-fn FN-LEVEL)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL addrs=[0x554a] reason=lto-inlined-fn-entry flavor=explicit_panic",
+      "// master enclosing fn known (<I2CMasterSlaveDriver as SyscallDriver>::command);",
+      "// panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body."
+    ],
+    "next_code": "fn command(",
+    "restoration_needed": false,
+    "restoration_note": "fn command (SyscallDriver impl) has no panic in the binary.",
+    "source": "session-manual-delete (pre-script)",
+    "assert": null,
+    "assert_disposition": "n/a",
+    "hint": null,
+    "category_detail": null
+  },
+  {
+    "file": "capsules/core/src/process_console.rs",
+    "line": 1195,
+    "category": "orphan",
+    "category_detail": "(file=capsules/core/src/process_console.rs, func~=received_buffer, flavor=bounds) matched no LTO-line-lost record",
+    "hint": "fn received_buffer now has PRECISE panic(s) at 1212=bounds, 1232=bounds, 1251=bounds, 1361=bounds, 1415=bounds -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x1a9ee, 0x1a9c4] flavor=bounds, div_by_zero",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn received_buffer("
+  },
+  {
+    "file": "capsules/core/src/process_console.rs",
+    "line": 1245,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1245 for (file=capsules/core/src/process_console.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 1251 (gap +6, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                                // FLUX-TODO addr=0x1a98c line=1234 flavor=bounds"
+    ],
+    "assert": "flux_support::assert(next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len());"
+  },
+  {
+    "file": "capsules/core/src/spi_controller.rs",
+    "line": 110,
+    "category": "orphan",
+    "category_detail": "(file=capsules/core/src/spi_controller.rs, func~=do_next_read_write, flavor=bounds) matched no LTO-line-lost record",
+    "hint": "fn do_next_read_write now has PRECISE panic(s) at 126=bounds, 145=unwrap_option, 166=bounds, 178=unwrap_option, 186=unwrap_option -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL addrs=[0x14342] reason=multi-candidate-fn-entry flavor=bounds",
+      "    // 2 kwbuf[i] writes in this fn (branch L122, L159); compiler likely",
+      "    // dedup'd both bls into 0x14342. Marker covers fn body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn do_next_read_write(&self, app: &mut App, kernel_data: &GrantKernelData) {"
+  },
+  {
+    "file": "capsules/core/src/virtualizers/virtual_aes_ccm.rs",
+    "line": 225,
+    "category": "orphan",
+    "category_detail": "(file=capsules/core/src/virtualizers/virtual_aes_ccm.rs, func~=crypt_done, flavor=mixed) matched no LTO-line-lost record",
+    "hint": "fn crypt_done now has PRECISE panic(s) at 241=slice_order -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x1d814] flavor=mixed",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn crypt_done(&'a self, source: Option<&'static mut [u8]>, dest: &'static mut [u8]) {"
+  },
+  {
+    "file": "capsules/core/src/virtualizers/virtual_aes_ccm.rs",
+    "line": 412,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=412 for (file=capsules/core/src/virtualizers/virtual_aes_ccm.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "nearest explicit_panic panic at line 497 (gap +85, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "    // FLUX-TODO addr=0x1303e reason=multi-candidate-fn-entry flavor=explicit_panic",
+      "    // 2 panic!() calls in this fn (L417 \"not idle\", L433 \"crypt_buf not present\");",
+      "    // master shows 1 site; one may be DCE'd. Marker covers fn body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn start_ccm_auth(&self) -> Result<(), ErrorCode> {"
+  },
+  {
+    "file": "capsules/core/src/virtualizers/virtual_aes_ccm.rs",
+    "line": 462,
+    "category": "orphan (redundant FN-LEVEL)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL covers=[0x134c2] flavor=explicit_panic",
+      "// panic somewhere in this fn body; addr2line lost the line",
+      "// (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "next_code": "fn start_ccm_encrypt(",
+    "restoration_needed": false,
+    "restoration_note": "panic still annotated by the precise marker above the panic!() (~line 500).",
+    "source": "session-manual-delete (pre-script)",
+    "assert": null,
+    "assert_disposition": "n/a",
+    "hint": null,
+    "category_detail": null
+  },
+  {
+    "file": "capsules/core/src/virtualizers/virtual_aes_ccm.rs",
+    "line": 562,
+    "category": "orphan",
+    "category_detail": "(file=capsules/core/src/virtualizers/virtual_aes_ccm.rs, func~=reverse_end_ccm, flavor=div_by_zero) matched no LTO-line-lost record",
+    "hint": "fn reverse_end_ccm now has PRECISE panic(s) at 580=slice_end, 589=slice_order, 591=slice_order -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x1d838] flavor=div_by_zero",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn reverse_end_ccm(&self) {"
+  },
+  {
+    "file": "capsules/core/src/virtualizers/virtual_aes_ccm.rs",
+    "line": 645,
+    "category": "orphan (redundant FN-LEVEL)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL covers=[0x132ca] flavor=slice_order",
+      "// panic somewhere in this fn body; addr2line lost the line",
+      "// (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "next_code": "fn crypt_r(",
+    "restoration_needed": false,
+    "restoration_note": "panic still annotated by the precise slice_order marker above the buf[..] slice (~line 678).",
+    "source": "session-manual-delete (pre-script)",
+    "assert": null,
+    "assert_disposition": "n/a",
+    "hint": null,
+    "category_detail": null
+  },
+  {
+    "file": "capsules/core/src/virtualizers/virtual_aes_ccm.rs",
+    "line": 857,
+    "category": "orphan",
+    "category_detail": "(file=capsules/core/src/virtualizers/virtual_aes_ccm.rs, func~=crypt_done, flavor=slice_order) matched no LTO-line-lost record",
+    "hint": "fn crypt_done now has PRECISE panic(s) at 882=bounds, 890=slice_end, 890=slice_order -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[(no addr)] flavor=slice_order",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn crypt_done(&self, _: Option<&'static mut [u8]>, crypt_buf: &'static mut [u8]) {"
+  },
+  {
+    "file": "capsules/core/src/virtualizers/virtual_aes_ccm.rs",
+    "line": 870,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=870 for (file=capsules/core/src/virtualizers/virtual_aes_ccm.rs, flavor=slice_order) within P..P+5",
+    "hint": "nearest slice_order panic at line 890 (gap +20, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                        // FLUX-TODO line=859 flavor=slice_order addrs=[",
+      "                        //     0x1d842, 0x1d852,",
+      "                        // ]"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "self.crypt_buf.map(|cbuf| {"
+  },
+  {
+    "file": "capsules/extra/src/ble_advertising_driver.rs",
+    "line": 610,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=610 for (file=capsules/extra/src/ble_advertising_driver.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "no precise explicit_panic panic in file, but it has line-lost records -> may belong on a FLUX-TODO-FN-LEVEL",
+    "comment": [
+      "    // FLUX-TODO addr=0x6386 reason=lto-inlined-fn-entry flavor=explicit_panic",
+      "    // master enclosing fn known (<BLE as SyscallDriver>::command);",
+      "    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn command("
+  },
+  {
+    "file": "capsules/extra/src/ieee802154/driver.rs",
+    "line": 942,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=942 for (file=capsules/extra/src/ieee802154/driver.rs, flavor=bounds) within P..P+5",
+    "hint": "no precise bounds panic in file, but it has line-lost records -> may belong on a FLUX-TODO-FN-LEVEL",
+    "comment": [
+      "                                    // FLUX-TODO addr=0x724e flavor=bounds",
+      "                                    // cfg[0] bounds check; only one bounds expr in fn body matches."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "let level = match SecurityLevel::from_scf(cfg[0].get()) {"
+  },
+  {
+    "file": "capsules/extra/src/kv_driver.rs",
+    "line": 471,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=471 for (file=capsules/extra/src/kv_driver.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "no precise explicit_panic panic in file, but it has line-lost records -> may belong on a FLUX-TODO-FN-LEVEL",
+    "comment": [
+      "    // FLUX-TODO addr=0x4f10 reason=lto-inlined-fn-entry flavor=explicit_panic",
+      "    // master enclosing fn known (<KVStoreDriver as SyscallDriver>::command);",
+      "    // panic source line lost to LTO; no panic!/unwrap/etc. visible in fn body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn command("
+  },
+  {
+    "file": "capsules/extra/src/net/ipv6/ip_utils.rs",
+    "line": 127,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=127 for (file=capsules/extra/src/net/ipv6/ip_utils.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 126 (gap -1, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "            // FLUX-TODO addr=0xd6de line=123 flavor=bounds"
+    ],
+    "assert": "flux_support::assert(full_bytes < self.0.len() && full_bytes < prefix.len());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(full_bytes < self.0.len() && full_bytes < prefix.len());"
+  },
+  {
+    "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+    "line": 345,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=345 for (file=capsules/extra/src/net/ipv6/ipv6.rs, flavor=bounds) within P..P+5",
+    "hint": "no bounds panic anywhere in this file -> panic likely gone (delete; invariant 1 backstops)",
+    "comment": [
+      "        // FLUX-TODO addr=0x19d96 line=345 flavor=bounds"
+    ],
+    "assert": "flux_support::assert(i < dst.len() && i < src.len());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(i < dst.len() && i < src.len());"
+  },
+  {
+    "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+    "line": 414,
+    "category": "orphan",
+    "category_detail": "(file=capsules/extra/src/net/ipv6/ipv6.rs, func~=encode, flavor=slice_end) matched no LTO-line-lost record",
+    "hint": "fn encode now has PRECISE panic(s) at 425=unwrap_option, 431=unwrap_option, 436=explicit_panic, 447=slice_end -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0xdad8] flavor=slice_end",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "pub fn encode(&self, buf: &mut [u8], offset: usize) -> SResult<usize> {"
+  },
+  {
+    "file": "capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs",
+    "line": 628,
+    "category": "orphan",
+    "category_detail": "(file=capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs, func~=decompress_ext_hdr, flavor=bounds) matched no LTO-line-lost record",
+    "hint": "fn decompress_ext_hdr now has PRECISE panic(s) at 671=slice_order -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL reason=mass-refactor-fn-entry addrs=[0xadf8, 0xae28, 0xae86] flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn decompress_ext_hdr("
+  },
+  {
+    "file": "capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs",
+    "line": 1222,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1222 for (file=capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs, flavor=div_by_zero) within P..P+5",
+    "hint": "no precise div_by_zero panic in file, but it has line-lost records -> may belong on a FLUX-TODO-FN-LEVEL",
+    "comment": [
+      "                // FLUX-TODO addr=0xd20e line=1186 flavor=div_by_zero"
+    ],
+    "assert": "flux_support::assert(*consumed + 1 < buf.len() && 2 < ip_addr.0.len());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(*consumed + 1 < buf.len() && 2 < ip_addr.0.len());"
+  },
+  {
+    "file": "capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs",
+    "line": 1401,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1401 for (file=capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs, flavor=slice_end) within P..P+5",
+    "hint": "nearest slice_end panic at line 868 (gap -533, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "// FLUX-TODO addr=0xb280 reason=tool-bug-survey-attributed-to-rustc flavor=slice_end",
+      "// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.",
+      "// Marker at fn entry; line within fn lost to LTO."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn decompress_iid_context("
+  },
+  {
+    "file": "capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs",
+    "line": 1480,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1480 for (file=capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs, flavor=slice_order) within P..P+5",
+    "hint": "nearest slice_order panic at line 1510 (gap +30, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "// FLUX-TODO addr=0xb4fc reason=tool-bug-survey-attributed-to-rustc flavor=slice_order",
+      "// survey attributed inner_file to /rustc/slice/index.rs; enclosing fn known.",
+      "// Marker at fn entry; line within fn lost to LTO."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, u16) {"
+  },
+  {
+    "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+    "line": 484,
+    "category": "orphan",
+    "category_detail": "(file=capsules/extra/src/net/sixlowpan/sixlowpan_state.rs, func~=prepare_first_fragment, flavor=mixed) matched no LTO-line-lost record",
+    "hint": "fn prepare_first_fragment now has PRECISE panic(s) at 497=bounds, 531=slice_end, 558=slice_end -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x1999e] flavor=mixed",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn prepare_first_fragment<'b>("
+  },
+  {
+    "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+    "line": 1039,
+    "category": "orphan",
+    "category_detail": "(file=capsules/extra/src/net/sixlowpan/sixlowpan_state.rs, func~=receive_fragment, flavor=mixed) matched no LTO-line-lost record",
+    "hint": "fn receive_fragment now has PRECISE panic(s) at 1079=bounds -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x1e0ec] flavor=mixed",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn receive_fragment("
+  },
+  {
+    "file": "capsules/extra/src/net/udp/driver.rs",
+    "line": 393,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=393 for (file=capsules/extra/src/net/udp/driver.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "no explicit_panic panic anywhere in this file -> panic likely gone (delete; invariant 1 backstops)",
+    "comment": [
+      "    // FLUX-TODO addr=0xd04c reason=monomorph-at-caller flavor=explicit_panic",
+      "    // enclosing-fn dyn-dispatched via SyscallDriver vtable; DWARF line lost",
+      "    // during LTO inlining of panic helper; marker placed at fn entry.",
+      "    // flux_support::assert(false);"
+    ],
+    "assert": "// flux_support::assert(false);",
+    "assert_disposition": "removed (commented-out, part of block)",
+    "next_code": "fn command("
+  },
+  {
+    "file": "capsules/extra/src/net/udp/udp_port_table.rs",
+    "line": 228,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=228 for (file=capsules/extra/src/net/udp/udp_port_table.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 234 (gap +6, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                // FLUX-TODO addr=0xbdf8 line=225 flavor=bounds"
+    ],
+    "assert": "flux_support::assert(MAX_NUM_BOUND_PORTS <= table.len());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(MAX_NUM_BOUND_PORTS <= table.len());"
+  },
+  {
+    "file": "capsules/extra/src/tickv.rs",
+    "line": 475,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=475 for (file=capsules/extra/src/tickv.rs, flavor=unwrap_option) within P..P+5",
+    "hint": "nearest unwrap_option panic at line 481 (gap +6, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                            // FLUX-TODO addr=0x1d214 line=454 flavor=unwrap_option"
+    ],
+    "assert": "flux_support::assert(self.key_buffer.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.key_buffer.is_some());"
+  },
+  {
+    "file": "capsules/extra/src/tickv.rs",
+    "line": 494,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=494 for (file=capsules/extra/src/tickv.rs, flavor=unwrap_option) within P..P+5",
+    "hint": "nearest unwrap_option panic at line 500 (gap +6, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                            // FLUX-TODO addr=0x1d1fc line=469 flavor=unwrap_option"
+    ],
+    "assert": "flux_support::assert(self.key_buffer.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.key_buffer.is_some());"
+  },
+  {
+    "file": "capsules/extra/src/tickv.rs",
+    "line": 519,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=519 for (file=capsules/extra/src/tickv.rs, flavor=unwrap_option) within P..P+5",
+    "hint": "nearest unwrap_option panic at line 525 (gap +6, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                            // FLUX-TODO addr=0x1d202 line=490 flavor=unwrap_option"
+    ],
+    "assert": "flux_support::assert(self.key_buffer.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.key_buffer.is_some());"
+  },
+  {
+    "file": "capsules/extra/src/tickv.rs",
+    "line": 556,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=556 for (file=capsules/extra/src/tickv.rs, flavor=unwrap_option) within P..P+5",
+    "hint": "nearest unwrap_option panic at line 562 (gap +6, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                            // FLUX-TODO addr=0x1d20e line=523 flavor=unwrap_option"
+    ],
+    "assert": "flux_support::assert(self.key_buffer.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.key_buffer.is_some());"
+  },
+  {
+    "file": "capsules/extra/src/tickv.rs",
+    "line": 628,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=628 for (file=capsules/extra/src/tickv.rs, flavor=unwrap_option) within P..P+5",
+    "hint": "nearest unwrap_option panic at line 634 (gap +6, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                    // FLUX-TODO addr=0x1d308 line=587 flavor=unwrap_option"
+    ],
+    "assert": "flux_support::assert(self.key_buffer.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.key_buffer.is_some());"
+  },
+  {
+    "file": "capsules/extra/src/tickv.rs",
+    "line": 642,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=642 for (file=capsules/extra/src/tickv.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "window P..P+5 has a different-flavor panic (644=unwrap_option); marker says explicit_panic -> flavor mismatch, fix flavor=",
+    "comment": [
+      "                    // FLUX-TODO addr=0x1d30e line=595 flavor=explicit_panic"
+    ],
+    "assert": "flux_support::assert(self.key_buffer.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.key_buffer.is_some());"
+  },
+  {
+    "file": "chips/nrf52/src/chip.rs",
+    "line": 124,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=124 for (file=chips/nrf52/src/chip.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "no explicit_panic panic anywhere in this file -> panic likely gone (delete; invariant 1 backstops)",
+    "comment": [
+      "                        // FLUX-TODO addrs=[0x1e08, 0x1e2c] flavor=explicit_panic"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "panic!(\"unhandled interrupt {}\", interrupt);"
+  },
+  {
+    "file": "chips/nrf52/src/usbd.rs",
+    "line": 1010,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1010 for (file=chips/nrf52/src/usbd.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "nearest explicit_panic panic at line 655 (gap -355, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "            // FLUX-TODO line=1010 flavor=explicit_panic addrs=[",
+      "            //     0x1174e, 0x11864,",
+      "            // ]"
+    ],
+    "assert": "flux_support::assert(false);",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(false);"
+  },
+  {
+    "file": "chips/nrf52/src/usbd.rs",
+    "line": 1377,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1377 for (file=chips/nrf52/src/usbd.rs, flavor=assert) within P..P+5",
+    "hint": "no assert panic anywhere in this file -> panic likely gone (delete; invariant 1 backstops)",
+    "comment": [
+      "                // FLUX-TODO addr=0x113ca reason=monomorph-at-caller flavor=assert",
+      "                // assert_failed::<Option<BulkInState>> wrapper fired here.",
+      "                // flux_support::assert(false);"
+    ],
+    "assert": "// flux_support::assert(false);",
+    "assert_disposition": "removed (commented-out, part of block)",
+    "next_code": "assert_eq!(in_state, Some(BulkInState::InDma));"
+  },
+  {
+    "file": "chips/nrf52/src/usbd.rs",
+    "line": 1842,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1842 for (file=chips/nrf52/src/usbd.rs, flavor=assert) within P..P+5",
+    "hint": "no assert panic anywhere in this file -> panic likely gone (delete; invariant 1 backstops)",
+    "comment": [
+      "            // FLUX-TODO addr=0x113ca reason=monomorph-at-caller flavor=assert",
+      "            // assert_failed::<Option<BulkInState>> wrapper fired here.",
+      "            // flux_support::assert(false);"
+    ],
+    "assert": "// flux_support::assert(false);",
+    "assert_disposition": "removed (commented-out, part of block)",
+    "next_code": "assert_eq!(in_state, Some(BulkInState::Init));"
+  },
+  {
+    "file": "chips/nrf52/src/usbd.rs",
+    "line": 1932,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1932 for (file=chips/nrf52/src/usbd.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "window P..P+5 has a different-flavor panic (1934=optional_cell_unwrap); marker says explicit_panic -> flavor mismatch, fix flavor=",
+    "comment": [
+      "        // FLUX-TODO addr=0x1161e line=1904 flavor=explicit_panic"
+    ],
+    "assert": "flux_support::assert(self.descriptors[endpoint].slice_in.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.descriptors[endpoint].slice_in.is_some());"
+  },
+  {
+    "file": "chips/nrf52/src/usbd.rs",
+    "line": 1951,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1951 for (file=chips/nrf52/src/usbd.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "window P..P+5 has a different-flavor panic (1953=optional_cell_unwrap); marker says explicit_panic -> flavor mismatch, fix flavor=",
+    "comment": [
+      "        // FLUX-TODO addr=0xf7a line=1919 flavor=explicit_panic"
+    ],
+    "assert": "flux_support::assert(self.descriptors[endpoint].slice_out.is_some());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.descriptors[endpoint].slice_out.is_some());"
+  },
+  {
+    "file": "chips/nrf52/src/usbd.rs",
+    "line": 2176,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=2176 for (file=chips/nrf52/src/usbd.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "nearest explicit_panic panic at line 2212 (gap +36, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "            // FLUX-TODO addr=0x12326 flavor=explicit_panic"
+    ],
+    "assert": "flux_support::assert(false);",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(false);"
+  },
+  {
+    "file": "chips/nrf52840/src/ieee802154_radio.rs",
+    "line": 1070,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1070 for (file=chips/nrf52840/src/ieee802154_radio.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 893 (gap -177, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                        // FLUX-TODO addr=0x12b6c line=1050 flavor=bounds"
+    ],
+    "assert": "flux_support::assert(data_len < rbuf.len());",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(data_len < rbuf.len());"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 255,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=255 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap +120, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                        // FLUX-TODO addr=0x21fca line=255 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(i + PLAINTEXT_START < 48 && i + start < output.len());"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 267,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=267 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap +108, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                    // FLUX-TODO addr=0x21fae line=264 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(i + PLAINTEXT_START < 48 && i + start < input.len());"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 286,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=286 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap +89, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                        // FLUX-TODO addr=0x21fd0 line=280 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(ecb_idx < 48 && i + start < output.len());"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 299,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=299 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap +76, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                    // FLUX-TODO addr=0x21fb4 line=290 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(ecb_idx < 48 && i + start < input.len());"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 316,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=316 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap +59, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "    // FLUX-TODO addr=0x21dbc reason=multi-fn-ambiguous-entry flavor=bounds",
+      "    // master attribution <AesECB>::crypt is ambiguous (2 crypts on AesECB: this",
+      "    // inherent one + the AES128 trait impl at L494). Mark both fn entries."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn crypt(&self) {"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 357,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=357 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap +18, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                        // FLUX-TODO addr=0x1e80 line=342 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(start + i < output.len() && i + PLAINTEXT_END < 48);"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 379,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=379 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap -4, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                        // FLUX-TODO addr=0x1e32 line=357 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(start_idx + current_idx + i < output.len());"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 404,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=404 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap -29, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                    // FLUX-TODO addr=0x1e12 line=379 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(dest_idx < output.len() && i + PLAINTEXT_END < 48);"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 425,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=425 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap -50, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                                    // FLUX-TODO addr=0x1e1c line=397 flavor=bounds"
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "flux_support::assume(dest_idx < output.len() && i + PLAINTEXT_END < 48 && i + PLAINTEXT_START < 48);"
+  },
+  {
+    "file": "chips/nrf5x/src/aes.rs",
+    "line": 512,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=512 for (file=chips/nrf5x/src/aes.rs, flavor=bounds) within P..P+5",
+    "hint": "nearest bounds panic at line 375 (gap -137, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "    // FLUX-TODO addr=0x21dbc reason=multi-fn-ambiguous-entry flavor=bounds",
+      "    // master attribution <AesECB>::crypt is ambiguous (this AES128 trait crypt",
+      "    // + the inherent crypt at L312). Mark both fn entries."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn crypt("
+  },
+  {
+    "file": "kernel/src/collections/ring_buffer.rs",
+    "line": 82,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=82 for (file=kernel/src/collections/ring_buffer.rs, flavor=rem_by_zero) within P..P+5",
+    "hint": "nearest rem_by_zero panic at line 95 (gap +13, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "        // FLUX-TODO line=83 flavor=rem_by_zero addrs=[",
+      "        //     0x7ecc, 0x1064a,",
+      "        // ]"
+    ],
+    "assert": "flux_support::assert(self.ring.len() != 0);",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(self.ring.len() != 0);"
+  },
+  {
+    "file": "kernel/src/grant.rs",
+    "line": 1359,
+    "category": "orphan",
+    "category_detail": "(file=kernel/src/grant.rs, func~=access_grant_with_allocator, flavor=mixed) matched no LTO-line-lost record",
+    "hint": "fn access_grant_with_allocator now has PRECISE panic(s) at 1442=explicit_panic -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[(no addr)] flavor=mixed",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn access_grant_with_allocator<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>"
+  },
+  {
+    "file": "kernel/src/grant.rs",
+    "line": 1432,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1432 for (file=kernel/src/grant.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "nearest explicit_panic panic at line 1442 (gap +10, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "                // FLUX-TODO line=1421 flavor=explicit_panic addrs=[",
+      "                //     0x58ce, 0x4d52, 0x4c34, 0x7ca2, 0x1b9ec, 0x982a, 0x988a, 0x9bd8, 0x1fd42,",
+      "                //     0x5436, 0x1b6dc, 0x4db0, 0x1fc4e, 0x4bd8, 0x4b00, 0x7830, 0x1b630, 0x7452,",
+      "                //     0x7306, 0x1a478, 0x170a6, 0x1e43c, 0x1e79a, 0x1f404, 0x60cc, 0x18dc4,",
+      "                //     0x63f0, 0x1c2a6, 0x1c16e, 0x18286, 0x17d64, 0x1f8c4, 0x1f958, 0x1f718,",
+      "                //     0x1fa7c, 0x1f9ee, 0x494c, 0xbeee, 0xc106, 0xc16a, 0xc26e, 0xc586, 0x1f686,",
+      "                //     0x48ee, 0x4834, 0xa296, 0x174a0, 0x77d4, 0x74b6, 0x12d18,",
+      "                // ]",
+      "                // Notes: We need to prove re-entrance is impossible to remove this panic.",
+      "                // flux_support::assert(false);"
+    ],
+    "assert": "// flux_support::assert(false);",
+    "assert_disposition": "removed (commented-out, part of block)",
+    "next_code": "panic!(\"Attempted to re-enter a grant region.\");"
+  },
+  {
+    "file": "kernel/src/kernel.rs",
+    "line": 433,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=433 for (file=kernel/src/kernel.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "nearest explicit_panic panic at line 284 (gap -149, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "    // FLUX-TODO addr=0x1d54 reason=tool-bug-generics-parser flavor=explicit_panic",
+      "    // survey enclosing was a monomorph of kernel_loop with many generic args",
+      "    // that broke fn-name extraction. Marker at the generic kernel_loop fn entry."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "pub fn kernel_loop<KR: KernelResources<C>, C: Chip, const NUM_PROCS: u8>("
+  },
+  {
+    "file": "kernel/src/process_standard.rs",
+    "line": 285,
+    "category": "orphan (empty-fn FN-LEVEL)",
+    "comment": [
+      "// FLUX-TODO-FN-LEVEL covers=[0x3cfc] flavor=mixed",
+      "// panic somewhere in this fn body; addr2line lost the line",
+      "// (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "next_code": "fn remove_pending_upcalls(",
+    "restoration_needed": false,
+    "restoration_note": "remove_pending_upcalls confirmed panic-free (debuginfo finding).",
+    "source": "session-manual-delete (pre-script)",
+    "assert": null,
+    "assert_disposition": "n/a",
+    "hint": null,
+    "category_detail": null
+  },
+  {
+    "file": "kernel/src/processbuffer.rs",
+    "line": 760,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=760 for (file=kernel/src/processbuffer.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "nearest explicit_panic panic at line 767 (gap +7, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "            // FLUX-OPT addr=0x11434 line=760 flavor=explicit_panic",
+      "            // Checked: this panic is proven dead at the call site below.",
+      "            // copy_to_slice's `dest: &mut [u8][n]` precondition makes",
+      "            // copy_to_slice_or_err infallible, so the is_err() branch (and this",
+      "            // helper) is unreachable; Flux discharges the witnessing",
+      "            // assert(false) at the call site. This #[cold] helper is verified",
+      "            // standalone where that context is unavailable, so no assert here."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "panic!("
+  },
+  {
+    "file": "kernel/src/processbuffer.rs",
+    "line": 1015,
+    "category": "orphan",
+    "category_detail": "(file=kernel/src/processbuffer.rs, func~=copy_from_slice, flavor=explicit_panic) matched no LTO-line-lost record",
+    "hint": "fn copy_from_slice now has PRECISE panic(s) at 1036=explicit_panic -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x114b8] flavor=explicit_panic",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "pub fn copy_from_slice(&self, src: &[u8]) {"
+  },
+  {
+    "file": "kernel/src/processbuffer.rs",
+    "line": 1029,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=1029 for (file=kernel/src/processbuffer.rs, flavor=explicit_panic) within P..P+5",
+    "hint": "nearest explicit_panic panic at line 1036 (gap +7, outside P..P+5) -> move comment to within 5 lines above the panic",
+    "comment": [
+      "            // FLUX-OPT addr=0x1157c line=1038 flavor=explicit_panic",
+      "            // Checked: this panic is proven dead at the call site below.",
+      "            // copy_from_slice's `src: &[u8][n]` precondition makes",
+      "            // copy_from_slice_or_err infallible, so the is_err() branch (and",
+      "            // this helper) is unreachable; Flux discharges the witnessing",
+      "            // assert(false) at the call site. This #[cold] helper is verified",
+      "            // standalone where that context is unavailable, so no assert here."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "panic!("
+  },
+  {
+    "file": "kernel/src/scheduler/round_robin.rs",
+    "line": 77,
+    "category": "orphan",
+    "category_detail": "(file=kernel/src/scheduler/round_robin.rs, func~=next, flavor=explicit_panic) matched no LTO-line-lost record",
+    "hint": "fn next now has PRECISE panic(s) at 110=unwrap_option, 140=explicit_panic -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x1d88] flavor=explicit_panic",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "fn next(&self) -> SchedulingDecision {"
+  },
+  {
+    "file": "libraries/tickv/src/async_ops.rs",
+    "line": 357,
+    "category": "orphan",
+    "category_detail": "(file=libraries/tickv/src/async_ops.rs, func~=continue_operation, flavor=unwrap_option) matched no LTO-line-lost record",
+    "hint": "fn continue_operation now has PRECISE panic(s) at 363=unwrap_option, 368=unwrap_option, 374=unwrap_option, 382=unwrap_option, 385=unwrap_option, 393=unwrap_option ... -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL covers=[0x18812] flavor=unwrap_option",
+      "    // panic somewhere in this fn body; addr2line lost the line",
+      "    // (LTO + generic monomorphization). See breadcrumb comments in body."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "pub fn continue_operation(&self) -> ContinueReturn {"
+  },
+  {
+    "file": "libraries/tickv/src/tickv.rs",
+    "line": 231,
+    "category": "orphan",
+    "category_detail": "no record at anchor P=231 for (file=libraries/tickv/src/tickv.rs, flavor=assert) within P..P+5",
+    "hint": "no precise assert panic in file, but it has line-lost records -> may belong on a FLUX-TODO-FN-LEVEL",
+    "comment": [
+      "        // FLUX-TODO addr=0x1608c flavor=assert reason=assert_ne_macro"
+    ],
+    "assert": "flux_support::assert(hash != 0xFFFF_FFFF_FFFF_FFFF);",
+    "assert_disposition": "retained (live code below block)",
+    "next_code": "flux_support::assert(hash != 0xFFFF_FFFF_FFFF_FFFF);"
+  },
+  {
+    "file": "libraries/tock-cells/src/take_cell.rs",
+    "line": 115,
+    "category": "orphan",
+    "category_detail": "(file=libraries/tock-cells/src/take_cell.rs, func~=map, flavor=mixed) matched no LTO-line-lost record",
+    "hint": "fn map now has PRECISE panic(s) at 124=bounds -> convert FN-LEVEL to precise (debuginfo recovered the line)",
+    "comment": [
+      "    // FLUX-TODO-FN-LEVEL addrs=[0x1a88a, 0x1a8a0, 0x1a8b0, 0x1a8d0] flavor=mixed",
+      "    // panic somewhere in this fn body; likely that",
+      "    // the call to `closure` panics, but addr2line lost the line."
+    ],
+    "assert": null,
+    "assert_disposition": "none",
+    "next_code": "pub fn map<F, R>(&self, closure: F) -> Option<R>"
+  }
+]

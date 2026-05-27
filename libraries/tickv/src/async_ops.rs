@@ -202,7 +202,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
         length: usize,
     ) -> Result<SuccessCode, (&'static mut [u8], ErrorCode)> {
         flux_support::assert(length <= value.len());
-        // FLUX-OPT addr=0x16836 line=205 flavor=slice_end
+        // FLUX-OPT addr=0x169c6 flavor=slice_end
         match self.tickv.append_key(hash, &value[0..length]) {
             Ok(_code) => {
                 // Ok is a problem, since that means no asynchronous operations
@@ -327,7 +327,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
         requires n == S
     )]
     pub fn set_read_buffer(&self, read_buffer: &[u8]) {
-        // FLUX-TODO addr=0x1d1ec line=329 flavor=unwrap_option
+        // FLUX-TODO addr=0x1cec8 flavor=unwrap_option
         // Notes: blocked-cell
         let read_buf_opt = self.tickv.read_buffer.take();
         // flux_support::assert(read_buf_opt.is_some());
@@ -354,20 +354,17 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///        The number of valid bytes in the buffer. 0 if Buf is None.
     /// The buffers will only be returned on a non async error or on success.
     #[flux_rs::trusted(reason = "TODO: hash comes from `self.key.get().unwrap()` (Cell). Need cell-state refinement to discharge `hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF` from get_key/invalidate_key/zeroise_key.")]
-    // FLUX-TODO-FN-LEVEL covers=[0x18812] flavor=unwrap_option
-    // panic somewhere in this fn body; addr2line lost the line
-    // (LTO + generic monomorphization). See breadcrumb comments in body.
     pub fn continue_operation(&self) -> ContinueReturn {
         let (ret, length) = match self.tickv.state.get() {
-            // FLUX-TODO addr=0x1881e line=354 flavor=unwrap_option
+            // FLUX-TODO addr=0x1899a flavor=unwrap_option
             State::Init(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.initialise(self.key.get().unwrap()), 0) },
             State::AppendKey(_) => {
-                // FLUX-TODO addr=0x1898e line=368 flavor=unwrap_option
+                // FLUX-TODO addr=0x1898e flavor=unwrap_option
                 let value_opt = self.value.take();
                 flux_support::assert(value_opt.is_some());
                 let value = value_opt.unwrap();
                 let value_length = self.value_length.get();
-                // FLUX-TODO addr=0x1882a line=360 flavor=unwrap_option
+                // FLUX-TODO addr=0x189a6 flavor=unwrap_option
                 flux_support::assert(self.key.get().is_some());
                 let ret = self
                     .tickv
@@ -376,11 +373,11 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
                 (ret, value_length)
             }
             State::GetKey(_) => {
-                // FLUX-TODO addr=0x18818 line=365 flavor=unwrap_option
+                // FLUX-TODO addr=0x18994 flavor=unwrap_option
                 let buf_opt = self.value.take();
                 flux_support::assert(buf_opt.is_some());
                 let buf = buf_opt.unwrap();
-                // FLUX-TODO addr=0x18830 line=366 flavor=unwrap_option
+                // FLUX-TODO addr=0x189ac flavor=unwrap_option
                 flux_support::assert(self.key.get().is_some());
                 let ret = self.tickv.get_key(self.key.get().unwrap(), buf);
                 self.value.replace(Some(buf));
@@ -389,15 +386,15 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
                     Err(e) => (Err(e), 0),
                 }
             }
-            // FLUX-TODO addr=0x1880c line=373 flavor=unwrap_option
+            // FLUX-TODO addr=0x18988 flavor=unwrap_option
             State::InvalidateKey(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.invalidate_key(self.key.get().unwrap()), 0) },
-            // FLUX-TODO addr=0x18824 line=374 flavor=unwrap_option
+            // FLUX-TODO addr=0x189a0 flavor=unwrap_option
             State::ZeroiseKey(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.zeroise_key(self.key.get().unwrap()), 0) },
             State::GarbageCollect(_) => match self.tickv.garbage_collect() {
                 Ok(bytes_freed) => (Ok(SuccessCode::Complete), bytes_freed),
                 Err(e) => (Err(e), 0),
             },
-            // FLUX-TODO addr=0x18806 line=379 flavor=explicit_panic
+            // FLUX-TODO addr=0x18982 flavor=explicit_panic
             _ => { flux_support::assert(false); unreachable!() },
         };
 

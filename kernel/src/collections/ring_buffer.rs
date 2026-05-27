@@ -53,13 +53,13 @@ impl<'a, T: Copy> RingBuffer<'a, T> {
     /// stored after the "right" slice).
     pub fn as_slices(&'a self) -> (Option<&'a [T]>, Option<&'a [T]>) {
         if self.head < self.tail {
-            // FLUX-TODO addr=0x1371e line=56 flavor=slice_end
+            // FLUX-TODO addr=0x13836 flavor=slice_end
             flux_support::assert(self.tail <= self.ring.len());
             (Some(&self.ring[self.head..self.tail]), None)
         } else if self.head > self.tail {
             // The extern spec for split_at requires
             // in-boundsness.
-            // FLUX-TODO addr=0x13732 line=60 flavor=explicit_panic
+            // FLUX-TODO addr=0x1384a flavor=explicit_panic
             flux_support::assert(self.head <= self.ring.len());
             let (left, right) = self.ring.split_at(self.head);
             (
@@ -79,17 +79,14 @@ impl<'a, T: Copy> RingBuffer<'a, T> {
 impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
     #[flux_rs::sig(fn(&RingBuffer<T>[@rb]) -> bool[!empty(rb)]) ]
     fn has_elements(&self) -> bool {
-        // FLUX-TODO line=83 flavor=rem_by_zero addrs=[
-        //     0x7ecc, 0x1064a,
-        // ]
         flux_support::assert(self.ring.len() != 0);
         self.head != self.tail
     }
 
     #[flux_rs::sig(fn(&RingBuffer<T>[@rb]) -> bool[full(rb)]) ]
     fn is_full(&self) -> bool {
-        // FLUX-TODO line=83 flavor=rem_by_zero addrs=[
-        //     0x7ecc, 0x1064a,
+        // FLUX-TODO flavor=rem_by_zero addrs=[
+        //     0x1070e, 0x7fb4,
         // ]
         flux_support::assert(self.ring.len() != 0);
         self.head == ((self.tail + 1) % self.ring.len())
@@ -122,7 +119,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
             // Incrementing tail will overwrite head
             false
         } else {
-            // FLUX-TODO addr=0x10652 line=113 flavor=bounds
+            // FLUX-TODO addrs=[0x10716, 0x7fbc] line=113 flavor=bounds
             flux_support::assert(self.tail < self.ring.len());
             self.ring[self.tail] = val;
             self.tail = (self.tail + 1) % self.ring.len();
@@ -164,8 +161,8 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
     )]
     fn dequeue(&mut self) -> Option<T> {
         if self.has_elements() {
-            // FLUX-TODO line=153 flavor=bounds addrs=[
-            //     0x10aac, 0x2c26,
+            // FLUX-TODO flavor=bounds addrs=[
+            //     0x10b6c, 0x2d1e,
             // ]
             flux_support::assert(self.head < self.ring.len());
             let val = self.ring[self.head];
