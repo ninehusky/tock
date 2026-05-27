@@ -252,8 +252,7 @@ impl<'a> AesECB<'a> {
                                 for i in 0..take {
                                     // Copy into static mut DMA buffer
                                     unsafe {
-                                        flux_support::assume(i + PLAINTEXT_START < 48 && i + start < output.len());
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                        flux_support::assert(i + PLAINTEXT_START < 48 && i + start < output.len());
                                         ECB_DATA[i + PLAINTEXT_START] = output[i + start];
                                     }
                                 }
@@ -263,8 +262,7 @@ impl<'a> AesECB<'a> {
                             for i in 0..take {
                                 // Copy into static mut DMA buffer
                                 unsafe {
-                                    flux_support::assume(i + PLAINTEXT_START < 48 && i + start < input.len());
-                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                    flux_support::assert(i + PLAINTEXT_START < 48 && i + start < input.len());
                                     ECB_DATA[i + PLAINTEXT_START] = input[i + start];
                                 }
                             }
@@ -281,8 +279,7 @@ impl<'a> AesECB<'a> {
 
                                     // Copy into static mut DMA buffer
                                     unsafe {
-                                        flux_support::assume(ecb_idx < 48 && i + start < output.len());
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                        flux_support::assert(ecb_idx < 48 && i + start < output.len());
                                         ECB_DATA[ecb_idx] ^= output[i + start];
                                     }
                                 }
@@ -293,8 +290,7 @@ impl<'a> AesECB<'a> {
                                 let ecb_idx = i + PLAINTEXT_START;
                                 // Copy into static mut DMA buffer
                                 unsafe {
-                                    flux_support::assume(ecb_idx < 48 && i + start < input.len());
-                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                    flux_support::assert(ecb_idx < 48 && i + start < input.len());
                                     ECB_DATA[ecb_idx] ^= input[i + start];
                                 }
                             }
@@ -347,13 +343,10 @@ impl<'a> AesECB<'a> {
                                 // output buffer.
                                 self.output.map(|output| {
                                     for i in 0..take {
-                                        flux_support::assume(start + i < output.len() && i + PLAINTEXT_END < 48);
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                        flux_support::assert(start + i < output.len() && i + PLAINTEXT_END < 48);
                                         let in_byte = output[start + i];
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         output[start + i] = keystream_byte ^ in_byte;
                                     }
                                 });
@@ -363,13 +356,10 @@ impl<'a> AesECB<'a> {
                                     let start_idx = self.start_idx.get();
 
                                     for i in 0..take {
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         let in_byte = input[start + i];
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
-                                        flux_support::assume(start_idx + current_idx + i < output.len());
-                                        flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                        flux_support::assert(start_idx + current_idx + i < output.len());
                                         output[start_idx + current_idx + i] =
                                             keystream_byte ^ in_byte;
                                     }
@@ -392,8 +382,7 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    flux_support::assume(dest_idx < output.len() && i + PLAINTEXT_END < 48);
-                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                    flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
                                 }
                             }
@@ -412,10 +401,8 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    flux_support::assume(dest_idx < output.len() && i + PLAINTEXT_END < 48 && i + PLAINTEXT_START < 48);
-                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
+                                    flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48 && i + PLAINTEXT_START < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
-                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     ECB_DATA[i + PLAINTEXT_START] = ECB_DATA[i + PLAINTEXT_END];
                                 }
                             }
@@ -473,7 +460,6 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
         } else {
             for (i, c) in key.iter().enumerate() {
                 unsafe {
-                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                     ECB_DATA[i] = *c;
                 }
             }
@@ -487,7 +473,6 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
         } else {
             for (i, c) in iv.iter().enumerate() {
                 unsafe {
-                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                     ECB_DATA[i + PLAINTEXT_START] = *c;
                 }
             }
@@ -516,7 +501,7 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             None
         } else {
             // FLUX-TODO addr=0x2234a flavor=unwrap_option
-            flux_support::assume(self.output.is_some());
+            flux_support::assert(self.output.is_some());
             Some((
                 Err(ErrorCode::INVAL),
                 self.input.take(),

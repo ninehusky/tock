@@ -119,7 +119,6 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         start = cmp::min(start, end);
 
                         for (i, c) in src[start..end].iter().enumerate() {
-                            flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                             kwbuf[i] = c.get();
                         }
                         end - start
@@ -137,7 +136,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
         // TODO verify SPI return value
         let _ = if rlen == 0 {
             // FLUX-TODO addr=0x146a6 flavor=unwrap_option
-            flux_support::assume(self.kernel_write.is_some());
+            flux_support::assert(self.kernel_write.is_some());
             self.spi_master
                 .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
         } else if write_len == 0 {
@@ -159,7 +158,6 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                                 let end = cmp::min(app.index + length, src.len());
 
                                 for (i, c) in src[start..end].iter().enumerate() {
-                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     kwbuf[i] = c.get();
                                 }
 
@@ -170,7 +168,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                 });
             app.index += read_len;
             // FLUX-TODO addr=0x146b2 flavor=unwrap_option
-            flux_support::assume(self.kernel_write.is_some());
+            flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
                 self.kernel_read.take(),
@@ -178,7 +176,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
             )
         } else {
             // FLUX-TODO addr=0x146ac flavor=unwrap_option
-            flux_support::assume(self.kernel_write.is_some());
+            flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
                 self.kernel_read.take(),
@@ -446,7 +444,6 @@ impl<'a, S: SpiMasterDevice<'a>> SpiMasterClient for Spi<'a, S> {
                                 let real_len = cmp::min(end - start, src.len());
                                 let dest_area = &dest[start..end];
                                 for (i, c) in src[0..real_len].iter().enumerate() {
-                                    flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                     dest_area[i].set(*c);
                                 }
                             })

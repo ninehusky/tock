@@ -567,7 +567,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     // CTR-encrypted block to obtain encrypted tag
                     let tag_off = self.crypt_enc_len.get() - AES128_BLOCK_SIZE;
                     // FLUX-TODO addr=0x1da08 flavor=slice_end
-                    flux_support::assume(mic_len <= self.saved_tag.get().len() && tag_off + mic_len <= cbuf.len());
+                    flux_support::assert(mic_len <= self.saved_tag.get().len() && tag_off + mic_len <= cbuf.len());
                     self.saved_tag.get()[..mic_len]
                         .iter()
                         .zip(cbuf[tag_off..tag_off + mic_len].iter_mut())
@@ -576,7 +576,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     // Compare the computed encrypted tag to the received
                     // encrypted tag
                     // FLUX-TODO addr=0x1da1c flavor=slice_order
-                    flux_support::assume(mic_len > 0 && m_off + m_len + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
+                    flux_support::assert(mic_len > 0 && m_off + m_len + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
                     buf[m_off + m_len..m_off + m_len + mic_len]
                         .iter()
                         .zip(cbuf[tag_off..tag_off + mic_len].iter())

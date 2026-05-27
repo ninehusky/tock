@@ -241,7 +241,6 @@ impl Timer {
             // For each of 4 possible compare events, if it's happened,
             // clear it and store its bit in val to pass in callback.
             for i in 0..4 {
-                flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                 if self.registers.events_compare[i].is_set(Event::READY) {
                     val |= 1 << i;
                     self.registers.events_compare[i].write(Event::READY::CLEAR);

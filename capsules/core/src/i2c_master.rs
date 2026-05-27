@@ -199,7 +199,6 @@ impl<'a, I: i2c::I2CMaster<'a>> i2c::I2CHwMasterClient for I2CMasterDriver<'a, I
                         .get_readwrite_processbuffer(rw_allow::BUFFER)
                         .and_then(|app_buffer| {
                             app_buffer.mut_enter(|app_buffer| {
-                                flux_support::assume(false); // UNMASK: temporary, reverse via get_unchecked
                                 app_buffer[..read_len].copy_from_slice(&buffer[..read_len]);
                             })
                         });
