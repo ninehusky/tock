@@ -31,7 +31,15 @@ pub const fn assert(_x: bool) {}
 #[flux_rs::sig(fn(b:bool) ensures b)]
 pub const fn assume(b: bool) {
     if !b {
-        // FLUX-TODO addr=0x10648 flavor=explicit_panic
+
+        // Notes: this assert is never going to get hit
+        // b/c this fn is trusted. In my fork of tock,
+        // we're counting the # of assumes as part
+        // of the verification process, which means this
+        // will likely be irrelevant. (i.e. we're
+        // getting rid of as many `assume`s as we can).
+
+        // FLUX-TODO addr=0x1056c flavor=explicit_panic
         crate::assert(false);
         panic!("assume fails")
     }

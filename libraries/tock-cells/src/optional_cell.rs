@@ -196,7 +196,7 @@ impl<T: Copy> OptionalCell<T> {
     #[track_caller]
     pub fn unwrap_or_panic(&self) -> T {
         // FLUX-TODO flavor=unwrap_option addrs=[
-        //     0x11784, 0x125ca, 0x12866, 0x1356a, 0x13570,
+        //     0x116a8, 0x124f2, 0x1278e, 0x13492, 0x13498,
         // ]
         flux_support::assert(self.value.get().is_some());
         self.value.get().unwrap()

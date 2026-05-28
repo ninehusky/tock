@@ -52,9 +52,11 @@ macro_rules! internal_warn {
 }
 
 macro_rules! internal_err {
-    [ $( $arg:expr ),+ ] => {
+    [ $( $arg:expr ),+ ] => {{
+        // FLUX-TODO addrs=[0x1172a, 0x11840] flavor=explicit_panic
+        flux_support::assert(false);
         panic!($( $arg ),+)
-    };
+    }};
 }
 
 const CHIPINFO_BASE: StaticRef<ChipInfoRegisters> =
@@ -640,7 +642,7 @@ impl EndpointState {
     fn ctrl_state(self) -> CtrlState {
         match self {
             EndpointState::Ctrl(state) => state,
-            // FLUX-TODO addr=0x12630 flavor=explicit_panic
+            // FLUX-TODO addr=0x12558 flavor=explicit_panic
             _ => { flux_support::assert(false); panic!("Expected EndpointState::Ctrl") },
         }
     }
@@ -651,7 +653,7 @@ impl EndpointState {
             EndpointState::Bulk(transfer_type, in_state, out_state) => {
                 (transfer_type, in_state, out_state)
             }
-            // FLUX-TODO addr=0x11680 flavor=explicit_panic
+            // FLUX-TODO addr=0x115a4 flavor=explicit_panic
             _ => { flux_support::assert(false); panic!("Expected EndpointState::Bulk") },
         }
     }
@@ -1466,7 +1468,7 @@ impl<'a> Usbd<'a> {
                 // Notify the client about the new packet.
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[endpoint].state.get().bulk_state();
-                // FLUX-TODO addr=0x1de4 flavor=explicit_panic
+                // FLUX-TODO addr=0x1cf4 flavor=explicit_panic
                 flux_support::assert(matches!(out_state, Some(BulkOutState::OutDma { .. })));
                 assert!(matches!(out_state, Some(BulkOutState::OutDma { .. })));
 
@@ -1564,7 +1566,7 @@ impl<'a> Usbd<'a> {
             if epdatastatus.is_set(status_epin(endpoint)) {
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[endpoint].state.get().bulk_state();
-                // FLUX-TODO addr=0x1e10 flavor=explicit_panic
+                // FLUX-TODO addr=0x1d20 flavor=explicit_panic
                 flux_support::assert(in_state.is_some());
                 assert!(in_state.is_some());
                 match in_state.unwrap() {
@@ -1597,7 +1599,7 @@ impl<'a> Usbd<'a> {
             if epdatastatus.is_set(status_epout(ep)) {
                 let (transfer_type, in_state, out_state) =
                     self.descriptors[ep].state.get().bulk_state();
-                // FLUX-TODO addr=0x1e1a flavor=explicit_panic
+                // FLUX-TODO addr=0x1d2a flavor=explicit_panic
                 flux_support::assert(out_state.is_some());
                 assert!(out_state.is_some());
 
@@ -1640,7 +1642,7 @@ impl<'a> Usbd<'a> {
                 // We are idle, and ready for any control transfer.
 
                 let ep_buf = &self.descriptors[endpoint].slice_out;
-                // FLUX-TODO addr=0x13e0 flavor=optional_cell_unwrap
+                // FLUX-TODO addr=0x132e flavor=optional_cell_unwrap
                 flux_support::assert(ep_buf.is_some());
                 let ep_buf = ep_buf.unwrap_or_panic(); // Unwrap fail = No OUT slice set for this descriptor
                 if ep_buf.len() < 8 {
@@ -1872,7 +1874,7 @@ impl<'a> Usbd<'a> {
         let (transfer_type, in_state, out_state) =
             self.descriptors[endpoint].state.get().bulk_state();
         // Starting the DMA can only happen in the OutData state, i.e. after an EPDATA event.
-        // FLUX-TODO addr=0x1e4e flavor=explicit_panic
+        // FLUX-TODO addr=0x1d5e flavor=explicit_panic
         flux_support::assert(matches!(out_state, Some(BulkOutState::OutData { .. })));
         assert!(matches!(out_state, Some(BulkOutState::OutData { .. })));
         self.start_dma_out(endpoint);
@@ -1892,14 +1894,14 @@ impl<'a> Usbd<'a> {
 
     #[flux_rs::trusted(reason = "To prove `slice[..size]` safe, we need to prove that `self.descriptors[endpoint].slice_in.is_some()`, and something about the length of its contents.")]
     fn start_dma_in(&self, endpoint: usize, size: usize) {
-        // FLUX-TODO addr=0x116c8 flavor=optional_cell_unwrap
+        // FLUX-TODO addr=0x115ec flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_in.is_some());
         let slice = self.descriptors[endpoint].slice_in.unwrap_or_panic(); // Unwrap fail = No IN slice set for this descriptor
         self.debug_in_packet(size, endpoint);
 
         // Start DMA transfer
         self.set_pending_dma();
-        // FLUX-TODO addr=0x11736 flavor=slice_end
+        // FLUX-TODO addr=0x1165a flavor=slice_end
         flux_support::assert(size <= slice.len());
         self.registers.epin[endpoint].set_buffer(&slice[..size]);
         debug_tasks!("- task: startepin[{}]", endpoint);
@@ -1907,7 +1909,7 @@ impl<'a> Usbd<'a> {
     }
 
     fn start_dma_out(&self, endpoint: usize) {
-        // FLUX-TODO addr=0x12694 flavor=optional_cell_unwrap
+        // FLUX-TODO addr=0x125bc flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_out.is_some());
         let slice = self.descriptors[endpoint].slice_out.unwrap_or_panic(); // Unwrap fail = No OUT slice set for this descriptor
 
@@ -1920,10 +1922,11 @@ impl<'a> Usbd<'a> {
 
     // Debug-only function
     fn debug_in_packet(&self, size: usize, endpoint: usize) {
+        // FLUX-TODO addr=0x115fa flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_in.is_some());
         let slice = self.descriptors[endpoint].slice_in.unwrap_or_panic(); // Unwrap fail = No IN slice set for this descriptor
         if size > slice.len() {
-            // FLUX-TODO addr=0x11758 flavor=explicit_panic
+            // FLUX-TODO addr=0x1167c flavor=explicit_panic
             flux_support::assert(false);
             panic!("Packet is too large: {}", size);
         }
@@ -1938,6 +1941,8 @@ impl<'a> Usbd<'a> {
 
     // Debug-only function
     fn debug_out_packet(&self, size: usize, endpoint: usize) {
+        // Notes: blocked-cell
+        // FLUX-TODO addr=0xf7a flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_out.is_some());
         let slice = self.descriptors[endpoint].slice_out.unwrap_or_panic(); // Unwrap fail = No OUT slice set for this descriptor
         if size > slice.len() {
@@ -2195,7 +2200,7 @@ fn inter_endepin(ep: usize) -> Field<u32, Interrupt::Register> {
         6 => Interrupt::ENDEPIN6,
         7 => Interrupt::ENDEPIN7,
         _ => {
-            // FLUX-TODO addr=0x12606 flavor=explicit_panic
+            // FLUX-TODO addr=0x1252e flavor=explicit_panic
             flux_support::assert(false);
             unreachable!()
         },
@@ -2213,7 +2218,7 @@ fn inter_endepout(ep: usize) -> Field<u32, Interrupt::Register> {
         5 => Interrupt::ENDEPOUT5,
         6 => Interrupt::ENDEPOUT6,
         7 => Interrupt::ENDEPOUT7,
-        // FLUX-TODO addr=0x125e6 flavor=explicit_panic
+        // FLUX-TODO addr=0x1250e flavor=explicit_panic
         _ => { flux_support::assert(false); unreachable!() },
     }
 }
@@ -2235,7 +2240,7 @@ fn packet_to_hex(packet: &[VolatileCell<u8>], packet_hex: &mut [u8]) {
     let mut i = 0;
     while i < packet.len() {
         let x = packet[i].get();
-        // FLUX-TODO addr=0x117d4 flavor=bounds
+        // FLUX-TODO addr=0x116f8 flavor=bounds
         flux_support::assert(2 * i + 1 < packet_hex.len());
         packet_hex[2 * i] = hex_char(x >> 4);
         packet_hex[2 * i + 1] = hex_char(x & 0x0f);

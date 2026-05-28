@@ -367,11 +367,9 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
             FaultAction::Panic => {
                 // process faulted. Panic and print status
                 self.state.set(State::Faulted);
-                // FLUX-TODO addr=0x32fe flavor=explicit_panic
-                // Notes: blocked-fault-state
-                //        To discharge this, you'd need to ensure this function itself is unreachable if
-                //        the fault policy's `action()` returns `FaultAction::Panic`.
-                // flux_support::assert(false);
+
+                // FLUX-TODO addr=0x31fe flavor=explicit_panic
+                flux_support::assert(false);
                 panic!("Process {} had a fault", self.get_process_name());
             }
             FaultAction::Restart => {
@@ -462,6 +460,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         self.tasks.map_or(None, |tasks| tasks.dequeue())
     }
 
+    // FLUX-TODO-FN-LEVEL addrs=[0x2e8c] flavor=bounds
     fn remove_upcall(&self, upcall_id: UpcallId) -> Option<Task> {
         self.tasks.map_or(None, |tasks| {
             tasks.remove_first_matching(|task| match task {
@@ -533,9 +532,9 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
     }
 
     fn setup_mpu(&self) -> MpuConfiguredCapability {
-        // FLUX-TODO addr=0x4732 flavor=unwrap_result
         // Notes: blocked-cell
-        // flux_support::assert(self.app_memory_allocator.is_some());
+        // FLUX-TODO addr=0x4632 flavor=unwrap_result
+        flux_support::assert(self.app_memory_allocator.is_some());
         self.app_memory_allocator
             .map_or(Err(()), |am| Ok(am.configure_mpu(self.chip.mpu())))
             .expect("Fatal kernel bug in setting up MPU - cannot branch to process as it would be unsafe")
@@ -1584,8 +1583,10 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
         // Discharging needs this function's own MPU-layout reasoning (how the
         // allocation sizes relate to remaining_memory) plus a split_at_mut
         // extern spec; deferred, not an infra blocker.
-        // flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
-        // FLUX-TODO addr=0x915c flavor=explicit_panic
+
+        // FLUX-TODO addr=0x9098 flavor=explicit_panic
+        flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
+
         let (_allocated_padded_memory, unused_memory) =
             remaining_memory.split_at_mut(app_memory_start_offset + allocation_size);
 

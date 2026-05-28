@@ -112,6 +112,7 @@ impl<'a, T: ?Sized> TakeCell<'a, T> {
     /// // but potentially changed.
     /// assert_eq!(y.take(), Some(&mut 1235));
     /// ```
+    // FLUX-TODO-FN-LEVEL addrs=[0x1a8ea, 0x1a900, 0x1a910, 0x1a930] flavor=bounds
     pub fn map<F, R>(&self, closure: F) -> Option<R>
     where
         F: FnOnce(&mut T) -> R,

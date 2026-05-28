@@ -12,8 +12,10 @@ first. The short version:
     they carry. ``line=`` is a stale cache and is stripped on rewrite.
   * Precise markers (FLUX-TODO / FLUX-OPT) join to the nearest panic_survey record
     at or below the comment (within 5 lines) with matching (file, flavor).
-  * FN-LEVEL markers join on (file, func, flavor) against LTO-line-lost records,
-    with the function derived from the comment's enclosing source fn.
+  * FN-LEVEL markers join on (file, func, flavor) against all records (both
+    LTO-line-lost and known-line — the latter covers panics whose predicate is
+    a function-level concern, e.g. inlined callees), with the function derived
+    from the comment's enclosing source fn.
   * The run is atomic: collect every violation across the whole tree, then write all
     rewrites only if there were zero violations, else write nothing.
 
@@ -232,6 +234,7 @@ class Marker:
     list_field: str | None = None     # 'addrs' | 'covers' | None
     addr_singular: str | None = None  # normalised lowercase, or None
     list_addrs: list[str] = field(default_factory=list)
+    override_file: str | None = None  # FN-LEVEL: overrides the survey-join file
 
     @property
     def raw(self) -> str:
@@ -270,6 +273,7 @@ def parse_markers(path: str, text: str) -> list[Marker]:
         )
         m.flavor = field_value(kind_line, "flavor")
         m.has_line = re.search(r"\bline=\d+", kind_line) is not None
+        m.override_file = field_value(kind_line, "file")
         m.addr_singular = (field_value(kind_line, "addr") or "").lower() or None \
             if has_singular_addr(kind_line) else None
         list_m = re.search(r"\b(addrs|covers)=\[", joined)
@@ -303,6 +307,64 @@ def enclosing_fn_below(lines: list[str], marker_start: int) -> tuple[str | None,
     return None, None
 
 
+def enclosing_impl_type(lines: list[str], marker_start: int) -> str | None:
+    """Walk upward from the marker to find the enclosing ``impl`` block's target
+    type name. Returns the type identifier (e.g. ``MuxAES128CCM``) or ``None`` if
+    the marker is not inside an impl block. Used to disambiguate ``fn`` names that
+    appear in multiple impls (``MuxAES128CCM::crypt_done`` vs
+    ``VirtualAES128CCM::crypt_done``) -- both would otherwise segment-match the
+    same fn token in ``effective_frame.func``.
+
+    Multi-line impl signatures are supported: the impl declaration is read from
+    its opening ``impl`` keyword down to its body's ``{``, so trailing
+    ``for MuxAES128CCM<...>`` on a continuation line is found.
+
+    Brace-aware: an ``impl`` line is only considered enclosing if its body's
+    ``{`` is before ``marker_start`` AND its matching ``}`` is at or after
+    ``marker_start``. Rust impls don't nest, so the first enclosing impl found
+    walking up is the only one possible; if a closer impl block has already
+    closed, the walker continues upward."""
+    for idx in range(marker_start, -1, -1):
+        if not re.match(r"^\s*impl\b", lines[idx]):
+            continue
+        # Find this impl's body-opening `{` (on this line or up to 10 below).
+        body_open_idx = None
+        body_open_col = None
+        for j in range(idx, min(idx + 10, len(lines))):
+            if "{" in lines[j]:
+                body_open_idx = j
+                body_open_col = lines[j].index("{")
+                break
+        if body_open_idx is None or body_open_idx >= marker_start:
+            continue
+        # Walk from the body-opening `{` forward; track brace depth. If depth
+        # falls to 0 before reaching `marker_start`, the impl body closed
+        # earlier and this impl does NOT enclose the marker.
+        depth = 0
+        encloses = True
+        for k in range(body_open_idx, marker_start):
+            text = lines[k]
+            if k == body_open_idx:
+                text = text[body_open_col:]  # only count braces from the body opener
+            code = re.sub(r"//.*", "", text)
+            depth += code.count("{") - code.count("}")
+            if k > body_open_idx and depth <= 0:
+                encloses = False
+                break
+        if not encloses or depth <= 0:
+            continue
+        # Marker is inside this impl. Extract the target type from the signature.
+        sig = " ".join(lines[idx:body_open_idx + 1])
+        for_m = re.search(r"\bfor\s+(?:\w+::)*([A-Z]\w*)", sig)
+        if for_m:
+            return for_m.group(1)
+        inh_m = re.match(r"^\s*impl(?:<[^>]*>)?\s+(?:\w+::)*([A-Z]\w*)", sig)
+        if inh_m:
+            return inh_m.group(1)
+        return None
+    return None
+
+
 def fn_body_range(lines: list[str], decl_idx: int) -> tuple[int, int]:
     """Brace-count from a fn declaration to the end of its body. Returns 1-based
     inclusive (start, end) source line numbers. Comments are stripped before
@@ -332,7 +394,7 @@ def tokens(s: str) -> set[str]:
 
 @dataclass
 class Violation:
-    kind: str          # 'malformed' | 'orphan' | 'ambiguous' | 'double' | 'overspecified'
+    kind: str          # 'malformed' | 'orphan' | 'ambiguous' | 'double' | 'overspecified' | 'unpaired'
     marker: Marker
     detail: str
     extra: Marker | None = None  # second marker for double-marker
@@ -340,6 +402,16 @@ class Violation:
 
     def location(self) -> str:
         return f"{self.marker.path}:{self.marker.anchor}"
+
+
+# Substring match: pairs match-arm shapes like
+#   _ => { flux_support::assert(false); panic!(...) },
+# as well as plain `flux_support::assert(...)` on its own line.
+_ASSERT_PAIR = re.compile(r"\bflux_support::assert\s*\(")
+# Inside the flux_support crate itself, `flux_support::assert(` doesn't resolve
+# (a crate can't refer to itself by name); the canonical reference is
+# `crate::assert(`. Accept that form for markers in files under flux_support/.
+_ASSERT_PAIR_FLUX_SUPPORT = re.compile(r"\b(?:flux_support|crate)::assert\s*\(")
 
 
 # --------------------------------------------------------------------------- #
@@ -365,7 +437,13 @@ class Auditor:
         self.by_file_flavor: dict[tuple[str, str], list[Record]] = defaultdict(list)
         self.by_file: dict[str, list[Record]] = defaultdict(list)       # precise only
         self.nullline_by_file: dict[str, list[Record]] = defaultdict(list)
+        # All records by file, regardless of line presence. FN-LEVEL markers
+        # join against this set (both null-line LTO records and known-line
+        # records where the predicate is structurally a function-level
+        # concern — see spec step 6).
+        self.all_by_file: dict[str, list[Record]] = defaultdict(list)
         for r in records:
+            self.all_by_file[r.file].append(r)
             if r.line is not None:
                 self.by_file_flavor[(r.file, r.flavor)].append(r)
                 self.by_file[r.file].append(r)
@@ -374,8 +452,12 @@ class Auditor:
 
         self.violations: list[Violation] = []
         self.resolutions: list[Resolution] = []
-        # per-file cache of FN-LEVEL fn body ranges, for the carve-out check
-        self._fnlevel_ranges: dict[str, list[tuple[int, int]]] = {}
+        # per-file cache of FN-LEVEL fn body ranges + claimed addrs, for the
+        # carve-out check (spec exit condition 3). Each entry is
+        # (start_line, end_line, frozenset_of_addrs) -- a precise marker whose
+        # resolved address is in this addr set is "carved": left unchanged and
+        # excluded from the double-marker check.
+        self._fnlevel_claims: dict[str, list[tuple[int, int, frozenset[str]]]] = {}
         self._lines_cache: dict[str, list[str]] = {}
 
     # -- file pass ------------------------------------------------------------
@@ -387,28 +469,47 @@ class Auditor:
         self._lines_cache[path] = lines
         markers = parse_markers(path, text)
 
-        # precompute FN-LEVEL enclosing-fn ranges in this file (carve-out check)
-        ranges: list[tuple[int, int]] = []
+        # Split into the three audit lanes. FN-LEVEL markers are audited first
+        # so the per-fn-range claim set is available to the precise carve-out
+        # check. Precise markers are processed in anchor-line order with a
+        # per-flavor source-line claim set, so stacked markers in overlapping
+        # windows pick distinct source lines (rebuild DWARF drift can
+        # otherwise land two markers on the same nearest panic).
+        precise: list[Marker] = []
+        fnlevel: list[Marker] = []
         for m in markers:
             if m.kind == KIND_FN_LEVEL:
-                _, decl = enclosing_fn_below(lines, m.start)
-                if decl is not None:
-                    ranges.append(fn_body_range(lines, decl))
-        self._fnlevel_ranges[path] = ranges
+                fnlevel.append(m)
+            elif m.kind in (KIND_TODO, KIND_OPT):
+                precise.append(m)
+            else:  # BLOCKED or UNKNOWN
+                reason = ("deprecated FLUX-TODO-BLOCKED kind"
+                          if m.kind == KIND_BLOCKED else "unrecognised // FLUX- kind")
+                self.violations.append(Violation("malformed", m, reason))
 
-        for m in markers:
-            self._audit_marker(m, lines)
-        return markers
-
-    def _audit_marker(self, m: Marker, lines: list[str]):
-        if m.kind == KIND_FN_LEVEL:
+        # Audit each FN-LEVEL marker, capturing its (fn-body range, claimed
+        # addrs) so precise markers below can be carved out.
+        claims: list[tuple[int, int, frozenset[str]]] = []
+        for m in fnlevel:
+            pre_count = len(self.resolutions)
             self._audit_fn_level(m, lines)
-        elif m.kind in (KIND_TODO, KIND_OPT):
-            self._audit_precise(m, lines)
-        else:  # BLOCKED or UNKNOWN
-            reason = ("deprecated FLUX-TODO-BLOCKED kind"
-                      if m.kind == KIND_BLOCKED else "unrecognised // FLUX- kind")
-            self.violations.append(Violation("malformed", m, reason))
+            _, decl = enclosing_fn_below(lines, m.start)
+            if decl is None:
+                continue
+            rng = fn_body_range(lines, decl)
+            if len(self.resolutions) > pre_count:
+                res = self.resolutions[-1]
+                addrs = frozenset(res.new_addrs or [])
+            else:
+                addrs = frozenset()
+            claims.append((rng[0], rng[1], addrs))
+        self._fnlevel_claims[path] = claims
+
+        claimed: dict[str, set[int]] = defaultdict(set)
+        for m in sorted(precise, key=lambda x: x.anchor):
+            self._audit_precise(m, lines, claimed)
+            self._audit_precise_pairing(m, lines)
+        return markers
 
     # -- precise markers ------------------------------------------------------
 
@@ -417,6 +518,8 @@ class Auditor:
         has_list = m.list_field == "addrs"
         if m.list_field == "covers":
             return "covers= is FN-LEVEL-only; not valid on a precise marker"
+        if m.override_file is not None:
+            return "file= override is FN-LEVEL-only; not valid on a precise marker"
         if has_addr and has_list:
             return "carries both addr= and addrs=[...]"
         if not has_addr and not has_list:
@@ -429,39 +532,50 @@ class Auditor:
             return f"unknown flavor={m.flavor!r}"
         return None
 
-    def _audit_precise(self, m: Marker, lines: list[str]):
+    def _audit_precise(self, m: Marker, lines: list[str],
+                       claimed: dict[str, set[int]]):
         reason = self._precise_malformed_reason(m)
         if reason is not None:
             self.violations.append(Violation("malformed", m, reason))
             return
 
         P = m.anchor
+        # "Closest unclaimed nearest-panic line in window": filter out source
+        # lines an earlier (lower-anchor) marker of this flavor already claimed
+        # so stacked markers within five lines distribute to distinct panics.
         cands = [r for r in self.by_file_flavor[(m.path, m.flavor)]
-                 if r.line is not None and P <= r.line <= P + 5]
+                 if r.line is not None and P <= r.line <= P + 6
+                 and r.line not in claimed[m.flavor]]
         if not cands:
             self.violations.append(Violation(
                 "orphan", m,
                 f"no record at anchor P={P} for (file={m.path}, flavor={m.flavor}) "
-                f"within P..P+5",
-                hint=self._orphan_hint_precise(m)))
+                f"within P..P+6",
+                hint=self._orphan_hint_precise(m, claimed)))
             return
 
         matched_line = min(r.line for r in cands)
+        claimed[m.flavor].add(matched_line)
         matched = [r for r in self.by_file_flavor[(m.path, m.flavor)]
                    if r.line == matched_line]
         addrs = sorted({r.address for r in matched})
+
+        if self._carved_by_fn_level(m, addrs):
+            # Spec exit condition 3: precise marker (either form) whose
+            # resolved address(es) intersect a FN-LEVEL's claimed addrs in
+            # the same enclosing fn is left unchanged and excluded from the
+            # double-marker check.
+            self.resolutions.append(Resolution(m, carved=True))
+            return
 
         if m.addr_singular is not None:        # addr= form
             if len(addrs) == 1:
                 self.resolutions.append(Resolution(m, new_addr=addrs[0]))
             else:
-                if self._covered_by_fn_level(m):
-                    self.resolutions.append(Resolution(m, carved=True))
-                else:
-                    self.violations.append(Violation(
-                        "ambiguous", m,
-                        f"line {matched_line} resolves to {len(addrs)} instructions: "
-                        f"{', '.join(addrs)}"))
+                self.violations.append(Violation(
+                    "ambiguous", m,
+                    f"line {matched_line} resolves to {len(addrs)} instructions: "
+                    f"{', '.join(addrs)}"))
         else:                                   # addrs=[...] form
             if len(addrs) > 1:
                 self.resolutions.append(Resolution(m, new_addrs=addrs))
@@ -471,27 +585,78 @@ class Auditor:
                     f"line {matched_line} resolves to a single instruction {addrs[0]}; "
                     f"consider addr= form"))
 
-    def _covered_by_fn_level(self, m: Marker) -> bool:
-        return any(s <= m.anchor <= e for s, e in self._fnlevel_ranges.get(m.path, []))
+    def _carved_by_fn_level(self, m: Marker, resolved_addrs: list[str]) -> bool:
+        """Generalised exit-condition-3 carve-out: a precise marker (TODO or
+        OPT, either `addr=` or `addrs=[...]` form) is carved out when it sits
+        inside the body of a function that also carries a FN-LEVEL marker AND
+        the precise marker's resolved address(es) intersect the FN-LEVEL
+        marker's claimed addrs. Carved markers are left unchanged and
+        excluded from the double-marker check."""
+        resolved = set(resolved_addrs)
+        for s, e, fn_addrs in self._fnlevel_claims.get(m.path, []):
+            if s <= m.anchor <= e and resolved & fn_addrs:
+                return True
+        return False
+
+    # -- precise-marker assert pairing (step 7) -------------------------------
+
+    def _audit_precise_pairing(self, m: Marker, lines: list[str]):
+        """Every precise marker (TODO/OPT) must be paired with a
+        ``flux_support::assert(...)`` call below it. Scan downward from the
+        line after the marker block, skipping blank lines and any lines whose
+        stripped form starts with ``//`` (this naturally skips the marker's
+        own continuation notes and further stacked precise markers). The
+        first non-skipped source line must contain a ``flux_support::assert(``
+        call; otherwise the marker is unpaired. Stacked precise markers above
+        the same panic share one assert — each resolves to it independently
+        via this same scan."""
+        n = len(lines)
+        idx = m.end + 1
+        pair_re = (_ASSERT_PAIR_FLUX_SUPPORT if m.path.startswith("flux_support/")
+                   else _ASSERT_PAIR)
+        while idx < n:
+            s = lines[idx]
+            stripped = s.strip()
+            if stripped == "" or stripped.startswith("//"):
+                idx += 1
+                continue
+            if pair_re.search(s):
+                return
+            preview = stripped if len(stripped) <= 80 else stripped[:77] + "..."
+            self.violations.append(Violation(
+                "unpaired", m,
+                f"first source line below marker has no flux_support::assert(...): "
+                f"{preview}"))
+            return
+        self.violations.append(Violation(
+            "unpaired", m, "no source line below marker (end of file)"))
 
     # -- orphan self-diagnosis ------------------------------------------------
 
-    def _orphan_hint_precise(self, m: Marker) -> str:
+    def _orphan_hint_precise(self, m: Marker,
+                             claimed: dict[str, set[int]] | None = None) -> str:
         """Say what is actually near a precise orphan's anchor, so the fix is
         obvious (wrong flavor / comment drifted / line-lost / panic gone)."""
         P = m.anchor
+        claimed_for_flavor = claimed[m.flavor] if claimed is not None else set()
+        win_all = sorted(r.line for r in self.by_file_flavor.get((m.path, m.flavor), [])
+                         if r.line is not None and P <= r.line <= P + 6)
+        if win_all and all(L in claimed_for_flavor for L in win_all):
+            return (f"window P..P+6 has {m.flavor} panic(s) at {win_all} but all are "
+                    f"claimed by earlier markers in this file -> likely a duplicate "
+                    f"stacked marker, delete or re-target")
         win = sorted((r.line, r.flavor) for r in self.by_file.get(m.path, [])
-                     if P <= r.line <= P + 5)
+                     if P <= r.line <= P + 6)
         others = [f"{l}={fl}" for l, fl in win if fl != m.flavor]
         if others:
-            return (f"window P..P+5 has a different-flavor panic ({', '.join(others)}); "
+            return (f"window P..P+6 has a different-flavor panic ({', '.join(others)}); "
                     f"marker says {m.flavor} -> flavor mismatch, fix flavor=")
         same = sorted((r.line for r in self.by_file_flavor.get((m.path, m.flavor), [])),
                       key=lambda L: abs(L - P))
         if same:
             L = same[0]
             return (f"nearest {m.flavor} panic at line {L} (gap {L - P:+d}, outside "
-                    f"P..P+5) -> move comment to within 5 lines above the panic")
+                    f"P..P+6) -> move comment to within 6 lines above the panic")
         if self.nullline_by_file.get(m.path):
             return (f"no precise {m.flavor} panic in file, but it has line-lost records "
                     f"-> may belong on a FLUX-TODO-FN-LEVEL")
@@ -527,17 +692,33 @@ class Auditor:
             return
 
         fn_name, decl = enclosing_fn_below(lines, m.start)
+        impl_type = enclosing_impl_type(lines, m.start)
         wildcard = (m.flavor == "mixed")
+        # Optional file= override: addr2line can attribute a line-lost panic to
+        # an inlined callee's file (binary symbol owns it but origin frame is
+        # elsewhere); pointing the FN-LEVEL marker at the origin file via
+        # `file=` lets it claim those addresses.
+        join_file = norm_file(m.override_file) if m.override_file else m.path
+        # Spec step 6: FN-LEVEL joins against all records in the file matching
+        # (func, flavor), regardless of whether the record carries a known line
+        # or is LTO-line-lost. The known-line case covers panics attributed to
+        # a specific source line whose predicate is still a function-level
+        # concern (e.g. a callee inlined into this function). When the marker
+        # sits inside an `impl Foo` block, the join also requires the impl-type
+        # name to appear in the record's func -- a bare `fn_name in tokens(...)`
+        # match cross-pulls panics from same-named methods on different types
+        # (e.g. `MuxAES128CCM::crypt_done` vs `VirtualAES128CCM::crypt_done`).
         cands = [
-            r for r in self.nullline_by_file.get(m.path, [])
+            r for r in self.all_by_file.get(join_file, [])
             if (wildcard or r.flavor == m.flavor)
             and fn_name is not None and fn_name in tokens(r.func)
+            and (impl_type is None or impl_type in tokens(r.func))
         ]
         if not cands:
             self.violations.append(Violation(
                 "orphan", m,
-                f"(file={m.path}, func~={fn_name}, flavor={m.flavor}) matched no "
-                f"LTO-line-lost record",
+                f"(file={join_file}, func~={fn_name}, flavor={m.flavor}) matched no "
+                f"record",
                 hint=self._orphan_hint_fn_level(m, fn_name, decl)))
             return
         addrs = sorted({r.address for r in cands})
@@ -670,12 +851,13 @@ def print_scope_summary(markers: list[Marker]):
 
 
 def report_violations(violations: list[Violation]) -> None:
-    order = ["malformed", "orphan", "ambiguous", "overspecified", "double"]
+    order = ["malformed", "orphan", "ambiguous", "overspecified", "unpaired", "double"]
     label = {
         "malformed": "MALFORMED",
         "orphan": "ORPHANED",
         "ambiguous": "AMBIGUOUS",
         "overspecified": "OVER-SPECIFIED",
+        "unpaired": "UNPAIRED-ASSERT",
         "double": "DOUBLE-MARKER",
     }
     by_kind: dict[str, list[Violation]] = defaultdict(list)

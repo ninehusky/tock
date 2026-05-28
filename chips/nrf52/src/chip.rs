@@ -116,6 +116,7 @@ impl<'a, I: InterruptService + 'a> kernel::platform::chip::Chip for NRF52<'a, I>
         &self.userspace_kernel_boundary
     }
 
+    // FLUX-TODO-FN-LEVEL addrs=[0x1e08, 0x1e2c] flavor=bounds
     fn service_pending_interrupts(&self) {
         unsafe {
             loop {

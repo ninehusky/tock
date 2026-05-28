@@ -492,7 +492,7 @@ impl<'a> Adc<'a> {
                 } else if self.registers.events_end.is_set(EVENT::EVENT) {
                     self.registers.events_end.write(EVENT::EVENT::CLEAR);
 
-                    // FLUX-TODO addr=0x1ec2 flavor=unwrap_option
+                    // FLUX-TODO addr=0x1dd2 flavor=unwrap_option
                     flux_support::assert(self.buffer.is_some());
                     let ret_buf = self.buffer.take().unwrap();
 
@@ -561,7 +561,7 @@ impl<'a> Adc<'a> {
     }
 
     fn setup_frequency(&self, frequency: u32) {
-        // FLUX-TODO addr=0x11adc flavor=div_by_zero
+        // FLUX-TODO addr=0x11a00 flavor=div_by_zero
         flux_support::assert(frequency != 0);
         let raw_cc = 16000000 / frequency;
         let cc = if raw_cc > 2047 {

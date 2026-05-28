@@ -130,7 +130,8 @@ impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
             // perturb the solver. Deferred. `start <= string_len` already
             // follows from the early-return control flow above.
             // flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
-            // FLUX-TODO addr=0x11168 flavor=slice_order
+            // FLUX-TODO addr=0x1108a flavor=slice_order
+            flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
             let ret = self
                 .binary_writer
                 .write_buffer(&(s).as_bytes()[start..string_len]);

@@ -107,7 +107,7 @@ pub trait ContextStore {
         match self.get_context_from_id(0) {
             Some(ctx) => ctx,
             None => {
-                // FLUX-OPT addr=0x18f78 flavor=explicit_panic
+                // FLUX-OPT addr=0x18e70 flavor=explicit_panic
                 // Notes: discharged by the `b: ctx_id == 0 => b` postcondition on `get_context_from_id`.
                 // There's only one `impl` of `ContextStore` which returns `Some` for `ctx_id == 0`.
                 flux_support::assert(false);
@@ -665,7 +665,7 @@ fn decompress_ext_hdr(
 
     next_headers[0] = next_header;
     next_headers[1] = hdr_len_field as u8;
-    // FLUX-TODO addr=0xd0a2 flavor=slice_order
+    // FLUX-TODO addr=0xcfc6 flavor=slice_order
     flux_support::assert(2 + len <= next_headers.len() && *consumed + len <= buf.len());
     next_headers[2..2 + len].copy_from_slice(&buf[*consumed..*consumed + len]);
 
@@ -704,7 +704,7 @@ fn decompress_ext_hdr(
     ) -> Result<(usize, usize), ()>
         requires buf_len >= 42 && out_len >= 40
 )]
-// FLUX-TODO-FN-LEVEL reason=mass-refactor-fn-entry addrs=[0xd170, 0xd17e, 0xd194, 0xd1a0] flavor=bounds
+// FLUX-TODO-FN-LEVEL reason=mass-refactor-fn-entry addrs=[0xcfe2, 0xcfec, 0xd000, 0xd02a, 0xd052, 0xd062, 0xd094, 0xd0a2, 0xd0b8, 0xd0c4, 0xd0da] flavor=mixed
 pub fn decompress(
     ctx_store: &dyn ContextStore,
     buf: &[u8],
@@ -861,7 +861,8 @@ pub fn decompress(
                 let udp_length_usize: usize = udp_length as usize;
                 let upper: usize = buf.len() + 8;
                 flux_support::assume(udp_length_usize <= upper && consumed <= upper - udp_length_usize);
-                // FLUX-TODO addr=0xd0c8 flavor=slice_end
+                // FLUX-TODO addr=0xcfc4 flavor=slice_end
+                flux_support::assert(next_headers.len() >= 8);
                 let udp_checksum = decompress_udp_checksum(
                     nhc_header,
                     &next_headers[0..8],
@@ -890,6 +891,12 @@ pub fn decompress(
                 //   read here.
                 flux_support::assume(next_headers.len() >= 264);
                 flux_support::assume(consumed < buf.len());
+
+                // Notes: likely inlined panic instruction from
+                // `decompress_ext_hdr`'s bounds check.
+                // FLUX-TODO addrs=[0xd03a, 0xd0b2] flavor=bounds
+                flux_support::assert(consumed < buf.len());
+
                 let (new_is_nhc, new_next_header, written_growth) =
                     decompress_ext_hdr(nhc_header, buf, &mut consumed, next_headers)?;
                 is_nhc = new_is_nhc;
@@ -898,7 +905,7 @@ pub fn decompress(
             }
 
             _ => {
-                // FLUX-TODO addr=0xd0be flavor=explicit_panic
+                // FLUX-TODO addr=0xcfba flavor=explicit_panic
                 flux_support::assert(false);
                 panic!("Unreachable case")
             },
@@ -985,7 +992,9 @@ fn decompress_tf(ip6_header: &mut IP6Header, iphc_header: u8, buf: &[u8], consum
     if fl_compressed {
         ip6_header.set_flow_label(0);
     } else {
-        // FLUX-TODO addr=0xd176 flavor=bounds
+        // FLUX-TODO addr=0xd09a flavor=bounds
+        flux_support::assert(*consumed + 1 < buf.len());
+        // FLUX-TODO addr=0xd0ae flavor=bounds
         flux_support::assert(*consumed + 2 < buf.len());
         let flow = (((buf[*consumed] & 0x0f) as u32) << 16)
             | ((buf[*consumed + 1] as u32) << 8)
@@ -1230,7 +1239,7 @@ fn decompress_multicast(
                 dst.copy_from_slice(src);
                 let dst = &mut ip_addr.0[12..16];
                 flux_support::assume(dst.len() == 4);
-                // FLUX-TODO addr=0xd0fc flavor=slice_order
+                // FLUX-TODO addr=0xd020 flavor=slice_order
                 flux_support::assert(*consumed + 6 <= buf.len());
                 dst.copy_from_slice(&buf[*consumed + 2..*consumed + 6]);
                 *consumed += 6;
@@ -1335,6 +1344,7 @@ fn decompress_iid_link_local(
             let dst = &mut ip_addr.0[8..16];
             flux_support::assume(dst.len() == 8);
 
+            // FLUX-TODO addr=0xd38e flavor=slice_order
             flux_support::assert(*consumed + 8 <= buf.len());
             dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
@@ -1350,7 +1360,7 @@ fn decompress_iid_link_local(
             dst.copy_from_slice(src);
             let dst = &mut ip_addr.0[14..16];
             flux_support::assume(dst.len() == 2);
-            // FLUX-TODO addr=0xd464 flavor=slice_order
+            // FLUX-TODO addr=0xd388 flavor=slice_order
             flux_support::assert(*consumed + 2 <= buf.len());
             dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
@@ -1364,7 +1374,7 @@ fn decompress_iid_link_local(
             dst.copy_from_slice(&compute_iid(mac_addr));
         }
         _ => {
-            // FLUX-TODO addr=0xd48a flavor=explicit_panic
+            // FLUX-TODO addr=0xd3ae flavor=explicit_panic
             flux_support::assert(false);
             panic!("Unreachable case")
         },
@@ -1396,6 +1406,7 @@ fn decompress_iid_link_local(
               && con + 8 <= buf_len
         ensures consumed: usize{c: con <= c && c <= con + 8}
 )]
+// FLUX-TODO-FN-LEVEL addrs=[0xd5ae] flavor=slice_end
 fn decompress_iid_context(
     addr_mode: u8,
     ip_addr: &mut IPAddr,
@@ -1418,6 +1429,7 @@ fn decompress_iid_context(
             flux_support::assume(dst.len() == 8);
             // Decorative: anchors a buf slice_end discharge (panic 0xb26c routes
             // through this fn's slice ops). Implied by sig `con + 8 <= buf_len`.
+            // FLUX-TODO addr=0xd5a0 flavor=slice_order
             flux_support::assert(*consumed + 8 <= buf.len());
             dst.copy_from_slice(&buf[*consumed..*consumed + 8]);
             *consumed += 8;
@@ -1430,8 +1442,10 @@ fn decompress_iid_context(
             dst.copy_from_slice(&iphc::MAC_BASE);
             let dst = &mut ip_addr.0[14..16];
             flux_support::assume(dst.len() == 2);
-            // Decorative: see note above on MODE1.
+
+            // FLUX-TODO addr=0xd59a flavor=slice_order
             flux_support::assert(*consumed + 2 <= buf.len());
+
             dst.copy_from_slice(&buf[*consumed..*consumed + 2]);
             *consumed += 2;
         }
@@ -1445,7 +1459,7 @@ fn decompress_iid_context(
             flux_support::assume(src.len() == 8);
             dst.copy_from_slice(src);
         }
-        // FLUX-TODO addr=0xd6a4 flavor=explicit_panic
+        // FLUX-TODO addr=0xd5c8 flavor=explicit_panic
         _ => { flux_support::assert(false); panic!("Unreachable case") },
     }
     // The bits covered by the provided context are always used, so we copy
@@ -1499,13 +1513,15 @@ fn decompress_udp_ports(udp_nhc: u8, buf: &[u8], consumed: &mut usize) -> (u16, 
         // Source port is uncompressed
         flux_support::assert(*consumed <= *consumed + 2);
         flux_support::assert(*consumed + 2 <= buf.len());
+        // FLUX-TODO addr=0xd03e flavor=slice_order
+        flux_support::assert(*consumed <= *consumed + 2);
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         // Destination port is compressed to 8 bits
         dst_port = nhc::UDP_8BIT_PORT | (buf[*consumed + 2] as u16);
         *consumed += 3;
     } else {
         // Both ports are uncompressed
-        flux_support::assert(*consumed <= *consumed + 2);
+        // FLUX-TODO addr=0xd038 flavor=slice_order
         flux_support::assert(*consumed + 2 <= buf.len());
         src_port = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         flux_support::assert(*consumed + 2 <= *consumed + 4);
@@ -1564,7 +1580,8 @@ fn decompress_udp_checksum(
         // Decorative: anchors the discharge of the original panic site
         // (0xadc2, slice_order) and the companion slice_end obligation.
         // Both are implied by the sig precondition `con + 2 <= buf_len`.
-        flux_support::assert(*consumed <= *consumed + 2);
+
+        // FLUX-TODO addr=0xd016 flavor=slice_order
         flux_support::assert(*consumed + 2 <= buf.len());
         let checksum = u16::from_be(network_slice_to_u16(&buf[*consumed..*consumed + 2]));
         *consumed += 2;

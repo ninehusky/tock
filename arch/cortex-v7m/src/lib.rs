@@ -293,7 +293,7 @@ unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
 ) -> ! {
     if stack_overflow != 0 {
         // Panic to show the correct error.
-        // FLUX-TODO addr=0x1059e flavor=explicit_panic
+        // FLUX-TODO addr=0x104c2 flavor=explicit_panic
         flux_support::assert(false);
         panic!("kernel stack overflow");
     } else {
@@ -344,7 +344,7 @@ unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
         let thumb_bit = ((stacked_xpsr >> 24) & 0x1) == 1;
         let exception_number = (stacked_xpsr & 0x1ff) as usize;
 
-        // FLUX-TODO addr=0x10584 flavor=explicit_panic
+        // FLUX-TODO addr=0x104a8 flavor=explicit_panic
         flux_support::assert(false);
         panic!(
             "{} HardFault.\r\n\

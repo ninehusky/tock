@@ -238,6 +238,7 @@ impl<'a> AesECB<'a> {
         (start, end, take)
     }
 
+    // FLUX-TODO-FN-LEVEL addrs=[0x22046, 0x2204c, 0x2205c, 0x22062, 0x22068] flavor=bounds
     fn copy_plaintext(&self) {
         let (start, _end, take) = self.get_start_end_take();
 
@@ -252,6 +253,9 @@ impl<'a> AesECB<'a> {
                                 for i in 0..take {
                                     // Copy into static mut DMA buffer
                                     unsafe {
+                                        // Note: the `&&` combines both bounds-checks, as it's
+                                        // unclear which one actually codegens into the checked operation.
+                                        // FLUX-TODO addr=0x22026 flavor=bounds
                                         flux_support::assert(i + PLAINTEXT_START < 48 && i + start < output.len());
                                         ECB_DATA[i + PLAINTEXT_START] = output[i + start];
                                     }
@@ -262,6 +266,8 @@ impl<'a> AesECB<'a> {
                             for i in 0..take {
                                 // Copy into static mut DMA buffer
                                 unsafe {
+                                    // Note: see above for the `&&` combining both bounds-checks.
+                                    // FLUX-TODO addr=0x2200a flavor=bounds
                                     flux_support::assert(i + PLAINTEXT_START < 48 && i + start < input.len());
                                     ECB_DATA[i + PLAINTEXT_START] = input[i + start];
                                 }
@@ -279,6 +285,7 @@ impl<'a> AesECB<'a> {
 
                                     // Copy into static mut DMA buffer
                                     unsafe {
+                                        // FLUX-TODO addr=0x2202c flavor=bounds
                                         flux_support::assert(ecb_idx < 48 && i + start < output.len());
                                         ECB_DATA[ecb_idx] ^= output[i + start];
                                     }
@@ -290,6 +297,7 @@ impl<'a> AesECB<'a> {
                                 let ecb_idx = i + PLAINTEXT_START;
                                 // Copy into static mut DMA buffer
                                 unsafe {
+                                    // FLUX-TODO addr=0x22010 flavor=bounds
                                     flux_support::assert(ecb_idx < 48 && i + start < input.len());
                                     ECB_DATA[ecb_idx] ^= input[i + start];
                                 }
@@ -343,6 +351,7 @@ impl<'a> AesECB<'a> {
                                 // output buffer.
                                 self.output.map(|output| {
                                     for i in 0..take {
+                                        // FLUX-TODO addr=0x1e80 flavor=bounds
                                         flux_support::assert(start + i < output.len() && i + PLAINTEXT_END < 48);
                                         let in_byte = output[start + i];
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
@@ -359,6 +368,7 @@ impl<'a> AesECB<'a> {
                                         let in_byte = input[start + i];
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
+                                        // FLUX-TODO addr=0x1e32 flavor=bounds
                                         flux_support::assert(start_idx + current_idx + i < output.len());
                                         output[start_idx + current_idx + i] =
                                             keystream_byte ^ in_byte;
@@ -382,6 +392,7 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
+                                    // FLUX-TODO addr=0x1e12 flavor=bounds
                                     flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
                                 }
@@ -401,6 +412,7 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
+                                    // FLUX-TODO addr=0x1e1c flavor=bounds
                                     flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48 && i + PLAINTEXT_START < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
                                     ECB_DATA[i + PLAINTEXT_START] = ECB_DATA[i + PLAINTEXT_END];
@@ -500,7 +512,7 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             self.crypt();
             None
         } else {
-            // FLUX-TODO addr=0x2234a flavor=unwrap_option
+            // FLUX-TODO addr=0x22142 flavor=unwrap_option
             flux_support::assert(self.output.is_some());
             Some((
                 Err(ErrorCode::INVAL),
