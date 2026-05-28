@@ -70,6 +70,8 @@ jobs:
         run:  make ci-job-debug-support-targets
       - name:      ci-job-collect-artifacts
         run:  make ci-job-collect-artifacts
+      - name:      ci-job-flux-annotations
+        run:  make ci-job-flux-annotations
       - name: upload-build-artifacts
         uses: actions/upload-artifact@v3
         with:
