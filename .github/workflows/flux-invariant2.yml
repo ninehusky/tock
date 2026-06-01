@@ -75,7 +75,7 @@ jobs:
       # is present.
       # ------------------------------------------------------------------ #
       - name: Install Flux Rust toolchain and embedded target
-        working-directory: ${{ env.HOME }}/flux
+        working-directory: ${{ env.FLUX_DIR }}
         run: |
           rustup show
           rustup target add thumbv7em-none-eabi
@@ -88,7 +88,7 @@ jobs:
       - name: Cache Flux build
         uses: Swatinem/rust-cache@v2.8.0
         with:
-          workspaces: "${{ env.HOME }}/flux -> ${{ env.HOME }}/flux/target"
+          workspaces: "${{ env.FLUX_DIR }} -> ${{ env.FLUX_DIR }}/target"
           cache-on-failure: true
 
       # ------------------------------------------------------------------ #
@@ -96,7 +96,7 @@ jobs:
       # Mirrors the "Install Flux" step in Flux's own vtock CI job.
       # ------------------------------------------------------------------ #
       - name: Build and install Flux
-        working-directory: ${{ env.HOME }}/flux
+        working-directory: ${{ env.FLUX_DIR }}
         run: |
           cargo x install
           echo ~/.cargo/bin >> "$GITHUB_PATH"
