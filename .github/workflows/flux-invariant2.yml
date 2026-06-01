@@ -122,6 +122,60 @@ jobs:
           cp "${FLUX_DIR}/rust-toolchain.toml" rust-toolchain.toml
 
       # ------------------------------------------------------------------ #
+      # Smoke-test: run cargo flux directly on flux_support so its raw
+      # output is visible in the CI log before the full pipeline runs.
+      # This lets us see exactly what Flux says (errors, ICEs, or silence).
+      # ------------------------------------------------------------------ #
+      - name: Smoke-test cargo flux on flux_support
+        working-directory: flux_support
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          echo "=== cargo flux smoke-test on flux_support ==="
+          CARGO_TARGET_DIR=/tmp/flux-smoke-target cargo flux --keep-going 2>&1 | tee /tmp/flux-smoke-flux_support.log
+          echo "=== cargo flux exited $? ==="
+
+      # ------------------------------------------------------------------ #
+      # Diagnostic: verify that derive_obligations and site-lookup work
+      # correctly from this checkout, so we can detect any mismatch between
+      # the committed invariant1_report.json and the current source.
+      # ------------------------------------------------------------------ #
+      - name: Diagnose obligation site-lookup
+        run: |
+          python3 - <<'PYEOF'
+          import sys, json
+          sys.path.insert(0, 'tools')
+          import negation_probe as NP
+          import check_invariant2 as INV2
+          from pathlib import Path
+
+          report = json.loads(open('tools/invariant1_report.json').read())
+          precise, fn_level = INV2.derive_obligations(report)
+          no_assert = sum(1 for o in precise if o.get('no_assert'))
+          print(f"derive_obligations: {len(precise)} precise, {len(fn_level)} fn-level")
+          print(f"  no_assert: {no_assert}, with_assert_line: {len(precise) - no_assert}")
+          ROOT = Path('.')
+          missing, found = 0, 0
+          for ob in precise:
+              p = ROOT / ob['file']
+              if not p.exists():
+                  print(f"  FILE MISSING: {ob['file']}")
+                  missing += 1
+                  continue
+              orig = p.read_text()
+              sites = {s['start_line']: s for s in INV2.assert_sites(ob['file'], orig)}
+              site = sites.get(ob.get('assert_line'))
+              if site is None:
+                  print(f"  SITE MISSING: {ob['file']}:{ob.get('assert_line')}  (sites has keys: {sorted(sites)[:5]})")
+                  missing += 1
+              else:
+                  found += 1
+          print(f"Site lookup: {found} found, {missing} missing")
+          if missing > 0:
+              sys.exit(1)
+          PYEOF
+
+      # ------------------------------------------------------------------ #
       # Run Invariant 2: no-vacuity gate.
       # Exits 0 iff gate=pass (all obligations are discharged, trusted, or
       # frontier — no SILENT / ICE_MASKED / BLOCKED_DEP_MASKED / NOT_RUN /
@@ -132,11 +186,15 @@ jobs:
           python3 tools/check_invariant2.py
 
       # ------------------------------------------------------------------ #
-      # Upload the full report as a build artifact for inspection.
+      # Upload the full report AND per-crate cargo flux logs as artifacts.
+      # The *.baseline.log files contain the raw cargo flux output for each
+      # crate — essential for diagnosing SILENT obligations.
       # ------------------------------------------------------------------ #
-      - name: Upload invariant2 report
+      - name: Upload invariant2 report and flux logs
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: invariant2-report
-          path: tools/invariant2_report.json
+          path: |
+            tools/invariant2_report.json
+            tools/invariant2_logs/
