@@ -55,6 +55,11 @@ include = [
     "def:decompress",
     "def:get_context_0",
     "def:get_context_from_id",
+    # KeyHeader::new_from_buf (kv_store_permissions.rs): pulled in per-fn to cover
+    # its FLUX-TODO-FN-LEVEL slice_end marker (was SILENT = pure out-of-include).
+    # Unique substring -> matches only the one inherent method. See
+    # tools/SESSION_2026-06-01_silent_triage.md site #5.
+    "def:new_from_buf",
     # per-fn for panic-bearing fns in otherwise-unverified files:
     # "def:command" — EXCLUDED for the negation-probe measurement (2026-05-23):
     # `def:` is an unanchored substring, so "command" matches all 89 command*/
@@ -64,6 +69,11 @@ include = [
     # removes ICE noise that blocked the crate from completing. Re-add (and dodge
     # the ICEs) if the two syscall command methods later gain asserts.
     # "def:command",  # KVStoreDriver::command (kv_driver.rs) and UDPDriver::command (net/udp/driver.rs)
+    # span: (file:line:col) pins ONLY KVStoreDriver::command — its body span covers
+    # line 472, and span matching is per-fn, so it does NOT pull in the ~89 other
+    # command* fns that def:command would (and their dyn-predicate ICE). Covers the
+    # kv_driver.rs:471 FLUX-TODO-FN-LEVEL marker. See SESSION_2026-06-01 site #4.
+    "span:src/kv_driver.rs:472:5",
 ]
 
 [lints]

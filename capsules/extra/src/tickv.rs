@@ -238,6 +238,10 @@ impl<'a, F: Flash> TickFSFlashCtrl<'a, F> {
 impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashController<PAGE_SIZE>
     for TickFSFlashCtrl<'a, F>
 {
+    #[flux_rs::trusted(reason = "impls external trait tickv::FlashController, whose \
+        def is not on Flux's include surface, so the body is skipped (E0999 \
+        not-included-when-checking-external-crate); also rests on the blocked-cell \
+        TakeCell invariant. Declared carve-out, matches sibling `write`.")]
     fn read_region(
         &self,
         region_number: usize,

@@ -287,6 +287,10 @@ pub unsafe fn switch_to_user_arm_v7m(
 #[cfg(all(target_arch = "arm", target_os = "none"))]
 /// Continue the hardfault handler for all hard-faults that occurred
 /// during kernel execution. This function must never return.
+#[flux_rs::trusted(reason = "hardware-invoked asm hard-fault handler (arm-only cfg, never \
+    returns); Flux cannot analyze the asm body and the host-target probe cfg's it out, so \
+    its assert(false) sentinels are declared carve-outs, not reachability proofs. See \
+    tools/SESSION_2026-06-01_silent_triage.md DEAD_PROVEN audit.")]
 unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
     faulting_stack: *mut u32,
     stack_overflow: u32,
