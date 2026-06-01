@@ -1,0 +1,142 @@
+# Licensed under the Apache License, Version 2.0 or the MIT License.
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Copyright Tock Contributors 2023.
+
+# Flux panic-verification pipeline — Invariant 2 (no-vacuity gate)
+#
+# Runs on every push to this branch. Reads tools/invariant1_report.json
+# (committed to the repo), builds Flux from our fork, rewrites the hardcoded
+# local Flux path deps in the Cargo.toml files, then executes
+# python3 tools/check_invariant2.py. The job passes iff the script exits 0
+# (summary: ... gate=pass).
+
+name: flux-invariant2
+
+on:
+  push:
+    branches:
+      - "flux-invariant2-silent-triage"
+      - "copilot/flux-invariant2-silent-triage"
+
+jobs:
+  flux-invariant2:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------ #
+      # Install fixpoint (SMT constraint solver used by Flux)
+      # Mirrors the install-fixpoint action from the Flux repo's CI.
+      # ------------------------------------------------------------------ #
+      - name: Install fixpoint
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          NAME="fixpoint-x86_64-linux-gnu.tar.gz"
+          URL="https://github.com/ucsd-progsys/liquid-fixpoint/releases/download/nightly/${NAME}"
+          echo "Downloading fixpoint from ${URL}"
+          curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" --retry 3 \
+            -o "${NAME}" "${URL}"
+          tar -xzf "${NAME}"
+          mkdir -p ~/.local/bin
+          cp fixpoint ~/.local/bin/fixpoint
+          rm -f "${NAME}"
+          echo ~/.local/bin >> "$GITHUB_PATH"
+          which fixpoint
+
+      # ------------------------------------------------------------------ #
+      # Install Z3 (required by Flux's constraint solving back-end)
+      # Use 4.15.3 — same version as the vtock job in Flux's own CI.
+      # Older versions are known to hang.
+      # ------------------------------------------------------------------ #
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1.6.6
+        with:
+          version: 4.15.3
+
+      # ------------------------------------------------------------------ #
+      # Clone OUR Flux fork (carries the --sorted-solution rename + other
+      # fixes that upstream flux-rs/flux does not yet have).
+      # ------------------------------------------------------------------ #
+      - name: Clone Flux fork
+        run: |
+          git clone --depth 1 \
+            --branch ninehusky-with-full-stack-trace \
+            https://github.com/ninehusky/flux.git \
+            "$HOME/flux"
+          echo "FLUX_DIR=$HOME/flux" >> "$GITHUB_ENV"
+
+      # ------------------------------------------------------------------ #
+      # Install the Rust toolchain that Flux requires (from its own
+      # rust-toolchain.toml) and add the embedded target we need.
+      # `rustup show` triggers toolchain installation when rust-toolchain.toml
+      # is present.
+      # ------------------------------------------------------------------ #
+      - name: Install Flux Rust toolchain and embedded target
+        working-directory: ${{ env.HOME }}/flux
+        run: |
+          rustup show
+          rustup target add thumbv7em-none-eabi
+
+      # ------------------------------------------------------------------ #
+      # Cache the Flux build artefacts to avoid the ~30-minute cold build on
+      # every run. The cache key is based on flux's Cargo.lock so it
+      # invalidates automatically when flux's dependencies change.
+      # ------------------------------------------------------------------ #
+      - name: Cache Flux build
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "${{ env.HOME }}/flux -> ${{ env.HOME }}/flux/target"
+          cache-on-failure: true
+
+      # ------------------------------------------------------------------ #
+      # Build and install flux + cargo-flux onto PATH.
+      # Mirrors the "Install Flux" step in Flux's own vtock CI job.
+      # ------------------------------------------------------------------ #
+      - name: Build and install Flux
+        working-directory: ${{ env.HOME }}/flux
+        run: |
+          cargo x install
+          echo ~/.cargo/bin >> "$GITHUB_PATH"
+
+      # ------------------------------------------------------------------ #
+      # Rewrite hardcoded local Flux path deps in Cargo.toml files.
+      # 14 files reference /Users/andrew/research/flux/... — replace them
+      # with the actual FLUX_DIR for this CI run.
+      # We do NOT commit this rewrite; it lives only in the working tree.
+      # ------------------------------------------------------------------ #
+      - name: Rewrite hardcoded Flux path deps
+        run: |
+          grep -rl '/Users/andrew/research/flux' --include='Cargo.toml' . \
+            | xargs sed -i "s#/Users/andrew/research/flux#${FLUX_DIR}#g"
+
+      # ------------------------------------------------------------------ #
+      # Replace Tock's rust-toolchain.toml with Flux's so that `cargo flux`
+      # uses the correct nightly. The two repos pin different nightlies; Flux
+      # supplies its own rustc so this is safe for the invariant-2 check.
+      # ------------------------------------------------------------------ #
+      - name: Use Flux rust-toolchain.toml
+        run: |
+          cp "${FLUX_DIR}/rust-toolchain.toml" rust-toolchain.toml
+
+      # ------------------------------------------------------------------ #
+      # Run Invariant 2: no-vacuity gate.
+      # Exits 0 iff gate=pass (all obligations are discharged, trusted, or
+      # frontier — no SILENT / ICE_MASKED / BLOCKED_DEP_MASKED / NOT_RUN /
+      # TIMEOUT).
+      # ------------------------------------------------------------------ #
+      - name: Run Invariant 2 pipeline
+        run: |
+          python3 tools/check_invariant2.py
+
+      # ------------------------------------------------------------------ #
+      # Upload the full report as a build artifact for inspection.
+      # ------------------------------------------------------------------ #
+      - name: Upload invariant2 report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: invariant2-report
+          path: tools/invariant2_report.json
