@@ -41,8 +41,23 @@ jobs:
             -o "${NAME}" "${URL}"
           tar -xzf "${NAME}"
           mkdir -p ~/.local/bin
-          cp fixpoint ~/.local/bin/fixpoint
+          # Install the real binary under a distinct name, then wrap it so
+          # that the legacy --sortedsolution flag is silently rewritten to
+          # --sorted-solution (renamed in nightly >= 2026-05-29).
+          cp fixpoint ~/.local/bin/fixpoint-real
           rm -f "${NAME}"
+          cat > ~/.local/bin/fixpoint << 'WRAPPER'
+          #!/bin/bash
+          args=()
+          for arg in "$@"; do
+            case "$arg" in
+              --sortedsolution) args+=(--sorted-solution) ;;
+              *) args+=("$arg") ;;
+            esac
+          done
+          exec ~/.local/bin/fixpoint-real "${args[@]}"
+          WRAPPER
+          chmod +x ~/.local/bin/fixpoint
           echo ~/.local/bin >> "$GITHUB_PATH"
           which fixpoint
 
