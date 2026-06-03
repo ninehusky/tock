@@ -2,9 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 # Copyright Tock Contributors 2023.
 
-# Flux panic-verification pipeline — Invariants 1 + 2
+# Flux panic-verification pipeline — Invariants 0 + 1 + 2
 #
 # Runs on every push to this branch. In sequence:
+#   0. python3 tools/reannotate_flux.py --survey tools/panic_survey.json --dry-run
+#      — audits all // FLUX- annotations against the committed survey;
+#      exits 1 on violations (orphan/malformed markers)
 #   1. python3 tools/check_invariant1.py  — reads tools/panic_survey.json
 #      (committed) + source annotations; writes tools/invariant1_report.json
 #   2. python3 tools/check_invariant2.py  — builds Flux from our fork,
@@ -136,6 +139,16 @@ jobs:
       - name: Use Flux rust-toolchain.toml
         run: |
           cp "${FLUX_DIR}/rust-toolchain.toml" rust-toolchain.toml
+
+      # ------------------------------------------------------------------ #
+      # Run Invariant 0: audit all // FLUX- annotations against the
+      # committed panic_survey.json. Uses --dry-run so no source files are
+      # modified; exits 1 if any markers are orphaned or malformed.
+      # No binary build needed — the survey is already committed.
+      # ------------------------------------------------------------------ #
+      - name: Run Invariant 0 pipeline (annotation audit)
+        run: |
+          python3 tools/reannotate_flux.py --survey tools/panic_survey.json --dry-run
 
       # ------------------------------------------------------------------ #
       # Run Invariant 1: every Tock-local panic instruction in the release
