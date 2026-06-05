@@ -19,7 +19,7 @@
       "effective_frame": {
         "func": "cortexm::unhandled_interrupt",
         "file": "./arch/cortex-m/src/lib.rs",
-        "line": 149
+        "line": 152
       },
       "effective_source": "panic!(\"Unhandled Interrupt. ISR {} is active.\", interrupt_number);",
       "outermost_frame": {
@@ -171,7 +171,7 @@
       "effective_frame": {
         "func": "cortexv7m::hard_fault_handler_arm_v7m_kernel",
         "file": "./arch/cortex-v7m/src/lib.rs",
-        "line": 298
+        "line": 301
       },
       "effective_source": "panic!(\"kernel stack overflow\");",
       "outermost_frame": {
@@ -204,7 +204,7 @@
       "effective_frame": {
         "func": "cortexv7m::hard_fault_handler_arm_v7m_kernel",
         "file": "./arch/cortex-v7m/src/lib.rs",
-        "line": 349
+        "line": 352
       },
       "effective_source": "panic!(",
       "outermost_frame": {
@@ -237,7 +237,7 @@
       "effective_frame": {
         "func": "<nrf52840dk_lib::io::Writer as kernel::debug::IoWrite>::write",
         "file": "./boards/nordic/nrf52840dk/src/io.rs",
-        "line": 80
+        "line": 84
       },
       "effective_source": "buffer[write_position as usize] = c;",
       "outermost_frame": {
@@ -7244,7 +7244,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>> as tickv::flash_controller::FlashController<4096>>::write",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 267
+        "line": 270
       },
       "effective_source": "let data_buf = self.flash_read_buffer.take().unwrap();",
       "outermost_frame": {
@@ -7282,7 +7282,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>> as tickv::flash_controller::FlashController<4096>>::write",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 272
+        "line": 275
       },
       "effective_source": "data_buf.as_mut()[i + (address % PAGE_SIZE)] = *d;",
       "outermost_frame": {
@@ -7467,7 +7467,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096>>::complete_init",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 392
+        "line": 395
       },
       "effective_source": "match self.invalidate_key(self.key_buffer.take().unwrap()) {",
       "outermost_frame": {
@@ -7505,7 +7505,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as kernel::hil::hasher::Client<8>>::add_mut_data_done",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 424
+        "line": 426
       },
       "effective_source": "self.hasher.run(self.key_buffer.take().unwrap()).unwrap();",
       "outermost_frame": {
@@ -7543,7 +7543,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as kernel::hil::hasher::Client<8>>::hash_done::{closure#0}",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 434
+        "line": 437
       },
       "effective_source": "cb.generate_key_complete(Ok(()), self.unhashed_key_buffer.take().unwrap(), digest);",
       "outermost_frame": {
@@ -8065,7 +8065,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as kernel::hil::flash::Client<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>>::read_complete::{closure#5}",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 599
+        "line": 601
       },
       "effective_source": "self.key_buffer.take().unwrap(),",
       "outermost_frame": {
@@ -8123,7 +8123,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as kernel::hil::flash::Client<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>>::read_complete",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 615
+        "line": 620
       },
       "effective_source": "_ => { flux_support::assert(false); unreachable!() },",
       "outermost_frame": {
@@ -8272,7 +8272,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as kernel::hil::flash::Client<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>>::write_complete::{closure#1}",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 650
+        "line": 654
       },
       "effective_source": "cb.invalidate_key_complete(Ok(()), self.key_buffer.take().unwrap());",
       "outermost_frame": {
@@ -8330,7 +8330,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as kernel::hil::flash::Client<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>>::write_complete",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 654
+        "line": 659
       },
       "effective_source": "_ => { flux_support::assert(false); unreachable!() },",
       "outermost_frame": {
@@ -8363,7 +8363,7 @@
       "effective_frame": {
         "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as kernel::hil::flash::Client<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>>::erase_complete",
         "file": "./capsules/extra/src/tickv.rs",
-        "line": 692
+        "line": 697
       },
       "effective_source": "_ => { flux_support::assert(false); unreachable!() },",
       "outermost_frame": {

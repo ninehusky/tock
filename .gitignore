@@ -107,9 +107,13 @@ tools/*.md
 /step0-*
 
 # de-ICE / census tooling outputs — regenerable; the numbers live in the .md writeups
-tools/invariant1_report.json
 tools/census_*.json
 tools/deice_probe*.json
 tools/deice_logs*/
 tools/skipped_triage.tsv
 tools/*.png
+
+# invariant pipeline outputs — regenerated in CI (check_invariant1.py / check_invariant2.py)
+tools/invariant1_report.json
+tools/invariant2_report.json
+tools/invariant2_logs/
