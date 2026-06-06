@@ -25,8 +25,8 @@ clean+baseline+warm-flip+ICE-retry protocol are unchanged. What's new here:
       classified assert_obligation vs other_obligation. Informational, not gating.
 
 Gate (no-vacuity): exit 0 iff zero obligations are SILENT / ICE_MASKED /
-BLOCKED_DEP_MASKED / NOT_RUN / TIMEOUT. FAILING / DEAD_FAILING / TRUSTED are the
-reported frontier and do NOT fail the gate.
+BLOCKED_DEP_MASKED / NOT_RUN / TIMEOUT. NOT_PROVEN / DEAD_NOT_PROVEN / TRUSTED are
+the reported frontier and do NOT fail the gate.
 
 Usage:
     tools/.venv/bin/python3 tools/check_invariant2.py
@@ -59,7 +59,7 @@ _DIRS = sorted(PKGS.items(), key=lambda kv: -len(kv[1]))
 # verdicts that mean "never genuinely analyzed / untrustworthy" -> fail the gate.
 VACUOUS = {"SILENT", "ICE_MASKED", "BLOCKED_DEP_MASKED", "NOT_RUN", "TIMEOUT", "DEAD_SILENT"}
 DISCHARGED = {"PROVEN", "DEAD_PROVEN"}
-FRONTIER = {"FAILING", "DEAD_FAILING", "TRUSTED"}
+FRONTIER = {"NOT_PROVEN", "DEAD_NOT_PROVEN", "TRUSTED"}
 
 ERR_FULL_RE = re.compile(r"error\[(E0999|FLUX[^\]]*)\]:\s*(.*)")
 TRUST_ATTR = "#[flux_rs::trusted]"
@@ -565,7 +565,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
             base_hit = NP.err_at(base_errs, rel, site)
             if site["inner"] == "false":
                 # Dead-code sentinel `assert(false)`. base_hit => Flux flagged it =>
-                # reachable => DEAD_FAILING. Otherwise it's a DEAD_PROVEN *candidate*,
+                # reachable => DEAD_NOT_PROVEN. Otherwise it's a DEAD_PROVEN *candidate*,
                 # but silence at the sentinel is ambiguous: the code is genuinely dead
                 # OR the body was never analyzed (vacuity, same failure mode as SILENT).
                 # Confirm by ENTRY CONTROL: inject assert(false) at the enclosing fn's
@@ -573,7 +573,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
                 #   error in fn span  => body analyzed => DEAD_PROVEN (genuine dead code)
                 #   still silent       => body unchecked => DEAD_SILENT (vacuous, gated)
                 if base_hit:
-                    r["status"] = "DEAD_FAILING"
+                    r["status"] = "DEAD_NOT_PROVEN"
                     r["probe"] = {"baseline": "error_at_site"}
                 elif NP.enclosing_fn_trusted(orig, site["call_off"]):
                     # silence is due to trust, not a dead-code proof -> declared carve-out
@@ -608,7 +608,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
                             r["probe"] = {"baseline": "pass",
                                           "entry_control": "error_at_entry" if checked else "silent"}
             elif base_hit:
-                r["status"] = "FAILING"
+                r["status"] = "NOT_PROVEN"
                 r["probe"] = {"baseline": "error_at_site"}
             elif NP.enclosing_fn_trusted(orig, site["call_off"]):
                 r["status"] = "TRUSTED"
@@ -658,7 +658,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
             r["status"] = "TRUSTED"
             r["probe"] = {"enclosing_fn": "trusted"}
         elif in_fn(base_errs):
-            r["status"] = "FAILING"
+            r["status"] = "NOT_PROVEN"
             r["probe"] = {"baseline": "error_in_fn"}
         elif body_open is None:
             r["status"] = "SILENT"
