@@ -311,7 +311,6 @@ pub fn decode_u32(buf: &[u8]) -> SResult<u32> {
 }
 
 
-#[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
 pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     let len = out.len();
@@ -320,7 +319,6 @@ pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
-#[flux_rs::trusted(reason = "missing spec: needs Iterator extern_specs for `iter().rev().enumerate()` to bound the yielded index `i` against `out.len()`")]
 pub fn decode_bytes_be(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     for (i, b) in buf[..out.len()].iter().rev().enumerate() {

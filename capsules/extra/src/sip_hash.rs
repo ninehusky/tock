@@ -147,7 +147,6 @@ macro_rules! compress {
     }};
 }
 
-#[flux_rs::trusted(reason = "Not in panic sites; need refinement on 0..8 length.")]
 fn read_le_u64(input: &[u8]) -> u64 {
     let mut eight_buf: [u8; 8] = [0; 8];
     for i in 0..8 {
@@ -156,7 +155,6 @@ fn read_le_u64(input: &[u8]) -> u64 {
     u64::from_le_bytes(eight_buf)
 }
 
-#[flux_rs::trusted(reason = "not in panic sites, need to prove precondition about mem::size_of::u16")]
 #[flux_rs::sig(fn(input: &[u8]{n: n >= 2}) -> u16)]
 fn read_le_u16(input: &[u8]) -> u16 {
     // FLUX-TODO addr=0xa39e flavor=explicit_panic
@@ -166,7 +164,6 @@ fn read_le_u16(input: &[u8]) -> u16 {
 }
 
 #[inline]
-#[flux_rs::trusted(reason = "Missing extern spec for slice-output length on `Index<RangeFrom<usize>>`: panicking row in panic_sites.md is fine")]
 #[flux_rs::sig(fn (buf: &[u8][@n], start: usize, len: usize) -> u64
     requires start + len <= n && len < 8
 )]
@@ -198,7 +195,6 @@ impl<'a> Hasher<'a, 8> for SipHasher24<'a> {
         self.client.set(client);
     }
 
-    #[flux_rs::trusted(reason = "u8to64_le precondition needs to be resolved here")]
     fn add_data(
         &self,
         data: SubSlice<'static, u8>,
@@ -255,7 +251,6 @@ impl<'a> Hasher<'a, 8> for SipHasher24<'a> {
         Ok(length)
     }
 
-    #[flux_rs::trusted(reason = "u8to64_le precondition needs to be resolved here")]
     fn add_mut_data(
         &self,
         mut data: SubSliceMut<'static, u8>,

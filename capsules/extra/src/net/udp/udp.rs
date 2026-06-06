@@ -53,7 +53,6 @@ impl UDPHeader {
         self.src_port = port.to_be();
     }
 
-    #[flux_rs::trusted(reason = "Stores in big-endian byte order; `u16::to_be` is not modeled by Flux extern specs. Sig records the logical len at the refinement level.")]
     #[flux_rs::sig(fn(self: &mut Self, len: u16) ensures self: Self[len])]
     pub fn set_len(&mut self, len: u16) {
         self.len = len.to_be();
@@ -71,7 +70,6 @@ impl UDPHeader {
         u16::from_be(self.dst_port)
     }
 
-    #[flux_rs::trusted(reason = "Stores in big-endian byte order; `u16::from_be` is not modeled by Flux extern specs. Sig records the logical len at the refinement level.")]
     #[flux_rs::sig(fn(&Self[@l]) -> u16[l])]
     pub fn get_len(&self) -> u16 {
         u16::from_be(self.len)

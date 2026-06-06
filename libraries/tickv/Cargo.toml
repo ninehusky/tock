@@ -22,7 +22,7 @@ flux_support = { path = "../../flux_support" }
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
-include = [ "src/tickv.rs", "src/async_ops.rs" ]
+include = [ "src/tickv.rs", "src/async_ops.rs", "src/flash_controller.rs" ]
 
 [lints]
 workspace = true

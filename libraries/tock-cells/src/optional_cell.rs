@@ -192,7 +192,6 @@ impl<T: Copy> OptionalCell<T> {
     /// -- because the Tock kernel discourages panicking, and this name
     /// is intended to discourage users from casually adding calls to
     /// `unwrap()` without careful consideration.
-    #[flux_rs::trusted(reason = "blocked-cell")]
     #[track_caller]
     pub fn unwrap_or_panic(&self) -> T {
         // FLUX-TODO flavor=unwrap_option addrs=[

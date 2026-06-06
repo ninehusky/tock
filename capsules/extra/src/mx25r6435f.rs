@@ -287,7 +287,11 @@ impl<
         self.enable_write()
     }
 
-    #[flux_rs::trusted()]
+    #[flux_rs::trusted(reason = "ICE: internal compiler error crates/flux-infer/src/infer.rs:1033 \
+        (assertion left == right failed on Client<MX25R6435F<..>> monomorphization, via the \
+        read_sector closure at mx25r6435f.rs:300). Same ICE family as the explicitly-trusted \
+        siblings in this file; the trait-impl method just had an undocumented empty reason. \
+        Latent category-1 ICE carve-out per issue #12.")]
     fn read_sector(
         &self,
         sector_index: u32,

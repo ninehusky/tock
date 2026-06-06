@@ -1892,7 +1892,6 @@ impl<'a> Usbd<'a> {
         ));
     }
 
-    #[flux_rs::trusted(reason = "To prove `slice[..size]` safe, we need to prove that `self.descriptors[endpoint].slice_in.is_some()`, and something about the length of its contents.")]
     fn start_dma_in(&self, endpoint: usize, size: usize) {
         // FLUX-TODO addr=0x115ec flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_in.is_some());

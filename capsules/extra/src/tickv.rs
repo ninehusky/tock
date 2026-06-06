@@ -238,10 +238,6 @@ impl<'a, F: Flash> TickFSFlashCtrl<'a, F> {
 impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashController<PAGE_SIZE>
     for TickFSFlashCtrl<'a, F>
 {
-    #[flux_rs::trusted(reason = "impls external trait tickv::FlashController, whose \
-        def is not on Flux's include surface, so the body is skipped (E0999 \
-        not-included-when-checking-external-crate); also rests on the blocked-cell \
-        TakeCell invariant. Declared carve-out, matches sibling `write`.")]
     fn read_region(
         &self,
         region_number: usize,
@@ -264,7 +260,6 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
         }
     }
 
-    #[flux_rs::trusted(reason = "temporarily adding this")]
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> {
         // FLUX-TODO addr=0x165c6 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());

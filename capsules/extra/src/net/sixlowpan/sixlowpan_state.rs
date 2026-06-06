@@ -293,7 +293,6 @@ fn set_frag_hdr(
     }
 }
 
-#[flux_rs::trusted(reason = "Body verifies with `output_pred`/`in_bounds` once caller(s) can supply `packet.len() >= 5`. Until `receive_frame` and its callers are refined with a `packet.len() >= 5` precondition, this stays trusted to avoid forcing a workspace-wide cascade.")]
 fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     let is_frag1 = match hdr[0] & lowpan_frag::FRAGN_HDR {
         lowpan_frag::FRAG1_HDR => true,
@@ -306,7 +305,6 @@ fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     (is_frag1, dgram_size, dgram_tag, (dgram_offset as usize) * 8)
 }
 
-#[flux_rs::trusted(reason = "Body verifies with `in_bounds` once caller(s) supply `packet.len() >= 1`. Stays trusted until `receive_frame`'s caller chain carries that precondition.")]
 fn is_fragment(packet: &[u8]) -> bool {
     let mask = packet[0] & lowpan_frag::FRAGN_HDR;
     (mask == lowpan_frag::FRAGN_HDR) || (mask == lowpan_frag::FRAG1_HDR)
@@ -597,7 +595,6 @@ impl<'a> TxState<'a> {
 
     // NOTE: This function will not work for headers that span past the first
     // frame.
-    #[flux_rs::trusted(reason = "IP6Packet refinement (kind != 1) for `get_total_hdr_size`/`encode` calls")]
     fn write_additional_headers<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -623,7 +620,6 @@ impl<'a> TxState<'a> {
         (payload_len, dgram_offset)
     }
 
-    #[flux_rs::trusted(reason = "cascade from set_frag_hdr precondition `hdr.len() >= 5`")]
     fn write_frag_hdr(&self, frame: &mut Frame, first_frag: bool) -> usize {
         if first_frag {
             let mut frag_header = [0_u8; lowpan_frag::FRAG1_HDR_SIZE];
@@ -857,7 +853,6 @@ fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
 
 // This function is called after receiving a frame
 impl<'a, A: time::Alarm<'a>, C: ContextStore> RxClient for Sixlowpan<'a, A, C> {
-    #[flux_rs::trusted(reason = "TODO: to verify `slice_view`, we need assoc reft on `RxClient::receive`")]
     fn receive<'b>(
         &self,
         buf: &'b [u8],
@@ -972,7 +967,6 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         }
     }
 
-    #[flux_rs::trusted(reason = "Two panicking rows. (1) is the cell unwrap. (2) is the slice op on `payload`, which needs some sort of assoc reft for `payload` being in bounds.")]
     fn receive_single_packet(
         &self,
         payload: &[u8],

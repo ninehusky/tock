@@ -160,7 +160,6 @@ impl IP6Header {
     /// # Return Value
     ///
     /// `SResult<usize>` - The offset wrapped in an SResult
-    #[flux_rs::trusted(reason = "Sig captures Done iff buf.len() >= 40 (IPv6 header is fixed 40 bytes). Body is `stream_len_cond!(buf, 40)` + 6 `enc_consume!`s writing 4+2+1+1+16+16 = 40 bytes. UDPHeader::encode/ICMP6Header::encode (in the same Done-iff-fits-buffer pattern) verify their bodies for real; IP6Header::encode does not because Flux's current extern specs for `[u8; N]` → `&[u8]` coercion (via `version_class_flow` / `src_addr.0` / `dst_addr.0` array fields) drop length info into `encode_bytes`. When that extern spec gap closes, the trust can be removed.")]
     #[flux_rs::sig(fn(&Self, &mut [u8][@n]) -> SResult<usize>{r: (r.is_done <=> n >= 40) && (r.is_done => r.offset == 40)})]
     pub fn encode(&self, buf: &mut [u8]) -> SResult<usize> {
         stream_len_cond!(buf, 40);
@@ -268,7 +267,6 @@ impl IP6Header {
     /// Utility function for verifying whether a transport layer checksum of a received
     /// packet is correct. Is called on the assocaite IPv6 Header, and passed the buffer
     /// containing the remainder of the packet.
-    #[flux_rs::trusted(reason = "Pre-existing flux errors on copy_from_slice + UDPHeader::decode + checksum-compute calls; not in target panic_sites rows.")]
     pub fn check_transport_checksum(&self, buf: &[u8]) -> Result<(), ErrorCode> {
         match self.next_header {
             ip6_nh::UDP => {
@@ -373,7 +371,6 @@ impl<'a> IPPayload<'a> {
     /// `(u8, u16)` - Returns a tuple of the `ip6_nh` type of the
     /// `transport_header` and the total length of the `IPPayload`
     /// (when serialized)
-    #[flux_rs::trusted(reason = "Gap (2): match arms do `udp_header.set_len(length)` on a destructured `mut` binding from a `Copy` enum variant — the mutation is lost — then `self.header = transport_header` writes the ORIGINAL length back. Likely a real Tock bug: the computed `length` returned in the tuple doesn't match the length stored in `self.header`. Maintaining the IPPayload invariant after the assignment would require a precondition on `transport_header.len`, but the bug itself stays. Gap (1) — the bytewise-copy loop's bounds — is now discharged separately in `copy_subslice_into`.")]
     pub fn set_payload(
         &mut self,
         transport_header: TransportHeader,
@@ -512,7 +509,6 @@ impl<'a> IP6Packet<'a> {
         40 + transport_hdr_size
     }
 
-    #[flux_rs::trusted(reason = "Pre-existing flux errors on compute_udp_checksum/compute_icmp_checksum preconditions (lines 484/493); the targeted unimplemented!() at line 486 is locally proven via the sig precondition `kind != 1`.")]
     #[flux_rs::sig(fn(self: &mut Self[@p]) requires p.kind != 1)]
     pub fn set_transport_checksum(&mut self) {
         // Looks at internal buffer assuming

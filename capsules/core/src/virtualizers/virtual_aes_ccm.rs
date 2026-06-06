@@ -335,7 +335,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
     /// `auth_len` (the length of the AuthData field) and `enc_len` (the
     /// combined length of AuthData and PData/CData) are returned. `auth_len` is
     /// guaranteed to be >= AES128_BLOCK_SIZE
-    #[flux_rs::trusted(reason = "TODO: copy_from_slice -- may need simple refinement on range syntax `i..j`")]
     fn encode_ccm_buffer(
         buf: &mut [u8],
         nonce: &[u8; CCM_NONCE_LENGTH],
@@ -455,7 +454,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
     }
 
-    #[flux_rs::trusted(reason = "extern-spec gap: IndexMut<I> for [T] not specified in flux_support; iv[0] = 1 is provably safe (iv: [u8; 16])")]
     fn start_ccm_encrypt(&self) -> Result<(), ErrorCode> {
         if !(self.state.get() == CCMState::Auth)
             && !(self.state.get() == CCMState::Idle && self.reversed())
@@ -512,7 +510,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
     }
 
-    #[flux_rs::trusted(reason = "TODO: discharge copy_from_slice precondition; cascade from new extern spec")]
     fn end_ccm(&self) {
         let tag_valid = self.buf.map_or(false, |buf| {
             self.crypt_buf.map_or_else(
@@ -602,7 +599,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
-    #[flux_rs::trusted(reason = "blocked-cell")]
     fn save_tag_block(&self) {
         // Copies [auth_len - AES128_BLOCK_SIZE..auth_len] to saved_tag
         // and zeroes it out
@@ -619,7 +615,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
-    #[flux_rs::trusted(reason = "blocked-cell")]
     fn swap_tag_block(&self) {
         // Swaps [auth_len - AES128_BLOCK_SIZE..auth_len] with
         // the value in saved_tag
@@ -705,7 +700,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
         self.ccm_client.set(client);
     }
 
-    #[flux_rs::trusted(reason = "Real bug: guard `key.len() < AES128_KEY_SIZE` allows longer keys; downstream `copy_from_slice` panics for `key.len() > 16`. Needs guard `!= AES128_KEY_SIZE` to be sound.")]
     fn set_key(&self, key: &[u8]) -> Result<(), ErrorCode> {
         if key.len() < AES128_KEY_SIZE {
             Err(ErrorCode::INVAL)
@@ -717,7 +711,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
         }
     }
 
-    #[flux_rs::trusted(reason = "Real bug: guard `nonce.len() < CCM_NONCE_LENGTH` allows longer nonces; downstream `copy_from_slice` panics for `nonce.len() > CCM_NONCE_LENGTH`. Needs guard `!= CCM_NONCE_LENGTH` to be sound.")]
     fn set_nonce(&self, nonce: &[u8]) -> Result<(), ErrorCode> {
         if nonce.len() < CCM_NONCE_LENGTH {
             Err(ErrorCode::INVAL)
@@ -852,7 +845,10 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> AES128CBC for Virtua
 impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption::Client<'a>
     for VirtualAES128CCM<'a, A>
 {
-    #[flux_rs::trusted(reason = "blocked-cell")]
+    #[flux_rs::trusted(reason = "ICE: fixpoint solver crash at crates/flux-infer/src/fixpoint_encoding.rs:702 \
+        (elaborate solver failed: Cannot unify Adt0 with bool). Latent ICE — was previously masked under a \
+        `blocked-cell` reason; un-trusting this trait-impl crypt_done crashes Flux and poisons all of \
+        capsules-core + capsules-extra crate-wide. Category-1 ICE carve-out per issue #12.")]
     fn crypt_done(&self, _: Option<&'static mut [u8]>, crypt_buf: &'static mut [u8]) {
         self.crypt_buf.replace(crypt_buf);
         match self.state.get() {

@@ -140,7 +140,6 @@ impl Frame {
     }
 
     /// Appends payload bytes into the frame if possible
-    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
     pub fn append_payload(&mut self, payload: &[u8]) -> Result<(), ErrorCode> {
         if payload.len() > self.remaining_data_capacity() {
             return Err(ErrorCode::NOMEM);
@@ -154,7 +153,6 @@ impl Frame {
 
     /// Appends payload bytes from a process slice into the frame if
     /// possible
-    #[flux_rs::trusted(reason = "missing spec: copy_from_slice")]
     pub fn append_payload_process(
         &mut self,
         payload_buf: &ReadableProcessSlice,
@@ -236,7 +234,6 @@ impl FrameInfo {
 // The CCM nonce layout is fixed: 8-byte device_addr + 4-byte frame_counter +
 // 1-byte level = 13 bytes total. With buf.len() >= 13, every `enc_consume!`
 // step returns Done and the closure returns Done.
-#[flux_rs::trusted(reason = "Body uses `encode_bytes(buf, &device_addr[..])` which works in principle, but the chain of `enc_consume!` macros + the `[u8; N] -> &[u8]` coercion drop length info similar to IP6Header::encode's gap. Sig captures the Done-iff-buf-fits invariant; the panic site at the call site is locally proven via this sig.")]
 #[flux_rs::sig(fn(buf: &mut [u8][@n], _, _, _) -> SResult{r: (r.is_done <=> n >= 13) && (r.is_done => r.offset == 13)})]
 fn encode_ccm_nonce_buf(
     buf: &mut [u8],
@@ -555,7 +552,6 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// Advances the transmission pipeline if it can be advanced.
-    #[flux_rs::trusted(reason = "need to prove precondition about cell so that ccm_encrypt_ranges won't panic")]
     fn step_transmit_state(&self) -> Result<(), (ErrorCode, &'static mut [u8])> {
         // FLUX-TODO addr=0x15ff0 flavor=explicit_panic
         flux_support::assert(self.tx_state.is_some());
@@ -630,7 +626,6 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// Advances the reception pipeline if it can be advanced.
-    #[flux_rs::trusted(reason = "missing spec: copy_from_slice; ccm_encrypt_ranges precondition is on cell")]
     fn step_receive_state(&self) {
         self.rx_state.take().map(|state| {
             let next_state = match state {
@@ -926,7 +921,6 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::TxClient for Framer<'a, M, A> {
 }
 
 impl<'a, M: Mac<'a>, A: AES128CCM<'a>> radio::RxClient for Framer<'a, M, A> {
-    #[flux_rs::trusted(reason = "missing: needs a way to generically specify precondition on top of `incoming_frame_security`")]
     fn receive(
         &self,
         buf: &'static mut [u8],

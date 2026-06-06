@@ -155,7 +155,6 @@ fn encode_key_id(key_id: &KeyId, buf: &mut [u8]) -> SResult {
 }
 
 /// Decodes a key ID that is in the format produced by the userland driver.
-#[flux_rs::trusted(reason = "blocked_flux_stream_combinator: SResult offset<=len invariant not Flux-tracked")]
 fn decode_key_id(buf: &[u8]) -> SResult<KeyId> {
     stream_len_cond!(buf, 1);
     let mode = stream_from_option!(KeyIdModeUserland::from_u8(buf[0]));
