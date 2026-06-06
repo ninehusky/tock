@@ -162,9 +162,8 @@ jobs:
 
       # ------------------------------------------------------------------ #
       # Run Invariant 2: no-vacuity gate.
-      # Exits 0 iff gate=pass (all obligations are discharged, trusted, or
-      # frontier — no SILENT / ICE_MASKED / BLOCKED_DEP_MASKED / NOT_RUN /
-      # TIMEOUT).
+      # Exits 0 iff gate=pass (all obligations are trusted, proven, or
+      # not-proven frontier — no SILENT).
       # ------------------------------------------------------------------ #
       - name: Run Invariant 2 pipeline
         run: |
