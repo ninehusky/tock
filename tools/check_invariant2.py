@@ -319,9 +319,9 @@ def emit_dep_masked(precise, fn_level, dep, crate_dir, out):
 
 
 def _collapse_status(status: str) -> str:
-    if status in ("DEAD_PROVEN",):
+    if status == "DEAD_PROVEN":
         return "PROVEN"
-    if status in ("DEAD_NOT_PROVEN",):
+    if status == "DEAD_NOT_PROVEN":
         return "NOT_PROVEN"
     if status in ("ICE_MASKED", "BLOCKED_DEP_MASKED", "NOT_RUN", "TIMEOUT", "DEAD_SILENT"):
         return "SILENT"
@@ -334,9 +334,8 @@ def append_obligation(out: dict, r: dict):
     if raw != folded:
         r["raw_status"] = raw
         if folded == "SILENT":
-            probe = dict(r.get("probe") or {})
-            probe.setdefault("silent_reason", raw.lower())
-            r["probe"] = probe
+            r.setdefault("probe", {})
+            r["probe"].setdefault("silent_reason", raw.lower())
         r["status"] = folded
     out["obligations"].append(r)
 
@@ -719,8 +718,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
             "col": e["col"], "message": e["message"],
             "category": "assert_obligation" if is_assert else "other_obligation"})
 
-    if any(o.get("raw_status") == "NOT_RUN" or o["status"] == "NOT_RUN"
-           for o in out["obligations"]):
+    if any(o.get("raw_status") == "NOT_RUN" for o in out["obligations"]):
         out["stopped"] = f"budget {budget}s exceeded"
 
     # ---- dependency unmasking (leave trusts applied for dependents) ----
