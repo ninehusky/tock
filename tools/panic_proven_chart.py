@@ -196,7 +196,7 @@ def main():
                 elif fn_errors:
                     # included + not trusted, but Flux rejects the enclosing fn
                     # (unmasked once kernel reached a true 0 — see the masking note)
-                    ann_bucket["included-but-FAILING (unmasked)"] += 1
+                    ann_bucket["included-but-not-proven (unmasked)"] += 1
                 else:
                     ann_bucket["locally-proven"] += 1
 
@@ -211,7 +211,7 @@ def main():
     if args.errors_dir:
         print(f"\n  Flux-verdict cross-check ON ({args.errors_dir}): "
               f"{len(err_fns)} distinct functions currently rejected by Flux.")
-        print("  'included-but-FAILING' = annotations whose enclosing fn is included")
+        print("  'included-but-not-proven' = annotations whose enclosing fn is included")
         print("  and not trusted, yet Flux rejects it (mostly capsules/chips unmasked")
         print("  once kernel hit a true 0). Without --errors-dir these count as locally-proven.")
 

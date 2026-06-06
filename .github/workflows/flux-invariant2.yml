@@ -4,7 +4,7 @@
 
 # Flux panic-verification pipeline — Invariants 0 + 1 + 2
 #
-# Runs on every push to this branch. In sequence:
+# Runs on every push commit. In sequence:
 #   0. python3 tools/reannotate_flux.py --survey tools/panic_survey.json --dry-run
 #      — audits all // FLUX- annotations against the committed survey;
 #      exits 1 on violations (orphan/malformed markers)
@@ -18,9 +18,6 @@ name: flux-invariant2
 
 on:
   push:
-    branches:
-      - "flux-invariant2-silent-triage"
-      - "copilot/flux-invariant2-silent-triage"
 
 jobs:
   flux-invariant2:
@@ -162,9 +159,8 @@ jobs:
 
       # ------------------------------------------------------------------ #
       # Run Invariant 2: no-vacuity gate.
-      # Exits 0 iff gate=pass (all obligations are discharged, trusted, or
-      # frontier — no SILENT / ICE_MASKED / BLOCKED_DEP_MASKED / NOT_RUN /
-      # TIMEOUT).
+      # Exits 0 iff gate=pass (all obligations are trusted, proven, or
+      # not-proven frontier — no SILENT).
       # ------------------------------------------------------------------ #
       - name: Run Invariant 2 pipeline
         run: |
