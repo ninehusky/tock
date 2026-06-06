@@ -69,6 +69,7 @@ const REGS_RANGE: Range<usize> = REGS_IDX..REGS_IDX + 8;
 
 const USIZE_SZ: usize = size_of::<usize>();
 
+#[flux_rs::trusted(reason = "trusted-hw: cortex-M has usize size of 4 bytes, which differs from modern machines")]
 #[flux_rs::sig(fn() -> usize[4])]
 fn my_usize_range() -> usize {
     4

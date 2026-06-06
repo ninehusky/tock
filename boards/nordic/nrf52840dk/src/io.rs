@@ -38,13 +38,6 @@ impl Write for Writer {
 }
 
 impl IoWrite for Writer {
-    #[flux_rs::trusted(reason = "measurement/dep-mask limitation (NOT a proof gap): the bounds \
-        obligation at io.rs:79 is provable in isolation, but nrf52840dk is the deepest-downstream \
-        crate and its full-pipeline flux check is dep-masked by the cumulative FAILING frontier of \
-        its dependencies (capsules-extra, nrf52840, kernel, …). The probe cannot unmask the whole \
-        stack to measure this single site, so it reports BLOCKED_DEP_MASKED. Same external-crate / \
-        dep-mask family as nrf52840 service_interrupt. Trusted as a documented carve-out; revisit \
-        once the dependency frontier shrinks. See tools/trust_reduction_2026-06-05.md.")]
     fn write(&mut self, buf: &[u8]) -> usize {
         match self {
             Writer::WriterUart(ref mut initialized) => {
