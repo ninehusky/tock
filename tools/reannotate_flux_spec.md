@@ -213,6 +213,44 @@ signature or body, not in an assert immediately below the marker. See step 7.
    `func` segment-match. `file=` on a *precise* marker is malformed — the
    override is FN-LEVEL-only.
 
+8. **Verify the paired assert sits directly above its panic event (precise
+   markers only).** Step 7 establishes that an assert *exists* below the marker;
+   this step establishes that it sits *directly above the panic it guards*, so a
+   later triage (issue #15) can reliably read "this Flux error is accompanied by
+   an assert" off the error's source line. The shape the convention requires is
+
+   ```rust
+   // FLUX-TODO addr=0x… flavor=…
+   flux_support::assert(i < arr.len());
+   arr[i]                                // the panic event the marker resolved to
+   ```
+
+   The "event" line is the survey line the marker already resolved to in the
+   join above (the binary panic's `effective_frame.line`) — no new lookup. The
+   check groups markers by their *paired assert* (stacked markers share one
+   assert and are judged together) and **passes** when an event lies at or above
+   the end of the single statement directly below the assert. "Directly below"
+   skips blank lines, comments, and sibling asserts (a stacked-assert cluster
+   guards one event), and the statement may span multiple physical lines — a
+   trailing operator (`… =`) or a following line that begins with a continuation
+   token (`.method()` chains, `| x` wrapped binary ops) keeps it one statement,
+   so a panic the survey attributes to an inner line (the `.unwrap()` of a method
+   chain, the `.split_at_mut(…)` line of a two-line `let`) still counts as
+   directly below.
+
+   A **`misplaced`** violation (`MISPLACED-ASSERT`) fires only when *every* event
+   in the group is strictly below that statement — i.e. an unrelated complete
+   statement sits between the assert and the panic it claims to guard. Two cases
+   are deliberately exempt: events the survey attributes *at or above* the assert
+   (DWARF line-imprecision — an assert below its marker cannot physically sit
+   below the marker line, which the orphan window pins as the floor), and
+   `assert(false)` **sentinels** (dead-code claims that govern a whole region,
+   not one indexing/unwrap site). FN-LEVEL markers are exempt entirely (their
+   obligation is in the signature/body, not an adjacent assert). Like every other
+   violation kind, a `misplaced` finding gates the run (no rewrite, exit 1); the
+   fix is to move the `flux_support::assert(...)` so only blank/comment lines or
+   sibling asserts separate the marker, the assert, and the event.
+
 ## In-scope files
 
 The set of source files this script audits is derived from `panic_survey.json`, not
@@ -308,6 +346,15 @@ stop at the first.
    binary address. The Rust stdlib `assert!(...)` macro is not a valid pairing
    — replace it with `flux_support::assert(...)` (and, if needed, keep the
    `assert!` call as well for the runtime check). FN-LEVEL markers are exempt.
+
+7. **Misplaced assert.** A `FLUX-TODO` or `FLUX-OPT` marker whose paired
+   `flux_support::assert(...)` does not sit directly above the panic event it
+   resolved to — an unrelated complete statement sits between the assert and the
+   panic — see step 8. Report the assert line, the end of the statement directly
+   below it, and the survey event line further down. The fix is to relocate the
+   assert so only blank/comment lines or sibling asserts separate the marker, the
+   assert, and the event. DWARF-imprecision events (attributed at or above the
+   assert), `assert(false)` sentinels, and FN-LEVEL markers are exempt.
 
 Atomicity: collect all violations across the full source tree, then either write
 all rewrites (if zero violations) or write none (if any). No partial progress on a
