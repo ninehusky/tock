@@ -1,0 +1,91 @@
+# Licensed under the Apache License, Version 2.0 or the MIT License.
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Copyright Tock Contributors 2024.
+
+# On pull requests, compare the number of flux_support::assume calls and
+# #[flux_rs::trusted] annotations between the base branch and the PR head,
+# and print a human-readable diff so reviewers can see at a glance whether
+# the PR adds or removes escape hatches.
+
+name: flux-annotation-diff
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  flux-annotation-diff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Full history is needed so we can check out the base commit.
+          fetch-depth: 0
+
+      - name: Count annotations on PR head
+        run: |
+          tools/count_flux_annotations.sh --json /tmp/head-annotations.json
+
+      - name: Add base-branch worktree
+        run: |
+          git worktree add /tmp/base-worktree ${{ github.event.pull_request.base.sha }}
+
+      - name: Count annotations on base branch
+        # Point the script (from HEAD) at the base worktree so we don't
+        # depend on the script existing in the base branch.
+        run: |
+          tools/count_flux_annotations.sh \
+            --dir /tmp/base-worktree \
+            --json /tmp/base-annotations.json
+
+      - name: Remove base-branch worktree
+        if: always()
+        run: git worktree remove --force /tmp/base-worktree
+
+      - name: Show annotation diff
+        run: |
+          python3 - /tmp/base-annotations.json /tmp/head-annotations.json <<'PYEOF'
+          import json
+          import sys
+          from pathlib import Path
+
+          base = json.loads(Path(sys.argv[1]).read_text())
+          head = json.loads(Path(sys.argv[2]).read_text())
+
+          def delta(label, b, h):
+              diff = h - b
+              sign = "+" if diff >= 0 else ""
+              marker = "  ⬆" if diff > 0 else ("  ⬇" if diff < 0 else "")
+              print(f"  {label:<45s}  base={b:4d}  head={h:4d}  ({sign}{diff}){marker}")
+
+          print("Flux annotation diff")
+          print("====================")
+          delta("flux_support::assume calls",      base["assumes"],  head["assumes"])
+          delta("#[flux_rs::trusted] annotations", base["trusted"],  head["trusted"])
+          delta("  of which: (no reason)",
+                base["trusted_no_reason"], head["trusted_no_reason"])
+          print()
+
+          # Per-reason diff — show only changed reasons, sorted by delta.
+          base_r = base.get("trusted_by_reason", {})
+          head_r = head.get("trusted_by_reason", {})
+          all_reasons = sorted(
+              set(base_r) | set(head_r),
+              key=lambda r: head_r.get(r, 0) - base_r.get(r, 0),
+          )
+          changed = [(r, base_r.get(r, 0), head_r.get(r, 0))
+                     for r in all_reasons
+                     if base_r.get(r, 0) != head_r.get(r, 0)]
+
+          if changed:
+              print("Changed trusted reasons:")
+              for reason, b, h in changed:
+                  diff = h - b
+                  display = reason if len(reason) <= 60 else reason[:57] + "..."
+                  print(f"  {diff:+d}  {display}")
+          else:
+              print("No changes to trusted reason breakdown.")
+          PYEOF
