@@ -24,9 +24,8 @@ clean+baseline+warm-flip+ICE-retry protocol are unchanged. What's new here:
   (d) FULL ERROR INVENTORY: every baseline Flux diagnostic (code/span/message),
       classified assert_obligation vs other_obligation. Informational, not gating.
 
-Gate (no-vacuity): exit 0 iff zero obligations are SILENT / ICE_MASKED /
-BLOCKED_DEP_MASKED / NOT_RUN / TIMEOUT. FAILING / DEAD_FAILING / TRUSTED are the
-reported frontier and do NOT fail the gate.
+Gate (no-vacuity): exit 0 iff zero obligations are SILENT. TRUSTED / PROVEN /
+NOT_PROVEN are the other reported flavors and do NOT fail the gate.
 
 Usage:
     tools/.venv/bin/python3 tools/check_invariant2.py
@@ -56,10 +55,10 @@ PKGS["nrf52840dk"] = "boards/nordic/nrf52840dk"
 # longest-dir-prefix first, so capsules/core beats capsules.
 _DIRS = sorted(PKGS.items(), key=lambda kv: -len(kv[1]))
 
-# verdicts that mean "never genuinely analyzed / untrustworthy" -> fail the gate.
-VACUOUS = {"SILENT", "ICE_MASKED", "BLOCKED_DEP_MASKED", "NOT_RUN", "TIMEOUT", "DEAD_SILENT"}
-DISCHARGED = {"PROVEN", "DEAD_PROVEN"}
-FRONTIER = {"FAILING", "DEAD_FAILING", "TRUSTED"}
+# externally reported flavors.
+VACUOUS = {"SILENT"}
+DISCHARGED = {"PROVEN"}
+FRONTIER = {"NOT_PROVEN", "TRUSTED"}
 
 ERR_FULL_RE = re.compile(r"error\[(E0999|FLUX[^\]]*)\]:\s*(.*)")
 TRUST_ATTR = "#[flux_rs::trusted]"
@@ -316,7 +315,29 @@ def emit_dep_masked(precise, fn_level, dep, crate_dir, out):
         else:
             r["status"] = "BLOCKED_DEP_MASKED"
             r["dep"] = dep
-        out["obligations"].append(r)
+        append_obligation(out, r)
+
+
+def _collapse_status(status: str) -> str:
+    if status == "DEAD_PROVEN":
+        return "PROVEN"
+    if status == "DEAD_NOT_PROVEN":
+        return "NOT_PROVEN"
+    if status in ("ICE_MASKED", "BLOCKED_DEP_MASKED", "NOT_RUN", "TIMEOUT", "DEAD_SILENT"):
+        return "SILENT"
+    return status
+
+
+def append_obligation(out: dict, r: dict):
+    raw = r.get("status")
+    folded = _collapse_status(raw)
+    if raw != folded:
+        r["raw_status"] = raw
+        if folded == "SILENT":
+            r.setdefault("probe", {})
+            r["probe"].setdefault("silent_reason", raw.lower())
+        r["status"] = folded
+    out["obligations"].append(r)
 
 
 # --------------------------------------------------------------------------
@@ -507,12 +528,12 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
             r = {"kind": "precise", **_pub_precise(ob), "status": status}
             if extra:
                 r.update(extra)
-            out["obligations"].append(r)
+            append_obligation(out, r)
         for ob in fn_level:
             r = {"kind": "fn_level", **_pub_fn(ob), "status": status}
             if extra:
                 r.update(extra)
-            out["obligations"].append(r)
+            append_obligation(out, r)
 
     if b_verdict in ("BUDGET", "TIMEOUT"):
         out["stopped"] = f"baseline {b_verdict.lower()}"
@@ -548,24 +569,24 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
             r = {"kind": "precise", **_pub_precise(ob)}
             if time.time() > deadline:
                 r["status"] = "NOT_RUN"
-                out["obligations"].append(r)
+                append_obligation(out, r)
                 continue
             if ob.get("no_assert"):
                 r["status"] = "SILENT"   # step-0 invariant says this can't happen
                 r["probe"] = {"note": "no paired assert found below marker"}
-                out["obligations"].append(r)
+                append_obligation(out, r)
                 continue
             site = sites.get(ob["assert_line"])
             if site is None:
                 r["status"] = "SILENT"
                 r["probe"] = {"note": "assert site not found at recorded line"}
-                out["obligations"].append(r)
+                append_obligation(out, r)
                 continue
             rel = str(p.relative_to(ROOT / crate_dir))
             base_hit = NP.err_at(base_errs, rel, site)
             if site["inner"] == "false":
                 # Dead-code sentinel `assert(false)`. base_hit => Flux flagged it =>
-                # reachable => DEAD_FAILING. Otherwise it's a DEAD_PROVEN *candidate*,
+                # reachable => DEAD_NOT_PROVEN. Otherwise it's a DEAD_PROVEN *candidate*,
                 # but silence at the sentinel is ambiguous: the code is genuinely dead
                 # OR the body was never analyzed (vacuity, same failure mode as SILENT).
                 # Confirm by ENTRY CONTROL: inject assert(false) at the enclosing fn's
@@ -573,7 +594,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
                 #   error in fn span  => body analyzed => DEAD_PROVEN (genuine dead code)
                 #   still silent       => body unchecked => DEAD_SILENT (vacuous, gated)
                 if base_hit:
-                    r["status"] = "DEAD_FAILING"
+                    r["status"] = "DEAD_NOT_PROVEN"
                     r["probe"] = {"baseline": "error_at_site"}
                 elif NP.enclosing_fn_trusted(orig, site["call_off"]):
                     # silence is due to trust, not a dead-code proof -> declared carve-out
@@ -608,7 +629,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
                             r["probe"] = {"baseline": "pass",
                                           "entry_control": "error_at_entry" if checked else "silent"}
             elif base_hit:
-                r["status"] = "FAILING"
+                r["status"] = "NOT_PROVEN"
                 r["probe"] = {"baseline": "error_at_site"}
             elif NP.enclosing_fn_trusted(orig, site["call_off"]):
                 r["status"] = "TRUSTED"
@@ -632,7 +653,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
                 r["probe"] = {"baseline": "pass",
                               "flip": "error_at_site" if r["status"] == "PROVEN" else verdict.lower(),
                               "attempts": att}
-            out["obligations"].append(r)
+            append_obligation(out, r)
             log(f"    {rel}:{ob['assert_line']:<5} {r['status']:<16} precise")
 
     # ---- fn-level obligations (entry control) ----
@@ -640,7 +661,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
         r = {"kind": "fn_level", **_pub_fn(ob)}
         if time.time() > deadline:
             r["status"] = "NOT_RUN"
-            out["obligations"].append(r)
+            append_obligation(out, r)
             continue
         p = ROOT / ob["file"]
         orig = p.read_text()
@@ -649,7 +670,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
         if decl is None:
             r["status"] = "SILENT"
             r["probe"] = {"note": "no fn decl found below marker"}
-            out["obligations"].append(r)
+            append_obligation(out, r)
             continue
         sl, el, body_open = fn_span(orig, decl.start())
         in_fn = lambda errs: any(rf.endswith(rel) and (el is None or sl <= ln <= el)
@@ -658,7 +679,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
             r["status"] = "TRUSTED"
             r["probe"] = {"enclosing_fn": "trusted"}
         elif in_fn(base_errs):
-            r["status"] = "FAILING"
+            r["status"] = "NOT_PROVEN"
             r["probe"] = {"baseline": "error_in_fn"}
         elif body_open is None:
             r["status"] = "SILENT"
@@ -681,7 +702,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
                 r["status"] = "PROVEN" if checked else "SILENT"
             r["probe"] = {"baseline": "pass",
                           "entry_control": "error_at_entry" if r["status"] == "PROVEN" else "silent"}
-        out["obligations"].append(r)
+        append_obligation(out, r)
         log(f"    {rel}:{ob['marker_line']:<5} {r['status']:<16} fn-level")
 
     # ---- full error inventory (classify) ----
@@ -697,7 +718,7 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
             "col": e["col"], "message": e["message"],
             "category": "assert_obligation" if is_assert else "other_obligation"})
 
-    if any(o["status"] == "NOT_RUN" for o in out["obligations"]):
+    if any(o.get("raw_status") == "NOT_RUN" for o in out["obligations"]):
         out["stopped"] = f"budget {budget}s exceeded"
 
     # ---- dependency unmasking (leave trusts applied for dependents) ----
