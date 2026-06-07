@@ -40,16 +40,7 @@ impl<'a> Nrf52840DefaultPeripherals<'a> {
 }
 impl<'a> kernel::platform::chip::InterruptService for Nrf52840DefaultPeripherals<'a> {
     // FLUX-TODO-FN-LEVEL addrs=[0x1d04] flavor=assert
-    #[flux_rs::trusted(reason = "external-crate include limitation (NOT a proof gap): the body \
-        accesses `self.nrf52: nrf52::chip::Nrf52DefaultPeripherals`, whose def is off Flux's \
-        include surface, so Flux emits E0999 and skips the body. Unlike tickv::FlashController \
-        (a pure trait decl, cheaply includable), this cannot be remedied by including nrf52's \
-        chip.rs: that module itself uses external cortexm4 items (mpu::MPU, syscall::SysCall, \
-        nvic::next/has_pending, support::wfi/atomic) that are likewise not included, so including \
-        it just spawns 7 new E0999s one level down and dep-masks the whole nrf52840 crate \
-        (verified 2026-06-05). The include limitation is transitive; trusting is the terminal \
-        state until Flux gains a cross-crate trait/struct extern-spec hook. See \
-        flux_external_trait_repro + tools/trust_reduction_2026-06-05.md.")]
+    #[flux_rs::trusted(reason = "TODO: this function is unchecked when running Flux on `chips/nrf52840`.")]
     unsafe fn service_interrupt(&self, interrupt: u32) -> bool {
         match interrupt {
             crate::peripheral_interrupts::USBD => self.usbd.handle_interrupt(),
