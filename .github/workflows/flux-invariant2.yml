@@ -69,6 +69,16 @@ jobs:
           rustup show
           rustup target add thumbv7em-none-eabi
 
+      # ------------------------------------------------------------------ #
+      # panic_survey.py demangles bl-target symbols with rustfilt to match
+      # them against the demangled sink names in tools/symbols.txt. Without
+      # rustfilt it falls back to an identity map and matches only the one
+      # already-unmangled sink (rust_begin_unwind), so the survey collapses
+      # to 1 site and the freshness comparison spuriously reports STALE.
+      # ------------------------------------------------------------------ #
+      - name: Install rustfilt
+        run: cargo install rustfilt
+
       - name: Build the nrf52840dk release binary
         working-directory: boards/nordic/nrf52840dk
         run: make release

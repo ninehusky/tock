@@ -51,6 +51,12 @@ def fmt(key) -> str:
     return f"  {f}:{line} [{flavor}] {src[:70]}"
 
 
+def sort_key(key):
+    """Stable ordering that tolerates None fields (e.g. line=None)."""
+    f, line, flavor, src = key
+    return (f or "", line if line is not None else -1, flavor or "", src or "")
+
+
 def main() -> int:
     if len(sys.argv) != 3:
         print("usage: check_survey_fresh.py <committed.json> <fresh.json>",
@@ -72,12 +78,12 @@ def main() -> int:
     if only_fresh:
         print(f"--- {sum(only_fresh.values())} site(s) in the current source but "
               f"MISSING from the committed survey (uncovered panics) ---")
-        for k in sorted(only_fresh.elements()):
+        for k in sorted(only_fresh.elements(), key=sort_key):
             print(fmt(k))
     if only_committed:
         print(f"\n--- {sum(only_committed.values())} site(s) in the committed survey "
               f"but GONE from the current source (removed/relocated panics) ---")
-        for k in sorted(only_committed.elements()):
+        for k in sorted(only_committed.elements(), key=sort_key):
             print(fmt(k))
     print("\nRegenerate and commit the survey:\n"
           "    python3 tools/panic_survey.py\n"
