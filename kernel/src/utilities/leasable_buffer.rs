@@ -262,7 +262,7 @@ impl<'a, T> SubSliceMut<'a, T> {
 
     #[flux_rs::sig(fn(&Self[@s]) -> &[T][s.hi - s.lo])]
     fn active_slice(&self) -> &[T] {
-        // FLUX-TODO addr=0xa200 flavor=slice_order
+        // FLUX-TODO addr=0xa120 flavor=slice_order
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end]
     }
@@ -365,9 +365,9 @@ where
     type Output = <I as SliceIndex<[T]>>::Output;
 
     fn index(&self, idx: I) -> &Self::Output {
-        // FLUX-TODO flavor=slice_order addrs=[
-        //     0x15346, 0x19ee6, 0x1fd18,
-        // ]
+        // FLUX-TODO addrs=[0x15232, 0x19de0, 0x1fb84] flavor=slice_order
+        // FLUX-TODO addrs=[0x1523c, 0x19dea, 0x1fb8e, 0x1fb98] flavor=slice_end
+        // FLUX-TODO addr=0x19e06 flavor=bounds
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end][idx]
     }

@@ -327,6 +327,7 @@ impl SyscallDriver for Console<'_> {
 }
 
 impl uart::TransmitClient for Console<'_> {
+    // FLUX-TODO-FN-LEVEL reason=lto-inlined-from-grant file=kernel/src/grant.rs addrs=[0x9ad4] flavor=explicit_panic
     fn transmitted_buffer(
         &self,
         buffer: &'static mut [u8],

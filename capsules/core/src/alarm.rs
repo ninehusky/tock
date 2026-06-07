@@ -150,6 +150,7 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// - invoke upcalls for all expired app alarms, resetting them afterwards,
     /// - re-arming the alarm for the next earliest [`Expiration`], or
     /// - disarming the alarm if no unexpired [`Expiration`] is found.
+    // FLUX-TODO-FN-LEVEL addrs=[0x190a2] flavor=explicit_panic
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
         // volatile read, and this may not be optimized if done in a loop:
@@ -185,7 +186,6 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
         // Compute the earliest alarm, and invoke the `expired_handler` for
         // every expired alarm. This will issue a callback and reset the alarms
         // respectively.
-        // FLUX-TODO addr=0x191aa flavor=explicit_panic
         let res = Self::earliest_alarm(
             now,
             // Pass an interator of all non-None expirations:
@@ -216,6 +216,8 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
             // The expired closure has requested to stop iteration. This should
             // be unreachable, and hence we panic:
             Err((_, _, ())) => {
+                // Note: this `unreachable!` is the only explicit_panic in this fn;
+                // its obligation is claimed by the FLUX-TODO-FN-LEVEL on the fn.
                 unreachable!();
             }
         }

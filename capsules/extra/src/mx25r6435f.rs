@@ -266,9 +266,8 @@ impl<
         self.txbuffer
             .take()
             .map_or(Err(ErrorCode::RESERVE), |txbuffer| {
-                // FLUX-TODO addr=0x167b8 flavor=bounds
-                // Notes: blocked-cell
-                // flux_support::assert(txbuffer.len() > 0);
+                // FLUX-TODO addr=0x166ac flavor=bounds
+                flux_support::assert(txbuffer.len() > 0);
                 txbuffer[0] = Opcodes::WREN as u8;
                 if let Err((err, txbuffer, _)) = self.spi.read_write_bytes(txbuffer, None, 1) {
                     self.txbuffer.replace(txbuffer);
@@ -304,9 +303,11 @@ impl<
                             .take()
                             .map_or(Err(ErrorCode::RESERVE), move |rxbuffer| {
                                 // Setup the read instruction
-                                // FLUX-TODO addr=0x16646 flavor=bounds
+
                                 // Notes: blocked-cell
-                                // flux_support::assert(txbuffer.len() > 3);
+                                // FLUX-TODO addr=0x16536 flavor=bounds
+                                flux_support::assert(txbuffer.len() > 3);
+
                                 txbuffer[0] = Opcodes::READ as u8;
                                 txbuffer[1] = ((sector_index * SECTOR_SIZE) >> 16) as u8;
                                 txbuffer[2] = ((sector_index * SECTOR_SIZE) >> 8) as u8;
@@ -323,9 +324,11 @@ impl<
                                     (PAGE_SIZE + 4) as usize,
                                 ) {
                                     self.txbuffer.replace(txbuffer);
-                                    // FLUX-TODO addr=0x1663e flavor=unwrap_option
+
                                     // Notes: blocked-cell
-                                    // flux_support::assert(rxbuffer.is_some());
+                                    // FLUX-TODO addr=0x1652e flavor=unwrap_option
+                                    flux_support::assert(rxbuffer.is_some());
+
                                     self.rxbuffer.replace(rxbuffer.unwrap());
                                     Err(err)
                                 } else {
@@ -379,7 +382,7 @@ impl<
         A: hil::time::Alarm<'a> + 'a,
     > hil::spi::SpiMasterClient for MX25R6435F<'a, S, P, A>
 {
-    // FLUX-TODO-FN-LEVEL reason=multi-candidate-fn-entry addrs=[0x1f42e] flavor=bounds
+    // FLUX-TODO-FN-LEVEL reason=multi-candidate-fn-entry addrs=[0x1f284, 0x1f292, 0x1f2e2] flavor=bounds
     // 2 bounds panics in this fn; 18 candidate arr[i] operations in the body
     // (state-machine dispatcher with many state-specific buffer copies).
     // Cannot disambiguate from DWARF; marker covers fn body.
@@ -543,7 +546,7 @@ impl<
 
                 self.client_sector.map(|sector| {
                     for i in 0..(PAGE_SIZE as usize) {
-                        // FLUX-TODO addr=0x1f420 flavor=bounds
+                        // FLUX-TODO addr=0x1f24c flavor=bounds
                         flux_support::assert(i + 4 < write_buffer.len() && (i + (page_index * PAGE_SIZE) as usize) < SECTOR_SIZE as usize);
                         write_buffer[i + 4] = sector[i + (page_index * PAGE_SIZE) as usize];
                     }
@@ -609,7 +612,7 @@ impl<
         // operation has finished.
         self.txbuffer.take().map(|write_buffer| {
             self.rxbuffer.take().map(move |read_buffer| {
-                // FLUX-TODO addr=0x1f6f6 flavor=bounds
+                // FLUX-TODO addr=0x1f55e flavor=bounds
                 flux_support::assert(write_buffer.len() > 0);
                 write_buffer[0] = Opcodes::RDSR as u8;
                 let _ = self

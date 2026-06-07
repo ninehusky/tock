@@ -500,7 +500,7 @@ where
                         .get_readwrite_processbuffer(rw_allow::SCAN_BUFFER)
                         .and_then(|scan_buffer| {
                             scan_buffer.mut_enter(|userland| {
-                                // FLUX-TODO addr=0x1f098 flavor=slice_end
+                                // FLUX-TODO addr=0x1eefc flavor=slice_end
                                 flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                 userland[0..len as usize]
                                     .copy_from_slice_or_err(&buf[0..len as usize])
@@ -607,6 +607,7 @@ where
     B: ble_advertising::BleAdvertisementDriver<'a> + ble_advertising::BleConfig,
     A: kernel::hil::time::Alarm<'a>,
 {
+    // FLUX-TODO-FN-LEVEL addrs=[0x63a2] flavor=explicit_panic
     fn command(
         &self,
         command_num: usize,

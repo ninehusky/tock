@@ -414,20 +414,20 @@ impl<'a> IPPayload<'a> {
         let (offset, _) = match self.header {
             // The `unwrap` is safe because we require that `buf >= 8 + offset`, which is the
             // exact condition under which `.encode()` returns a `Done`.
-            // FLUX-TODO addr=0xdab8 flavor=unwrap_option
             TransportHeader::UDP(udp_header) => {
                 let done = udp_header.encode(buf, offset).done();
+                // FLUX-TODO addr=0xd9dc flavor=unwrap_option
                 flux_support::assert(done.is_some());
                 done.unwrap()
             }
-            // FLUX-TODO addr=0xdabe flavor=unwrap_option
             TransportHeader::ICMP(icmp_header) => {
                 let done = icmp_header.encode(buf, offset).done();
+                // FLUX-TODO addr=0xd9e2 flavor=unwrap_option
                 flux_support::assert(done.is_some());
                 done.unwrap()
             }
             _ => {
-                // FLUX-TODO addr=0xdab2 flavor=explicit_panic
+                // FLUX-TODO addr=0xd9d6 flavor=explicit_panic
                 flux_support::assert(false);
                 unimplemented!();
             }
@@ -438,8 +438,8 @@ impl<'a> IPPayload<'a> {
         // Explicit assert is load-bearing: `flux_support`'s `Index::index` extern_spec puts `in_bounds` in
         // `#[no_panic_if]` (opt-in per call-site), not in the sig's `requires`. Since this function isn't
         // marked `#[flux_rs::no_panic]`, the slice-op bounds check wouldn't fire without this explicit assert.
+        // FLUX-OPT addr=0xd9cc flavor=slice_end
         flux_support::assert(payload_length <= self.payload.len());
-        // FLUX-OPT addr=0xdaa8 flavor=slice_end
         let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
         stream_done!(offset, offset)
     }
@@ -506,7 +506,7 @@ impl<'a> IP6Packet<'a> {
         let transport_hdr_size = match self.payload.header {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),
             TransportHeader::ICMP(icmp_header) => icmp_header.get_hdr_size(),
-            // FLUX-TODO addr=0xdb22 flavor=explicit_panic
+            // FLUX-TODO addr=0xda46 flavor=explicit_panic
             _ => { flux_support::assert(false); unimplemented!() },
         };
         40 + transport_hdr_size
@@ -536,7 +536,7 @@ impl<'a> IP6Packet<'a> {
                 icmp_header.set_cksum(cksum);
             }
             _ => {
-                // FLUX-TODO addr=0x19efa flavor=explicit_panic
+                // FLUX-TODO addr=0x19df4 flavor=explicit_panic
                 flux_support::assert(false);
                 unimplemented!();
             }
@@ -572,8 +572,8 @@ impl<'a> IP6Packet<'a> {
 
         let ip6_header = self.header;
         let done = ip6_header.encode(buf).done();
+        // FLUX-OPT addr=0xd9e8 flavor=unwrap_option
         flux_support::assert(done.is_some());
-        // FLUX-OPT addr=0xdac4 flavor=unwrap_option
         let (off, _) = done.unwrap();
         self.payload.encode(buf, off)
     }

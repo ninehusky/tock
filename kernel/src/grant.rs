@@ -1244,10 +1244,10 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
 
         let grant_opt = self.access_grant(fun, true);
         // FLUX-TODO flavor=unwrap_option addrs=[
-        //     0x17fb4, 0x1edc, 0x7f54, 0xbe9a,
+        //     0x17eac, 0x1dec, 0x7e90, 0xbdba,
         // ]
         // Notes: blocked-cell
-        // flux_support::assert(grant_opt.is_some());
+        flux_support::assert(grant_opt.is_some());
         grant_opt.unwrap()
     }
 
@@ -1426,6 +1426,8 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
                 // region you are currently in before trying to iterate over all
                 // grant regions.
 
+                // FLUX-TODO addrs=[0x134ac, 0x1712e, 0x174fc, 0x17dd8, 0x182fa, 0x18e20, 0x19fd0, 0x1a07c, 0x1a38c, 0x1ba90, 0x1bd2e, 0x1be66, 0x1e654, 0x1ef12, 0x1f4a8, 0x1f816, 0x1f90a, 0x1f9fa, 0x1fbac, 0x1fc3e, 0x1fcca, 0x1fd56, 0x1fdec, 0x4834, 0x490e, 0x496c, 0x4a8a, 0x4b18, 0x4bd2, 0x4c30, 0x4db8, 0x543e, 0x58d6, 0x60dc, 0x6400, 0x7330, 0x77a2, 0x79de, 0x7b2a, 0x7b86, 0x7ea4, 0x98a6, 0x9906, 0x9c54, 0xa2d2, 0xbed2, 0xc0ee, 0xc152, 0xc256, 0xc56e] flavor=explicit_panic
+                flux_support::assert(false);
                 panic!("Attempted to re-enter a grant region.");
             })
             .ok()?;

@@ -78,14 +78,13 @@ mod rw_allow {
 
 // Helper fn that converts a Result.. the precondition
 // implies that the `unwrap` will succeed.
-// TODO: this should be checked at the `command` callsite..
-// I had it originally (and it didn't throw an error), but I didn't include `driver.rs`
-// in the `Cargo.toml` because it was also giving errors for non-panic-row statements.
 #[flux_rs::sig(fn(rc: Result<(), kernel::ErrorCode>{r: !r.b}) -> kernel::ErrorCode)]
 fn result_to_errorcode(rc: Result<(), kernel::ErrorCode>) -> kernel::ErrorCode {
-    // FLUX-TODO addr=0xbe94 flavor=unwrap_result
+
+    // FLUX-TODO addr=0xbdb4 flavor=unwrap_result
+    flux_support::assert(rc.is_ok());
+
     let rc_into: Result<kernel::ErrorCode, _> = rc.try_into();
-    flux_support::assert(rc_into.is_ok());
     rc_into.unwrap()
 }
 

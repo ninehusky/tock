@@ -114,6 +114,7 @@ pub trait SyscallDriver {
     /// with an upcall). Command 0 is a reserved command to detect if a
     /// peripheral system call driver is installed and must always return a
     /// [`CommandReturn::success`].
+    // FLUX-TODO-FN-LEVEL addrs=[0x5396, 0x797c] flavor=explicit_panic
     fn command(
         &self,
         command_num: usize,

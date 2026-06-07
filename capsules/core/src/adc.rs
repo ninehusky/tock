@@ -737,7 +737,7 @@ impl<'a, A: hil::adc::Adc<'a> + hil::adc::AdcHighSpeed<'a>> hil::adc::Client
     /// Collects the sample and provides a callback to the application.
     ///
     /// - `sample` - analog sample value
-    // FLUX-TODO-FN-LEVEL addrs=[0x1e5a6] reason=lto-inlined-fn-entry flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x1e432] reason=lto-inlined-fn-entry flavor=explicit_panic
     fn sample_ready(&self, sample: u16) {
         let mut calledback = false;
         if self.active.get() && self.mode.get() == AdcMode::SingleSample {
@@ -825,7 +825,7 @@ impl<'a, A: hil::adc::Adc<'a> + hil::adc::AdcHighSpeed<'a>> hil::adc::HighSpeedC
     /// - `buf` - internal buffer filled with analog samples
     /// - `length` - number of valid samples in the buffer, guaranteed to be
     ///   less than or equal to buffer length
-    // FLUX-TODO-FN-LEVEL addrs=[0x1ebd6] reason=lto-inlined-fn-entry flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x1ea62] reason=lto-inlined-fn-entry flavor=explicit_panic
     fn samples_ready(&self, buf: &'static mut [u16], length: usize) {
         let mut unexpected_state = false;
 

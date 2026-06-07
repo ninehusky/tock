@@ -31,6 +31,9 @@ nrf52_components = { path = "../nrf52_components" }
 capsules-core = { path = "../../../capsules/core" }
 capsules-extra = { path = "../../../capsules/extra" }
 capsules-system = { path = "../../../capsules/system" }
+# flux-rs so the #[flux_rs::trusted] carve-out on Writer::write resolves in
+# normal (non-flux) builds too. See SESSION_2026-06-01 site #3.
+flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
 flux_support = { path = "../../../flux_support" }
 
 [lints]

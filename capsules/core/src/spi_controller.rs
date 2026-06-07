@@ -119,6 +119,8 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         start = cmp::min(start, end);
 
                         for (i, c) in src[start..end].iter().enumerate() {
+                            // FLUX-TODO addr=0x145ac flavor=bounds
+                            flux_support::assert(i < kwbuf.len());
                             kwbuf[i] = c.get();
                         }
                         end - start
@@ -135,7 +137,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
         // TODO verify SPI return value
         let _ = if rlen == 0 {
-            // FLUX-TODO addr=0x146a6 flavor=unwrap_option
+            // FLUX-TODO addr=0x14596 flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master
                 .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
@@ -167,7 +169,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         .unwrap_or(0),
                 });
             app.index += read_len;
-            // FLUX-TODO addr=0x146b2 flavor=unwrap_option
+            // FLUX-TODO addr=0x145a2 flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
@@ -175,7 +177,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                 read_len,
             )
         } else {
-            // FLUX-TODO addr=0x146ac flavor=unwrap_option
+            // FLUX-TODO addr=0x1459c flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
@@ -229,6 +231,7 @@ impl<'a, S: SpiMasterDevice<'a>> SyscallDriver for Spi<'a, S> {
     // x+1: unlock spi
     //   - does nothing if lock not held
     //
+    // FLUX-TODO-FN-LEVEL addrs=[0x76d4] flavor=explicit_panic
     fn command(
         &self,
         command_num: usize,

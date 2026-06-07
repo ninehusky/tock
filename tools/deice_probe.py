@@ -50,21 +50,50 @@ MAX_RETRIES = 3
 DEP_RE = re.compile(r"could not compile `([^`]+)`")
 
 
-def _env(target: Path):
+# Board crates pin an embedded target (thumbv7em) and inherit tock's linker
+# flags (`-C linker-flavor=ld.lld`) from boards/cargo/tock_flags.toml. Those
+# flags break cargo-flux's *host* `cargo metadata` probe ("linker flavor ld.lld
+# is incompatible with the current target"), so the whole board crate never gets
+# flux-checked. Flux only type-checks (it never links), so we strip the linker
+# flags via RUSTFLAGS — keeping the `cfg_tock_buildflagssentinel` cfg that
+# build.rs expects — and pin the embedded target explicitly. See
+# tools/SESSION_2026-06-01_silent_triage.md site #3.
+BOARD_TARGET = "thumbv7em-none-eabi"
+BOARD_RUSTFLAGS = ("--cfg cfg_tock_buildflagssentinel "
+                   "-C relocation-model=static -C symbol-mangling-version=v0")
+
+
+def _is_board(crate_dir: str) -> bool:
+    return crate_dir.startswith("boards/")
+
+
+def _env(target: Path, crate_dir: str = ""):
     e = os.environ.copy()
     e["CARGO_TARGET_DIR"] = str(target)
+    if _is_board(crate_dir):
+        e["RUSTFLAGS"] = BOARD_RUSTFLAGS
     return e
 
 
+def _flux_cmd(crate_dir: str, *extra):
+    cmd = ["cargo", "flux", *extra]
+    if _is_board(crate_dir):
+        cmd += ["--target", BOARD_TARGET]
+    return cmd
+
+
 def clean_in_dir(crate_dir: str, target: Path):
+    # `cargo flux clean` rejects --target; the RUSTFLAGS override in _env is what
+    # lets the board's clean get past the host metadata probe.
     subprocess.run(["cargo", "flux", "clean"], cwd=str(ROOT / crate_dir),
-                   capture_output=True, text=True, env=_env(target))
+                   capture_output=True, text=True, env=_env(target, crate_dir))
 
 
 def run_flux_in_dir(crate_dir: str, target: Path, timeout: int) -> str:
     try:
-        r = subprocess.run(["cargo", "flux", "--keep-going"], cwd=str(ROOT / crate_dir),
-                           capture_output=True, text=True, timeout=timeout, env=_env(target))
+        r = subprocess.run(_flux_cmd(crate_dir, "--keep-going"), cwd=str(ROOT / crate_dir),
+                           capture_output=True, text=True, timeout=timeout,
+                           env=_env(target, crate_dir))
         return r.stdout + "\n" + r.stderr
     except subprocess.TimeoutExpired:
         return "TIMEOUT"

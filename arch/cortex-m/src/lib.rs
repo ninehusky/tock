@@ -131,6 +131,10 @@ pub trait CortexMVariant {
 
 #[cfg(all(target_arch = "arm", target_os = "none"))]
 #[flux_rs::sig(fn() requires false)]
+#[flux_rs::trusted(reason = "hardware-invoked asm interrupt handler (reads IPSR via \
+    asm!, then panics); Flux cannot analyze the asm body and there are no Rust callers to \
+    discharge `requires false`, so the dead-code sentinel is a declared carve-out, not a \
+    reachability proof. See tools/SESSION_2026-06-01_silent_triage.md DEAD_PROVEN audit.")]
 pub unsafe extern "C" fn unhandled_interrupt() {
     use core::arch::asm;
     let mut interrupt_number: u32;
@@ -144,7 +148,7 @@ pub unsafe extern "C" fn unhandled_interrupt() {
 
     interrupt_number &= 0x1ff;
 
-    // FLUX-TODO addr=0xfa3c flavor=explicit_panic
+    // FLUX-TODO addr=0xf960 flavor=explicit_panic
     flux_support::assert(false);
     panic!("Unhandled Interrupt. ISR {} is active.", interrupt_number);
 }

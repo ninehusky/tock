@@ -468,6 +468,7 @@ impl<'a, V: kv::KVPermissions<'a>> kv::KVClient for KVStoreDriver<'a, V> {
 }
 
 impl<'a, V: kv::KVPermissions<'a>> SyscallDriver for KVStoreDriver<'a, V> {
+    // FLUX-TODO-FN-LEVEL addrs=[0x4d5a] flavor=explicit_panic
     fn command(
         &self,
         command_num: usize,

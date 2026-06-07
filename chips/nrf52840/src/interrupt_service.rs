@@ -39,6 +39,11 @@ impl<'a> Nrf52840DefaultPeripherals<'a> {
     }
 }
 impl<'a> kernel::platform::chip::InterruptService for Nrf52840DefaultPeripherals<'a> {
+    // FLUX-TODO-FN-LEVEL addrs=[0x1d04] flavor=assert
+    #[flux_rs::trusted(reason = "struct Nrf52840DefaultPeripherals embeds external \
+        nrf52::chip::Nrf52DefaultPeripherals, whose def is not on Flux's include \
+        surface, so this struct's impl bodies are skipped (E0999 \
+        not-included-when-checking-external-crate). Declared carve-out.")]
     unsafe fn service_interrupt(&self, interrupt: u32) -> bool {
         match interrupt {
             crate::peripheral_interrupts::USBD => self.usbd.handle_interrupt(),

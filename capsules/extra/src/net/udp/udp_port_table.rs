@@ -220,7 +220,7 @@ impl UdpPortManager {
         if user_bound {
             return Ok(true);
         };
-        // FLUX-TODO addr=0xbec2 flavor=unwrap_option
+        // FLUX-TODO addr=0xbde2 flavor=unwrap_option
         flux_support::assert(self.port_array.is_some());
         let ret = self
             .port_array
@@ -228,7 +228,7 @@ impl UdpPortManager {
                 flux_support::assert(MAX_NUM_BOUND_PORTS <= table.len());
                 let mut port_exists = false;
                 for i in 0..MAX_NUM_BOUND_PORTS {
-                    // FLUX-TODO addr=0xbebc flavor=bounds
+                    // FLUX-TODO addr=0xbddc flavor=bounds
                     flux_support::assert(i < table.len());
                     match table[i] {
                         Some(SocketBindingEntry::Port(p)) => {

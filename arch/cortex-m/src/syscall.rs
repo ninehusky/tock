@@ -103,8 +103,10 @@ fn copy_le_into(val: usize, dest: &mut [u8]) {
 #[flux_rs::sig(fn(val: usize, slice: &mut [u8]{n: n >= (i + 1) * 4}, usize[@i]) requires i < 256)]
 fn write_usize_to_u8_slice(val: usize, slice: &mut [u8], index: usize) {
     let range = usize_byte_range(index);
-    // FLUX-TODO addr=0xf82c flavor=slice_end 
-    flux_support::assert(range.start <= range.end && range.end <= slice.len());
+    // FLUX-TODO addr=0xf750 flavor=slice_end
+    flux_support::assert(range.end <= slice.len());
+    // FLUX-TODO addr=0xf75a flavor=slice_order
+    flux_support::assert(range.start <= range.end);
     copy_le_into(val, &mut slice[range]);
 }
 

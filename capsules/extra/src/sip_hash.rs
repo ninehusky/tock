@@ -159,7 +159,7 @@ fn read_le_u64(input: &[u8]) -> u64 {
 #[flux_rs::trusted(reason = "not in panic sites, need to prove precondition about mem::size_of::u16")]
 #[flux_rs::sig(fn(input: &[u8]{n: n >= 2}) -> u16)]
 fn read_le_u16(input: &[u8]) -> u16 {
-    // FLUX-TODO addr=0xa47e flavor=explicit_panic
+    // FLUX-TODO addr=0xa39e flavor=explicit_panic
     flux_support::assert(mem::size_of::<u16>() <= input.len());
     let (int_bytes, _rest) = input.split_at(mem::size_of::<u16>());
     u16::from_le_bytes(int_bytes.try_into().unwrap())
@@ -183,7 +183,7 @@ fn u8to64_le(buf: &[u8], start: usize, len: usize) -> u64 {
         i += 2
     }
     if i < len {
-        // FLUX-TODO addr=0xa486 flavor=bounds
+        // FLUX-TODO addr=0xa3a6 flavor=bounds
         flux_support::assert(start + i < buf.len());
         out |= (buf[start + i] as u64) << (i * 8);
         i += 1;
