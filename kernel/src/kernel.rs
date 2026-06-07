@@ -278,7 +278,7 @@ impl Kernel {
         _capability: &dyn capabilities::MemoryAllocationCapability,
     ) -> Grant<T, Upcalls, AllowROs, AllowRWs> {
         if self.grants_finalized.get() {
-            // FLUX-TODO addr=0x1351e flavor=explicit_panic
+            // FLUX-TODO addr=0x1356e flavor=explicit_panic
             // Notes: blocked-cell
             flux_support::assert(false);
             panic!("Grants finalized. Cannot create a new grant.");

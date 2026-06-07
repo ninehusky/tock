@@ -42,6 +42,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y binutils-arm-none-eabi
 
+      # ------------------------------------------------------------------ #
+      # Several Cargo.toml files carry hardcoded local Flux path deps
+      # (/Users/andrew/research/flux/...). Even though this job builds with
+      # Tock's own toolchain (NOT `cargo flux`), the flux-rs / flux-core
+      # crates are still ordinary path dependencies that must resolve for the
+      # workspace manifest to load. Clone the Flux fork and rewrite the paths
+      # to point at it (working-tree only — never committed), mirroring the
+      # flux-invariant2 job below.
+      # ------------------------------------------------------------------ #
+      - name: Clone Flux fork
+        run: |
+          git clone --depth 1 \
+            --branch ninehusky-with-full-stack-trace \
+            https://github.com/ninehusky/flux.git \
+            "$HOME/flux"
+          echo "FLUX_DIR=$HOME/flux" >> "$GITHUB_ENV"
+
+      - name: Rewrite hardcoded Flux path deps
+        run: |
+          grep -rl '/Users/andrew/research/flux' --include='Cargo.toml' . \
+            | xargs sed -i "s#/Users/andrew/research/flux#${FLUX_DIR}#g"
+
       - name: Install Tock Rust toolchain and embedded target
         run: |
           rustup show

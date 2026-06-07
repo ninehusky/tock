@@ -119,7 +119,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         start = cmp::min(start, end);
 
                         for (i, c) in src[start..end].iter().enumerate() {
-                            // FLUX-TODO addr=0x145ac flavor=bounds
+                            // FLUX-TODO addr=0x145e8 flavor=bounds
                             flux_support::assert(i < kwbuf.len());
                             kwbuf[i] = c.get();
                         }
@@ -137,7 +137,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
         // TODO verify SPI return value
         let _ = if rlen == 0 {
-            // FLUX-TODO addr=0x14596 flavor=unwrap_option
+            // FLUX-TODO addr=0x145d2 flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master
                 .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
@@ -169,7 +169,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         .unwrap_or(0),
                 });
             app.index += read_len;
-            // FLUX-TODO addr=0x145a2 flavor=unwrap_option
+            // FLUX-TODO addr=0x145de flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
@@ -177,7 +177,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                 read_len,
             )
         } else {
-            // FLUX-TODO addr=0x1459c flavor=unwrap_option
+            // FLUX-TODO addr=0x145d8 flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
