@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-06-07T03:48:58.987028+00:00",
-    "generated_at": "2026-06-07T03:48:59.449444+00:00",
+    "elf_mtime": "2026-06-07T05:48:52.263171+00:00",
+    "generated_at": "2026-06-07T05:48:57.711041+00:00",
     "total_sites": 351
   },
   "sites": [
@@ -17291,7 +17291,7 @@
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::zeroise_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 1002
+        "line": 1001
       },
       "effective_source": "let region_data = region_buf_opt.unwrap();",
       "outermost_frame": {
@@ -17308,7 +17308,7 @@
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::zeroise_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 1002
+          "line": 1001
         },
         {
           "func": "<tickv::async_ops::AsyncTicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::continue_operation",
@@ -17329,12 +17329,12 @@
       "innermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::zeroise_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 990
+        "line": 989
       },
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::zeroise_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 990
+        "line": 989
       },
       "effective_source": "unreachable!()",
       "outermost_frame": {
@@ -17346,7 +17346,7 @@
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::zeroise_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 990
+          "line": 989
         },
         {
           "func": "<tickv::async_ops::AsyncTicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::continue_operation",
@@ -17471,24 +17471,24 @@
       "innermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::initialise",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 159
+        "line": 158
       },
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::initialise",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 159
+        "line": 158
       },
       "effective_source": "unreachable!()",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::initialise",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 159
+        "line": 158
       },
       "inline_chain": [
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::initialise",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 159
+          "line": 158
         }
       ],
       "module_bucket": "libraries",
@@ -17504,24 +17504,24 @@
       "innermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_region",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 244
+        "line": 243
       },
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_region",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 244
+        "line": 243
       },
       "effective_source": "(hash as usize & 0xFFFF) % num_region",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_region",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 244
+        "line": 243
       },
       "inline_chain": [
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_region",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 244
+          "line": 243
         }
       ],
       "module_bucket": "libraries",
@@ -17537,24 +17537,24 @@
       "innermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::append_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 454
+        "line": 453
       },
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::append_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 454
+        "line": 453
       },
       "effective_source": "_ => { flux_support::assert(false); unreachable!() },",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::append_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 454
+        "line": 453
       },
       "inline_chain": [
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::append_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 454
+          "line": 453
         }
       ],
       "module_bucket": "libraries",
@@ -17575,13 +17575,13 @@
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::append_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 462
+        "line": 461
       },
       "effective_source": "let region_data = region_buf_opt.unwrap();",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::append_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 462
+        "line": 461
       },
       "inline_chain": [
         {
@@ -17592,7 +17592,7 @@
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::append_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 462
+          "line": 461
         }
       ],
       "module_bucket": "libraries",
@@ -17608,24 +17608,24 @@
       "innermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 732
+        "line": 731
       },
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 732
+        "line": 731
       },
       "effective_source": "unreachable!()",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 732
+        "line": 731
       },
       "inline_chain": [
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 732
+          "line": 731
         }
       ],
       "module_bucket": "libraries",
@@ -17646,13 +17646,13 @@
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 742
+        "line": 741
       },
       "effective_source": "let region_data = region_buf_opt.unwrap();",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 742
+        "line": 741
       },
       "inline_chain": [
         {
@@ -17663,7 +17663,7 @@
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::get_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 742
+          "line": 741
         }
       ],
       "module_bucket": "libraries",
@@ -17679,24 +17679,24 @@
       "innermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::invalidate_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 877
+        "line": 876
       },
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::invalidate_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 877
+        "line": 876
       },
       "effective_source": "unreachable!()",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::invalidate_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 877
+        "line": 876
       },
       "inline_chain": [
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::invalidate_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 877
+          "line": 876
         }
       ],
       "module_bucket": "libraries",
@@ -17717,13 +17717,13 @@
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::invalidate_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 886
+        "line": 885
       },
       "effective_source": "let region_data = region_buf_opt.unwrap();",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::invalidate_key",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 886
+        "line": 885
       },
       "inline_chain": [
         {
@@ -17734,7 +17734,7 @@
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::invalidate_key",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 886
+          "line": 885
         }
       ],
       "module_bucket": "libraries",
@@ -17750,24 +17750,24 @@
       "innermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 1213
+        "line": 1212
       },
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 1213
+        "line": 1212
       },
       "effective_source": "unreachable!()",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 1213
+        "line": 1212
       },
       "inline_chain": [
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 1213
+          "line": 1212
         }
       ],
       "module_bucket": "libraries",
@@ -17788,13 +17788,13 @@
       "effective_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect_region",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 1081
+        "line": 1080
       },
       "effective_source": "let region_data = region_buf_opt.unwrap();",
       "outermost_frame": {
         "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect",
         "file": "./libraries/tickv/src/tickv.rs",
-        "line": 1218
+        "line": 1217
       },
       "inline_chain": [
         {
@@ -17805,12 +17805,12 @@
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect_region",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 1081
+          "line": 1080
         },
         {
           "func": "<tickv::tickv::TicKV<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>, 4096>>::garbage_collect",
           "file": "./libraries/tickv/src/tickv.rs",
-          "line": 1218
+          "line": 1217
         }
       ],
       "module_bucket": "libraries",
