@@ -20,6 +20,46 @@ on:
   push:
 
 jobs:
+  # ------------------------------------------------------------------------ #
+  # Freshness gate: the committed tools/panic_survey.json is a *build product*
+  # of the release binary. Every downstream tool (reannotate_flux.py,
+  # check_invariant1/2.py) reads it as ground truth, so a stale survey makes
+  # the whole pipeline audit against the wrong binary. This job rebuilds the
+  # board, regenerates the survey, and fails if the committed copy no longer
+  # matches the current source (address-independent comparison — absolute
+  # addresses legitimately drift across hosts and are ignored).
+  #
+  # Uses Tock's own rust-toolchain.toml (NOT Flux's), so it must stay a
+  # separate job from flux-invariant2, which swaps that file out.
+  # ------------------------------------------------------------------------ #
+  panic-survey-fresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ARM binutils (objdump + addr2line)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils-arm-none-eabi
+
+      - name: Install Tock Rust toolchain and embedded target
+        run: |
+          rustup show
+          rustup target add thumbv7em-none-eabi
+
+      - name: Build the nrf52840dk release binary
+        working-directory: boards/nordic/nrf52840dk
+        run: make release
+
+      - name: Regenerate survey and compare against the committed copy
+        run: |
+          python3 tools/panic_survey.py \
+            --skip-build \
+            --objdump arm-none-eabi-objdump \
+            --addr2line arm-none-eabi-addr2line \
+            --out /tmp/fresh_survey.json
+          python3 tools/check_survey_fresh.py tools/panic_survey.json /tmp/fresh_survey.json
+
   flux-invariant2:
     runs-on: ubuntu-latest
 

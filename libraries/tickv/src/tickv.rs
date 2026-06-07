@@ -85,7 +85,6 @@ impl ObjectHeader {
     #[flux_rs::sig(fn(hashed_key: u64, len: u16{len < 0xFFF}) -> Self)]
     fn new(hashed_key: u64, len: u16) -> Self {
         flux_support::assert(len < 0xFFF);
-        // FLUX-OPT addr=0x16bbc flavor=explicit_panic
         flux_support::assert(len < 0xFFF);
         assert!(len < 0xFFF);
         Self {
