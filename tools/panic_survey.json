@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-06-07T05:48:52.263171+00:00",
-    "generated_at": "2026-06-07T05:48:57.711041+00:00",
+    "elf_mtime": "2026-06-07T06:51:14.348119+00:00",
+    "generated_at": "2026-06-07T06:51:22.566302+00:00",
     "total_sites": 351
   },
   "sites": [
@@ -232,24 +232,24 @@
       "innermost_frame": {
         "func": "<nrf52840dk_lib::io::Writer as kernel::debug::IoWrite>::write",
         "file": "./boards/nordic/nrf52840dk/src/io.rs",
-        "line": 80
+        "line": 85
       },
       "effective_frame": {
         "func": "<nrf52840dk_lib::io::Writer as kernel::debug::IoWrite>::write",
         "file": "./boards/nordic/nrf52840dk/src/io.rs",
-        "line": 80
+        "line": 85
       },
       "effective_source": "buffer[write_position as usize] = c;",
       "outermost_frame": {
         "func": "<nrf52840dk_lib::io::Writer as kernel::debug::IoWrite>::write",
         "file": "./boards/nordic/nrf52840dk/src/io.rs",
-        "line": 80
+        "line": 85
       },
       "inline_chain": [
         {
           "func": "<nrf52840dk_lib::io::Writer as kernel::debug::IoWrite>::write",
           "file": "./boards/nordic/nrf52840dk/src/io.rs",
-          "line": 80
+          "line": 85
         }
       ],
       "module_bucket": "boards",
