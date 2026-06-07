@@ -192,11 +192,10 @@ impl<T: Copy> OptionalCell<T> {
     /// -- because the Tock kernel discourages panicking, and this name
     /// is intended to discourage users from casually adding calls to
     /// `unwrap()` without careful consideration.
-    #[flux_rs::trusted(reason = "blocked-cell")]
     #[track_caller]
     pub fn unwrap_or_panic(&self) -> T {
         // FLUX-TODO flavor=unwrap_option addrs=[
-        //     0x116a8, 0x124f2, 0x1278e, 0x13492, 0x13498,
+        //     0x116f8, 0x12542, 0x127de, 0x134e2, 0x134e8,
         // ]
         flux_support::assert(self.value.get().is_some());
         self.value.get().unwrap()

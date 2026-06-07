@@ -238,7 +238,7 @@ impl<'a> AesECB<'a> {
         (start, end, take)
     }
 
-    // FLUX-TODO-FN-LEVEL addrs=[0x22046, 0x2204c, 0x2205c, 0x22062, 0x22068] flavor=bounds
+    // FLUX-TODO-FN-LEVEL addrs=[0x220ce, 0x220d4, 0x220e4, 0x220ea, 0x220f0] flavor=bounds
     fn copy_plaintext(&self) {
         let (start, _end, take) = self.get_start_end_take();
 
@@ -512,7 +512,7 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             self.crypt();
             None
         } else {
-            // FLUX-TODO addr=0x22142 flavor=unwrap_option
+            // FLUX-TODO addr=0x221ca flavor=unwrap_option
             flux_support::assert(self.output.is_some());
             Some((
                 Err(ErrorCode::INVAL),

@@ -284,7 +284,6 @@ impl Command {
     /// Write the buffer with the provided data.
     /// If the provided data's length is smaller than the buffer length,
     /// the left over bytes are not modified due to '\0' termination.
-    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn write(&mut self, buf: &[u8; COMMAND_BUF_LEN]) {
         self.len = buf
             .iter()
@@ -294,7 +293,6 @@ impl Command {
         (self.buf).copy_from_slice(buf);
     }
 
-    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn insert_byte(&mut self, byte: u8, pos: usize) {
         for i in (pos..self.len).rev() {
             self.buf[i + 1] = self.buf[i];
@@ -306,7 +304,6 @@ impl Command {
         }
     }
 
-    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn delete_byte(&mut self, pos: usize) {
         for i in pos..self.len {
             self.buf[i] = self.buf[i + 1];
@@ -360,7 +357,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
     }
 
     /// Creates an empty space in the history for the next command
-    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn make_space(&mut self, cmd: &[u8]) {
         let mut cmd_arr = [0; COMMAND_BUF_LEN];
         cmd_arr.copy_from_slice(cmd);
@@ -372,7 +368,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
         }
     }
 
-    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn write_to_first(&mut self, cmd: &[u8]) {
         let mut cmd_arr = [0; COMMAND_BUF_LEN];
         cmd_arr.copy_from_slice(cmd);
@@ -380,7 +375,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
     }
 
     // Set the next index in the command history
-    #[flux_rs::trusted(reason = "Will come back later, Flux errors don't correspond to codegened panics")]
     fn next_cmd_idx(&mut self) -> Option<usize> {
         if self.cmd_idx + 1 >= COMMAND_HISTORY_LEN {
             None
@@ -421,7 +415,6 @@ impl ConsoleWriter {
     }
 }
 impl fmt::Write for ConsoleWriter {
-    #[flux_rs::trusted(reason = "TODO: copy_from_slice precondition fails. need to refine str::as_bytes")]
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let curr = (s).as_bytes().len();
         self.buf[self.size..self.size + curr].copy_from_slice((s).as_bytes());
@@ -431,7 +424,6 @@ impl fmt::Write for ConsoleWriter {
 }
 
 impl BinaryWrite for ConsoleWriter {
-    #[flux_rs::trusted(reason = "TODO: copy_from_slice. probably easy, but may need refinement on usize::min.")]
     fn write_buffer(&mut self, buffer: &[u8]) -> Result<usize, ()> {
         let start = self.size;
         let remaining = self.buf.len() - start;
@@ -758,7 +750,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
     }
 
     // Process the command in the command buffer and clear the buffer.
-    #[flux_rs::trusted(reason = "blocked_cell: bounds inside MapCell closure require Cell-state invariants")]
     fn read_command(&self) {
         self.command_buffer.map(|command| {
             let terminator = command.iter().position(|&x| x == 0).unwrap_or(0);
@@ -1005,7 +996,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 },
                             );
                         } else if clean_str.starts_with("panic") {
-                            // FLUX-TODO addr=0x1b314 flavor=explicit_panic
+                            // FLUX-TODO addr=0x1b3dc flavor=explicit_panic
                             flux_support::assert(false);
                             panic!("Process Console forced a kernel panic.");
                         } else {
@@ -1025,7 +1016,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
             }
         });
         self.command_buffer.map(|command| {
-            // FLUX-TODO addr=0x1b2fa flavor=bounds
+            // FLUX-TODO addr=0x1b3c2 flavor=bounds
             flux_support::assert(command.len() > 0);
             command[0] = 0;
         });
@@ -1052,11 +1043,10 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         self.create_state_buffer(self.writer_state.get());
     }
 
-    #[flux_rs::trusted(reason = "blocked_cell: bounds inside MapCell/TakeCell closures require Cell-state invariants")]
     fn write_byte(&self, byte: u8) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
-                // FLUX-TODO addr=0x14098 flavor=bounds
+                // FLUX-TODO addr=0x140d4 flavor=bounds
                 flux_support::assert(self.queue_size.get() < buf.len());
                 buf[self.queue_size.get()] = byte;
                 self.queue_size.set(self.queue_size.get() + 1);
@@ -1072,7 +1062,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         }
     }
 
-    #[flux_rs::trusted(reason = "TODO: discharge copy_from_slice precondition; cascade from new extern spec")]
     fn write_bytes(&self, bytes: &[u8]) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
@@ -1099,7 +1088,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
     ///
     /// Returns Ok(usize) with the number of bytes sent from the queue. If Ok(0)
     /// is returned, nothing was sent and the UART is free.
-    #[flux_rs::trusted(reason = "TODO: copy_from_slice -- cmp::min is tricky; may be blocked on cell stuff")]
     fn handle_queue(&self) -> Result<usize, ErrorCode> {
         if self.tx_in_progress.get() {
             // This shouldn't happen because we should only try to handle the
@@ -1204,7 +1192,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                 0 => debug!("ProcessConsole had read of 0 bytes"),
                 1 => {
                     self.command_buffer.map(|command| {
-                        // FLUX-TODO addr=0x1a8f6 flavor=bounds
+                        // FLUX-TODO addr=0x1a9be flavor=bounds
                         flux_support::assert(0 < read_buf.len());
                         let esc_state = self.esc_state.get().next_state(read_buf[0]);
                         self.esc_state.set(esc_state);
@@ -1224,7 +1212,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                         } else {
                                             ht.prev_cmd_idx()
                                         } {
-                                            // FLUX-TODO addr=0x1a942 flavor=bounds
+                                            // FLUX-TODO addr=0x1aa0a flavor=bounds
                                             flux_support::assert(next_index < ht.cmds.len());
                                             let next_command_len = ht.cmds[next_index].len;
 
@@ -1242,7 +1230,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                                 flux_support::assert(next_index < ht.cmds.len() && i < ht.cmds[next_index].buf.len());
                                                 let byte = ht.cmds[next_index].buf[i];
                                                 let _ = self.write_byte(byte);
-                                                // FLUX-TODO addr=0x1a8e0 flavor=bounds
+                                                // FLUX-TODO addr=0x1a9a8 flavor=bounds
                                                 flux_support::assert(i < command.len());
                                                 command[i] = byte;
                                             }
@@ -1352,7 +1340,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                     let _ = self.write_byte(command[i]);
                                 }
                                 // We don't want to write the EOL byte, but we want to copy it to the left
-                                // FLUX-TODO addr=0x1a918 flavor=bounds
+                                // FLUX-TODO addr=0x1a9e0 flavor=bounds
                                 flux_support::assert(index >= 1 && index < command.len());
                                 command[index - 1] = command[index];
 
@@ -1406,7 +1394,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
 
                             // Make space for the newest byte
                             for i in (cursor..(index + 1)).rev() {
-                                // FLUX-TODO addr=0x1a906 flavor=bounds
+                                // FLUX-TODO addr=0x1a9ce flavor=bounds
                                 flux_support::assert(i + 1 < command.len());
                                 command[i + 1] = command[i];
                             }

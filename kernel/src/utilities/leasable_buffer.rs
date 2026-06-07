@@ -262,7 +262,7 @@ impl<'a, T> SubSliceMut<'a, T> {
 
     #[flux_rs::sig(fn(&Self[@s]) -> &[T][s.hi - s.lo])]
     fn active_slice(&self) -> &[T] {
-        // FLUX-TODO addr=0xa120 flavor=slice_order
+        // FLUX-TODO addr=0xa11c flavor=slice_order
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end]
     }
@@ -332,7 +332,6 @@ impl<'a, T> SubSliceMut<'a, T> {
     /// s.slice(0..250);
     /// network.send(s);
     /// ```
-    #[flux_rs::trusted(reason = "Generic over `RangeBounds<usize>`, so the new (start, end) can't be statically bounded without refining the RangeBounds trait itself. Body re-establishes the SubSliceMut invariant at runtime via wrapping/saturating math (any out-of-bounds caller will hit the underlying slice's bounds checks later, which Flux still tracks).")]
     #[flux_rs::spec(fn(self: &mut Self, range: R) ensures self: Self)]
     pub fn slice<R: RangeBounds<usize>>(&mut self, range: R) {
         let start = match range.start_bound() {
@@ -365,9 +364,9 @@ where
     type Output = <I as SliceIndex<[T]>>::Output;
 
     fn index(&self, idx: I) -> &Self::Output {
-        // FLUX-TODO addrs=[0x15232, 0x19de0, 0x1fb84] flavor=slice_order
-        // FLUX-TODO addrs=[0x1523c, 0x19dea, 0x1fb8e, 0x1fb98] flavor=slice_end
-        // FLUX-TODO addr=0x19e06 flavor=bounds
+        // FLUX-TODO addrs=[0x1526e, 0x19ea8, 0x1fc0c] flavor=slice_order
+        // FLUX-TODO addrs=[0x15278, 0x19eb2, 0x1fc16, 0x1fc20] flavor=slice_end
+        // FLUX-TODO addr=0x19ece flavor=bounds
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end][idx]
     }
@@ -377,7 +376,6 @@ impl<'a, T, I> IndexMut<I> for SubSliceMut<'a, T>
 where
     I: SliceIndex<[T]>,
 {
-    #[flux_rs::trusted(reason = "Pending SubSliceMut refinement: this impl chains two refined index ops and we don't yet expose SubSliceMut's active-range length to Flux, so the output_pred postcondition can't be discharged. Body is a one-liner that delegates to the inner slice's IndexMut.")]
     fn index_mut(&mut self, idx: I) -> &mut Self::Output {
         &mut self.internal[self.active_range.start..self.active_range.end][idx]
     }

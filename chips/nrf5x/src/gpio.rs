@@ -539,7 +539,7 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
 
     fn disable_interrupts(&self) {
         if let Some(channel) = self.allocated_channel.get() {
-            // FLUX-TODO addr=0x1a3d4 flavor=bounds
+            // FLUX-TODO addr=0x1a49c flavor=bounds
             flux_support::assert(channel < self.gpiote_registers.config.len());
             self.gpiote_registers.config[channel]
                 .write(Config::MODE::CLEAR + Config::PSEL::CLEAR + Config::POLARITY::CLEAR);
