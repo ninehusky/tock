@@ -293,6 +293,7 @@ fn set_frag_hdr(
     }
 }
 
+#[flux_rs;:]
 fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     let is_frag1 = match hdr[0] & lowpan_frag::FRAGN_HDR {
         lowpan_frag::FRAG1_HDR => true,

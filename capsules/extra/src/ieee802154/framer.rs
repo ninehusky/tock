@@ -424,10 +424,10 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
     }
 
     /// IEEE 802.15.4-2015, 9.2.3, incoming frame security procedure
-    // #[flux_rs::sig(
-    //     fn(&Self, buf: &mut [u8][@n], usize, u8) -> RxState
-    //     requires n >= radio::PSDU_OFFSET + LQI_SIZE
-    // )]
+    #[flux_rs::sig(
+        fn(&Self, buf: &mut [u8][@n], usize, u8) -> RxState
+        requires n >= radio::PSDU_OFFSET + LQI_SIZE
+    )]
     fn incoming_frame_security(
         &self,
         buf: &'static mut [u8],
