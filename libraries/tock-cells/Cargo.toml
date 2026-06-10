@@ -20,7 +20,7 @@ include = [
 ]
 
 [dependencies]
-flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux-rs = { path = "../../flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
 
 [lints]

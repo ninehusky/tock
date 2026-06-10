@@ -21,9 +21,9 @@ include = [
 
 [dependencies]
 kernel = { path = "../../kernel" }
-flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux-rs = { path = "../../flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
-flux-core = { path = "/Users/andrew/research/flux/lib/flux-core" }
+flux-core = { path = "../../flux/lib/flux-core" }
 
 [lints]
 workspace = true

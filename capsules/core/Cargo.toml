@@ -12,7 +12,7 @@ edition.workspace = true
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
 tickv = { path = "../../libraries/tickv" }
-flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux-rs = { path = "../../flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
 
 [package.metadata.flux]

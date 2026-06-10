@@ -16,7 +16,7 @@ keywords = ["flash", "key-value-store"]
 categories = ["database-implementations", "no-std"]
 
 [dependencies]
-flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux-rs = { path = "../../flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
 
 [package.metadata.flux]

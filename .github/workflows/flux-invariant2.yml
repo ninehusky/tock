@@ -10,8 +10,8 @@
 #      exits 1 on violations (orphan/malformed markers)
 #   1. python3 tools/check_invariant1.py  — reads tools/panic_survey.json
 #      (committed) + source annotations; writes tools/invariant1_report.json
-#   2. python3 tools/check_invariant2.py  — builds Flux from our fork,
-#      rewrites hardcoded local Flux path deps, runs the no-vacuity gate.
+#   2. python3 tools/check_invariant2.py  — builds Flux from the `flux/`
+#      submodule (flux-rs/flux), runs the no-vacuity gate.
 # The job passes iff check_invariant2.py exits 0 (summary: ... gate=pass).
 
 name: flux-invariant2
@@ -35,34 +35,20 @@ jobs:
   panic-survey-fresh:
     runs-on: ubuntu-latest
     steps:
+      # The Flux compiler lives in the `flux/` git submodule (flux-rs/flux).
+      # `submodules: recursive` checks it out at the pinned commit so the
+      # flux-rs / flux-core path dependencies in the workspace Cargo.toml
+      # files resolve — even though this job builds with Tock's own toolchain
+      # (NOT `cargo flux`), those crates must still resolve for the manifest
+      # to load.
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install ARM binutils (objdump + addr2line)
         run: |
           sudo apt-get update
           sudo apt-get install -y binutils-arm-none-eabi
-
-      # ------------------------------------------------------------------ #
-      # Several Cargo.toml files carry hardcoded local Flux path deps
-      # (/Users/andrew/research/flux/...). Even though this job builds with
-      # Tock's own toolchain (NOT `cargo flux`), the flux-rs / flux-core
-      # crates are still ordinary path dependencies that must resolve for the
-      # workspace manifest to load. Clone the Flux fork and rewrite the paths
-      # to point at it (working-tree only — never committed), mirroring the
-      # flux-invariant2 job below.
-      # ------------------------------------------------------------------ #
-      - name: Clone Flux fork
-        run: |
-          git clone --depth 1 \
-            --branch ninehusky-with-full-stack-trace \
-            https://github.com/ninehusky/flux.git \
-            "$HOME/flux"
-          echo "FLUX_DIR=$HOME/flux" >> "$GITHUB_ENV"
-
-      - name: Rewrite hardcoded Flux path deps
-        run: |
-          grep -rl '/Users/andrew/research/flux' --include='Cargo.toml' . \
-            | xargs sed -i "s#/Users/andrew/research/flux#${FLUX_DIR}#g"
 
       - name: Install Tock Rust toolchain and embedded target
         run: |
@@ -95,8 +81,14 @@ jobs:
   flux-invariant2:
     runs-on: ubuntu-latest
 
+    # Flux lives in the `flux/` git submodule (flux-rs/flux, pinned commit).
+    env:
+      FLUX_DIR: ${{ github.workspace }}/flux
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       # ------------------------------------------------------------------ #
       # Install fixpoint (SMT constraint solver used by Flux)
@@ -145,18 +137,6 @@ jobs:
           version: 4.15.3
 
       # ------------------------------------------------------------------ #
-      # Clone OUR Flux fork (carries the --sorted-solution rename + other
-      # fixes that upstream flux-rs/flux does not yet have).
-      # ------------------------------------------------------------------ #
-      - name: Clone Flux fork
-        run: |
-          git clone --depth 1 \
-            --branch ninehusky-with-full-stack-trace \
-            https://github.com/ninehusky/flux.git \
-            "$HOME/flux"
-          echo "FLUX_DIR=$HOME/flux" >> "$GITHUB_ENV"
-
-      # ------------------------------------------------------------------ #
       # Install the Rust toolchain that Flux requires (from its own
       # rust-toolchain.toml) and add the embedded target we need.
       # `rustup show` triggers toolchain installation when rust-toolchain.toml
@@ -188,17 +168,6 @@ jobs:
         run: |
           cargo x install
           echo ~/.cargo/bin >> "$GITHUB_PATH"
-
-      # ------------------------------------------------------------------ #
-      # Rewrite hardcoded local Flux path deps in Cargo.toml files.
-      # 14 files reference /Users/andrew/research/flux/... — replace them
-      # with the actual FLUX_DIR for this CI run.
-      # We do NOT commit this rewrite; it lives only in the working tree.
-      # ------------------------------------------------------------------ #
-      - name: Rewrite hardcoded Flux path deps
-        run: |
-          grep -rl '/Users/andrew/research/flux' --include='Cargo.toml' . \
-            | xargs sed -i "s#/Users/andrew/research/flux#${FLUX_DIR}#g"
 
       # ------------------------------------------------------------------ #
       # Replace Tock's rust-toolchain.toml with Flux's so that `cargo flux`
