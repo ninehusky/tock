@@ -1,0 +1,2156 @@
+{
+  "summary": {
+    "total_obligations": 242,
+    "by_kind": {
+      "refinement_type": 129,
+      "oob_index": 94,
+      "xcrate_resolution": 14,
+      "div_by_zero": 3,
+      "other": 2
+    },
+    "ice_trusted_total": 26,
+    "elaboration_ice_crates": [
+      "capsules-extra"
+    ]
+  },
+  "crates": {
+    "tock-cells": {
+      "health": "clean",
+      "obligations": [],
+      "ice_trusted_fns": [],
+      "crate": "tock-cells",
+      "crate_dir": "libraries/tock-cells"
+    },
+    "tickv": {
+      "health": "clean",
+      "obligations": [
+        {
+          "code": "E0999",
+          "file": "libraries/tickv/src/crc32.rs",
+          "line": 339,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        }
+      ],
+      "ice_trusted_fns": [],
+      "crate": "tickv",
+      "crate_dir": "libraries/tickv"
+    },
+    "flux_support": {
+      "health": "clean",
+      "obligations": [],
+      "ice_trusted_fns": [],
+      "crate": "flux_support",
+      "crate_dir": "flux_support"
+    },
+    "kernel": {
+      "health": "clean",
+      "obligations": [],
+      "ice_trusted_fns": [],
+      "crate": "kernel",
+      "crate_dir": "kernel"
+    },
+    "cortexv7m": {
+      "health": "clean",
+      "obligations": [],
+      "ice_trusted_fns": [],
+      "crate": "cortexv7m",
+      "crate_dir": "arch/cortex-v7m"
+    },
+    "cortexm": {
+      "health": "ice_no_loc",
+      "ice": "crates/flux-middle/src/rty/mod.rs:813:32: caller should guarantee existence of associated refinement",
+      "ice_loc": null,
+      "obligations_scope": "scoped_fallback",
+      "obligations": [],
+      "ice_trusted_fns": [],
+      "crate": "cortexm",
+      "crate_dir": "arch/cortex-m"
+    },
+    "nrf5x": {
+      "health": "clean",
+      "obligations": [
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 210,
+          "col": 17,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 271,
+          "col": 37,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 272,
+          "col": 69,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 272,
+          "col": 37,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 259,
+          "col": 41,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 260,
+          "col": 73,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 260,
+          "col": 41,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 301,
+          "col": 37,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 302,
+          "col": 58,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 302,
+          "col": 37,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 289,
+          "col": 41,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 290,
+          "col": 62,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 290,
+          "col": 41,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 416,
+          "col": 37,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 417,
+          "col": 56,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 417,
+          "col": 37,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 418,
+          "col": 69,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 418,
+          "col": 37,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 396,
+          "col": 37,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 397,
+          "col": 56,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 397,
+          "col": 37,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 368,
+          "col": 55,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 369,
+          "col": 71,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 372,
+          "col": 41,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 373,
+          "col": 41,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 355,
+          "col": 41,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 356,
+          "col": 55,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 357,
+          "col": 71,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 359,
+          "col": 41,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 475,
+          "col": 21,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 488,
+          "col": 21,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/aes.rs",
+          "line": 516,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 388,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 397,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 415,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 419,
+          "col": 15,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 428,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 437,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 450,
+          "col": 19,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 466,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 501,
+          "col": 23,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 534,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 535,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 543,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 544,
+          "col": 13,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 579,
+          "col": 10,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 585,
+          "col": 14,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 599,
+          "col": 29,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 605,
+          "col": 27,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/gpio.rs",
+          "line": 606,
+          "col": 17,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/pinmux.rs",
+          "line": 38,
+          "col": 25,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/pinmux.rs",
+          "line": 41,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/timer.rs",
+          "line": 225,
+          "col": 24,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/timer.rs",
+          "line": 244,
+          "col": 20,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf5x/src/timer.rs",
+          "line": 277,
+          "col": 24,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        }
+      ],
+      "ice_trusted_fns": [],
+      "crate": "nrf5x",
+      "crate_dir": "chips/nrf5x"
+    },
+    "nrf52": {
+      "health": "clean",
+      "obligations": [
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/adc.rs",
+          "line": 504,
+          "col": 25,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/adc.rs",
+          "line": 438,
+          "col": 31,
+          "message": "assertion might fail: possible division by zero",
+          "kind": "div_by_zero"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/adc.rs",
+          "line": 496,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/adc.rs",
+          "line": 497,
+          "col": 35,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/adc.rs",
+          "line": 676,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ble_radio.rs",
+          "line": 636,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ble_radio.rs",
+          "line": 638,
+          "col": 61,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ble_radio.rs",
+          "line": 809,
+          "col": 19,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/chip.rs",
+          "line": 18,
+          "col": 18,
+          "message": "use of associated function `cortexm::mpu::MPU::<NUM_REGIONS, MIN_REGION_SIZE>::new` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/chip.rs",
+          "line": 111,
+          "col": 5,
+          "message": "use of struct `cortexm::mpu::MPU` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/chip.rs",
+          "line": 115,
+          "col": 5,
+          "message": "use of struct `cortexm::syscall::SysCall` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/chip.rs",
+          "line": 123,
+          "col": 42,
+          "message": "use of function `cortexm4::nvic::next_pending` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/chip.rs",
+          "line": 138,
+          "col": 18,
+          "message": "use of function `cortexm4::nvic::has_pending` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/chip.rs",
+          "line": 143,
+          "col": 13,
+          "message": "use of function `cortexm4::support::wfi` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/chip.rs",
+          "line": 151,
+          "col": 9,
+          "message": "use of function `cortexm4::support::atomic` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/crt1.rs",
+          "line": 149,
+          "col": 5,
+          "message": "use of function `cortexm4::scb::set_vector_table_offset` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 463,
+          "col": 18,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 464,
+          "col": 18,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 466,
+          "col": 18,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 467,
+          "col": 18,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 469,
+          "col": 18,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 470,
+          "col": 18,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 472,
+          "col": 18,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 473,
+          "col": 19,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 475,
+          "col": 19,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 476,
+          "col": 19,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 478,
+          "col": 19,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/ficr.rs",
+          "line": 479,
+          "col": 19,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/nvmc.rs",
+          "line": 178,
+          "col": 10,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/nvmc.rs",
+          "line": 184,
+          "col": 14,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/spi.rs",
+          "line": 253,
+          "col": 24,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/spi.rs",
+          "line": 437,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/uart.rs",
+          "line": 413,
+          "col": 31,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/uart.rs",
+          "line": 421,
+          "col": 31,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 805,
+          "col": 17,
+          "message": "use of function `cortexm4::support::atomic` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 822,
+          "col": 17,
+          "message": "use of function `cortexm4::support::atomic` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1012,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 57,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1049,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1087,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1137,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1191,
+          "col": 41,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1179,
+          "col": 41,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1264,
+          "col": 34,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1240,
+          "col": 34,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1349,
+          "col": 13,
+          "message": "use of function `cortexm4::support::nop` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1375,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1394,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1470,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1472,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1601,
+          "col": 21,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1601,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1603,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 57,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1568,
+          "col": 21,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1568,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1570,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 57,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1639,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1646,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 57,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 57,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1837,
+          "col": 17,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1837,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1875,
+          "col": 13,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1875,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1878,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1897,
+          "col": 30,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1897,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1904,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1905,
+          "col": 56,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1912,
+          "col": 30,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1912,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1925,
+          "col": 30,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1925,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1934,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1929,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1945,
+          "col": 30,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1945,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1952,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1980,
+          "col": 13,
+          "message": "use of associated function `core::num::<impl usize>::is_power_of_two` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 1991,
+          "col": 13,
+          "message": "use of associated function `core::num::<impl usize>::is_power_of_two` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 2004,
+          "col": 13,
+          "message": "use of associated function `core::num::<impl usize>::is_power_of_two` that was not included when checking external crate",
+          "kind": "xcrate_resolution"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 57,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 2095,
+          "col": 32,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 2095,
+          "col": 32,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 2124,
+          "col": 13,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 2124,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 57,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 2169,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 646,
+          "col": 20,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "chips/nrf52/src/usbd.rs",
+          "line": 657,
+          "col": 20,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        }
+      ],
+      "ice_trusted_fns": [
+        {
+          "fn": "chips/nrf52/src/nvmc.rs:212",
+          "ice": "/Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "chips/nrf52/src/nvmc.rs:367",
+          "ice": "/Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        }
+      ],
+      "crate": "nrf52",
+      "crate_dir": "chips/nrf52"
+    },
+    "nrf52840": {
+      "health": "clean",
+      "obligations": [],
+      "ice_trusted_fns": [],
+      "crate": "nrf52840",
+      "crate_dir": "chips/nrf52840"
+    },
+    "capsules-core": {
+      "health": "clean",
+      "obligations": [
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/test/rng.rs",
+          "line": 82,
+          "col": 13,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/test/rng.rs",
+          "line": 145,
+          "col": 13,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/test/rng.rs",
+          "line": 153,
+          "col": 51,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/test/rng.rs",
+          "line": 208,
+          "col": 13,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/test/rng.rs",
+          "line": 216,
+          "col": 51,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/test/virtual_uart.rs",
+          "line": 48,
+          "col": 31,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/stream.rs",
+          "line": 269,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/stream.rs",
+          "line": 301,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/adc.rs",
+          "line": 726,
+          "col": 37,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/i2c_master.rs",
+          "line": 75,
+          "col": 25,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/i2c_master.rs",
+          "line": 75,
+          "col": 25,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/low_level_debug/fmt.rs",
+          "line": 83,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/spi_peripheral.rs",
+          "line": 108,
+          "col": 29,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/core/src/spi_peripheral.rs",
+          "line": 302,
+          "col": 46,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        }
+      ],
+      "ice_trusted_fns": [
+        {
+          "fn": "capsules/core/src/low_level_debug/mod.rs:122",
+          "ice": "crates/flux-refineck/src/ghost_statements/fold_unfold.rs:512:21: invalid downcast `\u2022[core::option::Option<low_level_debug::DebugEntry>; Unev"
+        },
+        {
+          "fn": "capsules/core/src/rng.rs:76",
+          "ice": "crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/rng.rs:251",
+          "ice": "crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/rng.rs:325",
+          "ice": "crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/rng.rs:422",
+          "ice": "crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_alarm.rs:240",
+          "ice": "crates/flux-infer/src/projections.rs:382:13: impossible case reached"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_flash.rs:91",
+          "ice": "crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_flash.rs:156",
+          "ice": "/Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_flash.rs:171",
+          "ice": "/Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_flash.rs:179",
+          "ice": "/Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_flash.rs:190",
+          "ice": "/Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_flash.rs:201",
+          "ice": "/Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_rng.rs:74",
+          "ice": "crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_rng.rs:167",
+          "ice": "crates/flux-infer/src/infer.rs:1033:17: assertion `left == right` failed"
+        },
+        {
+          "fn": "capsules/core/src/virtualizers/virtual_timer.rs:227",
+          "ice": "crates/flux-infer/src/projections.rs:382:13: impossible case reached"
+        }
+      ],
+      "crate": "capsules-core",
+      "crate_dir": "capsules/core"
+    },
+    "capsules-extra": {
+      "health": "elaboration_ice",
+      "ice": "crates/flux-infer/src/infer.rs:426:10:",
+      "ice_loc": "capsules/extra/src/virtual_kv.rs:69",
+      "obligations_scope": "scoped_fallback",
+      "obligations": [
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 310,
+          "col": 16,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 606,
+          "col": 29,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 616,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 616,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 627,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 815,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 873,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 872,
+          "col": 38,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 994,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 1002,
+          "col": 32,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 1002,
+          "col": 32,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 1015,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 1016,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/stream.rs",
+          "line": 325,
+          "col": 9,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 276,
+          "col": 58,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 296,
+          "col": 38,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 296,
+          "col": 38,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 379,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 385,
+          "col": 17,
+          "message": "type invariant may not hold (when place is folded)",
+          "kind": "other"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 391,
+          "col": 17,
+          "message": "type invariant may not hold (when place is folded)",
+          "kind": "other"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/udp/udp_send.rs",
+          "line": 336,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ble_advertising_driver.rs",
+          "line": 276,
+          "col": 33,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ble_advertising_driver.rs",
+          "line": 286,
+          "col": 33,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ble_advertising_driver.rs",
+          "line": 290,
+          "col": 33,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ble_advertising_driver.rs",
+          "line": 290,
+          "col": 33,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ble_advertising_driver.rs",
+          "line": 504,
+          "col": 33,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 148,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 164,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 164,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 557,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 573,
+          "col": 54,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 573,
+          "col": 54,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 641,
+          "col": 50,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 641,
+          "col": 50,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 664,
+          "col": 37,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 728,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 943,
+          "col": 21,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/driver.rs",
+          "line": 580,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/driver.rs",
+          "line": 1080,
+          "col": 25,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/driver.rs",
+          "line": 1081,
+          "col": 25,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/kv_store_permissions.rs",
+          "line": 62,
+          "col": 22,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/mx25r6435f.rs",
+          "line": 102,
+          "col": 10,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/mx25r6435f.rs",
+          "line": 108,
+          "col": 14,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/mx25r6435f.rs",
+          "line": 270,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/mx25r6435f.rs",
+          "line": 271,
+          "col": 17,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 228,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 228,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 257,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 257,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 284,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 284,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 313,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/sip_hash.rs",
+          "line": 313,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 248,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 265,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 276,
+          "col": 46,
+          "message": "assertion might fail: possible division by zero",
+          "kind": "div_by_zero"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 270,
+          "col": 38,
+          "message": "assertion might fail: possible remainder with a divisor of zero",
+          "kind": "div_by_zero"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 270,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 271,
+          "col": 13,
+          "message": "assertion might fail: possible out-of-bounds access",
+          "kind": "oob_index"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 421,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 423,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 731,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 775,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 775,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 806,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/tickv.rs",
+          "line": 806,
+          "col": 23,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/virtual_kv.rs",
+          "line": 126,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/virtual_kv.rs",
+          "line": 162,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/virtual_kv.rs",
+          "line": 231,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_compression.rs",
+          "line": 909,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
+          "line": 586,
+          "col": 13,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ip_utils.rs",
+          "line": 119,
+          "col": 9,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 522,
+          "col": 29,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 528,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 531,
+          "col": 29,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 531,
+          "col": 29,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/ipv6/ipv6.rs",
+          "line": 532,
+          "col": 17,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/net/udp/driver.rs",
+          "line": 85,
+          "col": 5,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 237,
+          "col": 63,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        },
+        {
+          "code": "E0999",
+          "file": "capsules/extra/src/ieee802154/framer.rs",
+          "line": 237,
+          "col": 103,
+          "message": "refinement type error",
+          "kind": "refinement_type"
+        }
+      ],
+      "ice_trusted_fns": [
+        {
+          "fn": "capsules/extra/src/test/hmac_sha256.rs:99",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/test/aes_gcm.rs:113",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/test/aes_gcm.rs:77",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/test/aes_ccm.rs:117",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/test/aes_ccm.rs:85",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/test/aes.rs:360",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/test/aes.rs:188",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/test/aes.rs:87",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        },
+        {
+          "fn": "capsules/extra/src/virtual_kv.rs:68",
+          "ice": "crates/flux-infer/src/infer.rs:426:10:"
+        }
+      ],
+      "crate": "capsules-extra",
+      "crate_dir": "capsules/extra"
+    },
+    "nrf52840dk": {
+      "health": "clean",
+      "obligations": [],
+      "ice_trusted_fns": [],
+      "crate": "nrf52840dk",
+      "crate_dir": "boards/nordic/nrf52840dk"
+    }
+  }
+}
