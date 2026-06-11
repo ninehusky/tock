@@ -295,6 +295,8 @@ def main():
     ap.add_argument("--out", type=Path, default=ROOT / "tools" / "flux_obligations.json")
     ap.add_argument("--workdir", type=Path, default=ROOT / "tools" / "flux_obligations_logs")
     ap.add_argument("--timeout", type=int, default=1800)
+    ap.add_argument("--summary-md", type=Path,
+                    help="write a GitHub-flavored markdown report here (e.g. $GITHUB_STEP_SUMMARY)")
     args = ap.parse_args()
     args.workdir.mkdir(parents=True, exist_ok=True)
     chain = [(d, p) for d, p in CHAIN if not args.crates or p in args.crates]
@@ -342,7 +344,54 @@ def main():
     log(f"total obligations: {summary['total_obligations']}  by kind: {summary['by_kind']}")
     log(f"ICE-trusted blind-spot fns: {summary['ice_trusted_total']}")
     log(f"elaboration-ICE (partial) crates: {summary['elaboration_ice_crates']}")
+
+    if args.summary_md:
+        args.summary_md.write_text(render_markdown(report, summary))
+        log(f"wrote {args.summary_md}")
     return 0
+
+
+KIND_LABELS = {
+    "refinement_type": "refinement-type errors",
+    "oob_index": "out-of-bounds indexing",
+    "assert_might_fail": "raw asserts (`flux_support::assert` unproved)",
+    "precondition": "unproved preconditions",
+    "div_by_zero": "division by zero",
+    "arith_overflow": "arithmetic overflow",
+    "xcrate_resolution": "cross-crate resolution (artifact — see notes)",
+    "other": "other",
+}
+
+
+def render_markdown(report, summary) -> str:
+    from collections import Counter
+    out = ["## Flux obligation census\n"]
+    real = summary["total_obligations"] - summary["by_kind"].get("xcrate_resolution", 0)
+    out.append(f"**{real} real obligations** "
+               f"(+{summary['by_kind'].get('xcrate_resolution', 0)} cross-crate artifacts), "
+               f"**{summary['ice_trusted_total']} ICE-trusted blind-spot fns**, "
+               f"scoped-fallback crates: {summary['elaboration_ice_crates'] or 'none'}\n")
+    out.append("### What's remaining, by kind\n")
+    out.append("| kind | count |\n|---|---:|")
+    for k, n in summary["by_kind"].items():
+        out.append(f"| {KIND_LABELS.get(k, k)} | {n} |")
+    out.append("\n### By crate\n")
+    out.append("| crate | health | obligations | ICE-trusted |\n|---|---|---:|---:|")
+    for pkg, r in report.items():
+        kinds = Counter(o["kind"] for o in r["obligations"])
+        kbits = ", ".join(f"{n} {k.split('_')[0]}" for k, n in kinds.most_common()) or "—"
+        out.append(f"| {pkg} | {r['health']} | {len(r['obligations'])} ({kbits}) "
+                   f"| {len(r['ice_trusted_fns'])} |")
+    out.append("\n### Notes\n")
+    out.append("- `ice_trusted` fns are blind spots: trusted to dodge a body-checking "
+               "ICE, so their own obligations are hidden.")
+    out.append("- `elaboration_ice` / `ice_no_loc` crates are measured from their **scoped** "
+               "include (a floor, not whole-crate).")
+    out.append("- `cross-crate resolution` entries are measurement artifacts (a dep that "
+               "isn't fully exported), not real obligations.")
+    out.append("- See `tools/flux_obligations.md` (methodology) and "
+               "`tools/flux_ice_catalog.md` (the 6 Flux ICEs that block full coverage).")
+    return "\n".join(out) + "\n"
 
 
 if __name__ == "__main__":

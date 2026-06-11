@@ -1,0 +1,123 @@
+# Licensed under the Apache License, Version 2.0 or the MIT License.
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Copyright Tock Contributors 2023.
+
+# Flux obligation census — "what's left to prove", whole-crate.
+#
+# Runs tools/flux_obligations.py: walks the nrf52840dk crate chain in dependency
+# order, enables whole-crate Flux on each crate (against temp-disabled deps so
+# nothing masks it), dodges body-checking ICEs by temp-trusting the crashing fn,
+# and records EVERY Flux obligation, bucketed by kind (refinement / out-of-bounds
+# / raw assert / precondition / div-by-zero / overflow). This is the per-crate-
+# isolated alternative to compiling the whole board through (which deadlocks on
+# cross-crate masking + ICEs and costs ~2h) — it actually completes.
+#
+# INFORMATIONAL, NOT GATING. The census has known blind spots (body-check ICEs
+# are trusted away; capsules-extra is a scoped floor; nrf52840/board are masked
+# by the cortex-m rty:813 ICE — see tools/flux_ice_catalog.md), so it reports
+# rather than fails. The breakdown lands in the run's job-summary and the full
+# JSON is uploaded as an artifact.
+#
+# Expensive (~1-2h incl. the Flux build), so it runs nightly + on-demand, never
+# on every push.
+
+name: flux-obligations
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *"   # 07:00 UTC nightly
+
+jobs:
+  flux-obligations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---- Flux back-end: fixpoint (with the --sorted-solution rename wrapper)
+      - name: Install fixpoint
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          NAME="fixpoint-x86_64-linux-gnu.tar.gz"
+          URL="https://github.com/ucsd-progsys/liquid-fixpoint/releases/download/nightly/${NAME}"
+          curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" --retry 3 -o "${NAME}" "${URL}"
+          tar -xzf "${NAME}"
+          mkdir -p ~/.local/bin
+          cp fixpoint ~/.local/bin/fixpoint-real
+          rm -f "${NAME}"
+          cat > ~/.local/bin/fixpoint << 'WRAPPER'
+          #!/bin/bash
+          args=()
+          for arg in "$@"; do
+            case "$arg" in
+              --sortedsolution) args+=(--sorted-solution) ;;
+              *) args+=("$arg") ;;
+            esac
+          done
+          exec ~/.local/bin/fixpoint-real "${args[@]}"
+          WRAPPER
+          chmod +x ~/.local/bin/fixpoint
+          echo ~/.local/bin >> "$GITHUB_PATH"
+
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1.6.6
+        with:
+          version: 4.15.3
+
+      - name: Clone Flux fork
+        run: |
+          git clone --depth 1 \
+            --branch ninehusky-with-full-stack-trace \
+            https://github.com/ninehusky/flux.git \
+            "$HOME/flux"
+          echo "FLUX_DIR=$HOME/flux" >> "$GITHUB_ENV"
+
+      - name: Install Flux Rust toolchain and embedded target
+        working-directory: ${{ env.FLUX_DIR }}
+        run: |
+          rustup show
+          rustup target add thumbv7em-none-eabi
+
+      - name: Cache Flux build
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "${{ env.FLUX_DIR }} -> ${{ env.FLUX_DIR }}/target"
+          cache-on-failure: true
+
+      - name: Build and install Flux
+        working-directory: ${{ env.FLUX_DIR }}
+        run: |
+          cargo x install
+          echo ~/.cargo/bin >> "$GITHUB_PATH"
+
+      - name: Rewrite hardcoded Flux path deps
+        run: |
+          grep -rl '/Users/andrew/research/flux' --include='Cargo.toml' . \
+            | xargs sed -i "s#/Users/andrew/research/flux#${FLUX_DIR}#g"
+
+      - name: Use Flux rust-toolchain.toml
+        run: cp "${FLUX_DIR}/rust-toolchain.toml" rust-toolchain.toml
+
+      # ---- The census itself. Writes the kind-breakdown into the job summary
+      #      and the full per-crate JSON for the artifact upload. Never gates:
+      #      `|| true` keeps a partial/ICE run from failing the job.
+      - name: Run Flux obligation census
+        run: |
+          python3 tools/flux_obligations.py \
+            --out tools/flux_obligations.json \
+            --summary-md "$GITHUB_STEP_SUMMARY" \
+            --workdir tools/flux_obligations_logs \
+            || true
+
+      - name: Upload obligation census
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: flux-obligations
+          path: |
+            tools/flux_obligations.json
+            tools/flux_obligations_logs/*.log
