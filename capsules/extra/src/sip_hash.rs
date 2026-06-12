@@ -149,18 +149,28 @@ macro_rules! compress {
 
 fn read_le_u64(input: &[u8]) -> u64 {
     let mut eight_buf: [u8; 8] = [0; 8];
-    for i in 0..8 {
+    let mut i = 0;
+    while i < 8 {
         eight_buf[i] = *input.get(i).unwrap_or(&0);
+        i += 1;
     }
     u64::from_le_bytes(eight_buf)
+}
+
+// TODO: upstream `sizeof` as extern spec in flux-core.
+#[flux_rs::trusted]
+#[flux_rs::sig(fn() -> usize[2])]
+fn size_of_u16() -> usize {
+    mem::size_of::<u16>()
 }
 
 #[flux_rs::sig(fn(input: &[u8]{n: n >= 2}) -> u16)]
 fn read_le_u16(input: &[u8]) -> u16 {
     // FLUX-TODO addr=0xa3da flavor=explicit_panic
-    flux_support::assert(mem::size_of::<u16>() <= input.len());
-    let (int_bytes, _rest) = input.split_at(mem::size_of::<u16>());
-    u16::from_le_bytes(int_bytes.try_into().unwrap())
+    flux_support::assert(size_of_u16() <= input.len());
+    let (int_bytes, _rest) = input.split_at(size_of_u16());
+    let real_int_bytes: [u8; 2] = [int_bytes[0], int_bytes[1]];
+    u16::from_le_bytes(real_int_bytes)
 }
 
 #[inline]

@@ -293,7 +293,7 @@ fn set_frag_hdr(
     }
 }
 
-#[flux_rs;:]
+#[flux_rs::sig(fn(hdr: &[u8][@n]) -> (bool, u16, u16, usize) requires n >= 5)]
 fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     let is_frag1 = match hdr[0] & lowpan_frag::FRAGN_HDR {
         lowpan_frag::FRAG1_HDR => true,
@@ -306,6 +306,7 @@ fn get_frag_hdr(hdr: &[u8]) -> (bool, u16, u16, usize) {
     (is_frag1, dgram_size, dgram_tag, (dgram_offset as usize) * 8)
 }
 
+#[flux_rs::sig(fn(packet: &[u8][@n]) -> bool requires n >= 1)]
 fn is_fragment(packet: &[u8]) -> bool {
     let mask = packet[0] & lowpan_frag::FRAGN_HDR;
     (mask == lowpan_frag::FRAGN_HDR) || (mask == lowpan_frag::FRAG1_HDR)

@@ -321,8 +321,12 @@ pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
 // This function assumes that the host is little-endian
 pub fn decode_bytes_be(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
-    for (i, b) in buf[..out.len()].iter().rev().enumerate() {
-        out[i] = *b;
+    // Counted form of `for (i, b) in buf[..out.len()].iter().rev().enumerate()`
+    // so Flux can bound `i` against `out.len()` (no Enumerate/Rev extern-spec).
+    let mut i = 0;
+    while i < out.len() {
+        out[i] = buf[out.len() - 1 - i];
+        i += 1;
     }
     stream_done!(out.len());
 }
