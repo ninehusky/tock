@@ -108,6 +108,32 @@ def render(crates, md=False):
             L.append(f"| {pkg} | {health} | {realn} ({bits}) |")
         else:
             L.append(f"  {pkg:<16} {health:<16} {realn:4}  ({bits})")
+
+    # by-file: count table (most obligations first) + a collapsible file:line list
+    from collections import defaultdict
+    by_file = defaultdict(list)
+    for r in crates.values():
+        for o in r["obligations"]:
+            k = kind_of(o["message"])
+            if k == "xcrate":          # artifacts, not real obligations
+                continue
+            by_file[o["file"]].append((o["line"], k, o["message"]))
+    h2("By file")
+    if md:
+        L.append("| file | obligations | kinds |\n|---|---:|---|")
+    for f in sorted(by_file, key=lambda x: (-len(by_file[x]), x)):
+        ck = Counter(k for _, k, _ in by_file[f])
+        bits = ", ".join(f"{n} {k.split('_')[-1]}" for k, n in ck.most_common())
+        if md:
+            L.append(f"| `{f}` | {len(by_file[f])} | {bits} |")
+        else:
+            L.append(f"  {len(by_file[f]):4}  {f}  ({bits})")
+    if md and by_file:
+        L.append("\n<details><summary>Full by-file:line list of obligations</summary>\n")
+        for f in sorted(by_file):
+            for line, _k, msg in sorted(by_file[f]):
+                L.append(f"- `{f}:{line}` — {msg}")
+        L.append("\n</details>")
     return "\n".join(L) + "\n"
 
 

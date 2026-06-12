@@ -102,16 +102,23 @@ jobs:
       - name: Use Flux rust-toolchain.toml
         run: cp "${FLUX_DIR}/rust-toolchain.toml" rust-toolchain.toml
 
-      # ---- The census itself. Writes the kind-breakdown into the job summary
-      #      and the full per-crate JSON for the artifact upload. Never gates:
-      #      `|| true` keeps a partial/ICE run from failing the job.
+      # ---- The census itself. Writes the full per-crate JSON. Never gates:
+      #      `|| true` keeps a partial/ICE run from failing the job. (If the run
+      #      is partial, the report step below falls back to the committed JSON.)
       - name: Run Flux obligation census
         run: |
           python3 tools/flux_obligations.py \
             --out tools/flux_obligations.json \
-            --summary-md "$GITHUB_STEP_SUMMARY" \
             --workdir tools/flux_obligations_logs \
             || true
+
+      # ---- "What's left to prove" into the run's job summary: the by-kind
+      #      table, the trust / blind-spot view, and a by-file breakdown with a
+      #      collapsible full file:line list of every obligation.
+      - name: Report what's left to prove
+        if: always()
+        run: |
+          python3 tools/flux_obligations_summary.py --md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload obligation census
         uses: actions/upload-artifact@v4
