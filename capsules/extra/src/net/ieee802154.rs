@@ -185,6 +185,7 @@ impl SecurityLevel {
         }
     }
 
+    #[flux_rs::sig(fn(&Self) -> usize{v: v <= 16})]
     pub fn mic_len(&self) -> usize {
         match *self {
             SecurityLevel::Mic32 | SecurityLevel::EncMic32 => 4,

@@ -597,6 +597,9 @@ impl<'a> TxState<'a> {
 
     // NOTE: This function will not work for headers that span past the first
     // frame.
+
+    // requires ip6_packet.kind != 1.
+    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _, _, _) -> _ requires ip.kind != 1)]
     fn write_additional_headers<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -1009,6 +1012,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
                 0,
                 false,
             );
+
             match decompressed {
                 Ok((consumed, written)) => {
                     let remaining = payload_len - consumed;

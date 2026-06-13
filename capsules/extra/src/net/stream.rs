@@ -294,16 +294,19 @@ pub fn encode_bytes_be(buf: &mut [u8], bs: &[u8]) -> SResult {
     stream_done!(bs.len());
 }
 
+#[flux_rs::sig(fn(&[u8][@n]) -> SResult<u8>{r: (r.is_done <=> n >= 1) && (r.is_done => r.offset == 1)})]
 pub fn decode_u8(buf: &[u8]) -> SResult<u8> {
     stream_len_cond!(buf, 1);
     stream_done!(1, buf[0]);
 }
 
+#[flux_rs::sig(fn(&[u8][@n]) -> SResult<u16>{r: (r.is_done <=> n >= 2) && (r.is_done => r.offset == 2)})]
 pub fn decode_u16(buf: &[u8]) -> SResult<u16> {
     stream_len_cond!(buf, 2);
     stream_done!(2, (buf[0] as u16) << 8 | (buf[1] as u16));
 }
 
+#[flux_rs::sig(fn(&[u8][@n]) -> SResult<u32>{r: (r.is_done <=> n >= 4) && (r.is_done => r.offset == 4)})]
 pub fn decode_u32(buf: &[u8]) -> SResult<u32> {
     stream_len_cond!(buf, 4);
     let b = (buf[0] as u32) << 24 | (buf[1] as u32) << 16 | (buf[2] as u32) << 8 | (buf[3] as u32);
@@ -311,6 +314,7 @@ pub fn decode_u32(buf: &[u8]) -> SResult<u32> {
 }
 
 
+#[flux_rs::sig(fn(&[u8][@n], &mut [u8][@m]) -> SResult{r: (r.is_done <=> n >= m) && (r.is_done => r.offset == m)})]
 pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     let len = out.len();
@@ -319,6 +323,7 @@ pub fn decode_bytes(buf: &[u8], out: &mut [u8]) -> SResult {
 }
 
 // This function assumes that the host is little-endian
+#[flux_rs::sig(fn(&[u8][@n], &mut [u8][@m]) -> SResult{r: (r.is_done <=> n >= m) && (r.is_done => r.offset == m)})]
 pub fn decode_bytes_be(buf: &[u8], out: &mut [u8]) -> SResult {
     stream_len_cond!(buf, out.len());
     // Counted form of `for (i, b) in buf[..out.len()].iter().rev().enumerate()`

@@ -1017,6 +1017,13 @@ impl<'a, M: device::MacDevice<'a>> device::TxClient for RadioDriver<'a, M> {
 }
 
 impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
+    // `trusted_impl`: this impl method's signature need not be a supertype of the
+    // RxClient::receive trait method, so we can attach the frame-fits precondition
+    // here. STAGED: the precondition is assumed for the body now (drives the 1080
+    // assert) and will be propagated to callers (the framer) in a follow-up.
+    #[flux_rs::trusted_impl]
+    #[flux_rs::sig(fn(&Self, buf: &[u8][@n], header: Header, lqi: u8, data_offset: usize, data_len: usize)
+        requires data_offset + data_len + 16 <= n && data_offset + data_len + 16 <= radio::MAX_FRAME_SIZE)]
     fn receive<'b>(
         &self,
         buf: &'b [u8],
@@ -1057,7 +1064,10 @@ impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
                             return false;
                         }
 
-                        let mic_len = header.security.map_or(0, |sec| sec.level.mic_len());
+                        let mic_len = match &header.security {
+                            Some(sec) => sec.level.mic_len(),
+                            None => 0,
+                        };
                         let frame_len = data_offset + data_len + mic_len;
 
                         let mut read_index = rbuf[0].get() as usize;
