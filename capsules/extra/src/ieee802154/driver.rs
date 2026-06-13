@@ -224,6 +224,7 @@ pub struct App {
     pending_tx: Option<(u16, Option<(SecurityLevel, KeyId)>)>,
 }
 
+#[flux_rs::refined_by()]
 pub struct RadioDriver<'a, M: device::MacDevice<'a>> {
     /// Underlying MAC device, possibly multiplexed
     mac: &'a M,
@@ -232,6 +233,9 @@ pub struct RadioDriver<'a, M: device::MacDevice<'a>> {
     /// neighbors.
     neighbors: MapCell<[DeviceDescriptor; MAX_NEIGHBORS]>,
     /// Actual number of neighbors in the fixed size array of neighbors.
+    /// Invariant: never exceeds `MAX_NEIGHBORS` (== `neighbors.len()`), so a
+    /// `neighbors[..num_neighbors]` slice is always in bounds.
+    #[flux_rs::field(Cell<usize{v: v <= MAX_NEIGHBORS}>)]
     num_neighbors: Cell<usize>,
 
     /// List of (security level, key_id, key) tuples representing IEEE 802.15.4
@@ -576,8 +580,6 @@ impl<'a, M: device::MacDevice<'a>> framer::DeviceProcedure for RadioDriver<'a, M
     fn lookup_addr_long(&self, addr: MacAddress) -> Option<[u8; 8]> {
         self.neighbors
             .and_then(|neighbors| {
-                // FLUX-TODO addr=0x1bfec flavor=slice_end
-                flux_support::assert(self.num_neighbors.get() <= neighbors.len());
                 neighbors[..self.num_neighbors.get()]
                     .iter()
                     .find(|neighbor| match addr {

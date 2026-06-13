@@ -260,6 +260,7 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
         }
     }
 
+    #[flux_rs::sig(fn(&Self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> requires PAGE_SIZE > 0)]
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> {
         // FLUX-TODO addr=0x16622 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());

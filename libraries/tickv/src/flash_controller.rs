@@ -87,6 +87,7 @@ pub trait FlashController<const S: usize> {
     /// `read_region()` can indicate that the operation should be retried in
     /// the future. Note that that region will not be written
     /// again so the write must occur otherwise the operation fails.
+    #[flux_rs::sig(fn(&Self, address: usize, buf: &[u8]) -> Result<(), ErrorCode> requires S > 0)]
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), ErrorCode>;
 
     /// This function must erase the region specified by `region_number`.
