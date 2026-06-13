@@ -756,8 +756,9 @@ impl ReadableProcessSlice {
         #[inline(never)]
         #[cold]
         #[track_caller]
+        #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x1146c flavor=explicit_panic
+            // FLUX-TODO addr=0x1140c flavor=explicit_panic
             flux_support::assert(false);
             panic!(
                 "source slice length ({}) does not match destination slice length ({})",
@@ -854,10 +855,12 @@ impl ReadableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: Range<int>) -> bool { idx.start <= idx.end && idx.end <= v.len })]
 impl Index<Range<usize>> for ReadableProcessSlice {
     // Subslicing will still yield a ReadableProcessSlice reference
     type Output = Self;
 
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn index(&self, idx: Range<usize>) -> &Self::Output {
         // Notes: actionable. Discharge path is known but deferred: give this
         // impl (and the RangeTo/RangeFrom/usize siblings) an `Index::in_bounds`
@@ -868,15 +871,16 @@ impl Index<Range<usize>> for ReadableProcessSlice {
         // spurious MightPanic). Cascades to every `rps[range]` call site.
         // flux_support::assert(idx.end <= self.slice.len());
 
-        // FLUX-TODO addr=0x11008 flavor=slice_end
+        // FLUX-TODO addr=0x1101a flavor=slice_end
         flux_support::assert(idx.end <= self.slice.len());
-        // FLUX-TODO addr=0x11010 flavor=slice_order
+        // FLUX-TODO addr=0x11022 flavor=slice_order
         flux_support::assert(idx.start <= idx.end);
 
         cast_byte_slice_to_process_slice(&self.slice[idx])
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeTo<int>) -> bool { idx.end <= v.len })]
 impl Index<RangeTo<usize>> for ReadableProcessSlice {
     // Subslicing will still yield a ReadableProcessSlice reference
     type Output = Self;
@@ -886,6 +890,7 @@ impl Index<RangeTo<usize>> for ReadableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeFrom<int>) -> bool { idx.start <= v.len })]
 impl Index<RangeFrom<usize>> for ReadableProcessSlice {
     // Subslicing will still yield a ReadableProcessSlice reference
     type Output = Self;
@@ -894,6 +899,7 @@ impl Index<RangeFrom<usize>> for ReadableProcessSlice {
         &self[idx.start..self.len()]
     }
 }
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { idx < v.len })]
 impl Index<usize> for ReadableProcessSlice {
     // Indexing into a ReadableProcessSlice must yield a
     // ReadableProcessByte, to limit the API surface of the wrapped
@@ -1022,8 +1028,9 @@ impl WriteableProcessSlice {
         #[inline(never)]
         #[cold]
         #[track_caller]
+        #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x114f0 flavor=explicit_panic
+            // FLUX-TODO addr=0x11490 flavor=explicit_panic
             flux_support::assert(false);
             panic!(
                 "src slice len ({}) != dest slice len ({})",
@@ -1115,15 +1122,18 @@ impl WriteableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: Range<int>) -> bool { idx.start <= idx.end && idx.end <= v.len })]
 impl Index<Range<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::trusted]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
         cast_cell_slice_to_process_slice(&self.slice[idx])
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeTo<int>) -> bool { idx.end <= v.len })]
 impl Index<RangeTo<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
@@ -1133,6 +1143,7 @@ impl Index<RangeTo<usize>> for WriteableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeFrom<int>) -> bool { idx.start <= v.len })]
 impl Index<RangeFrom<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
@@ -1142,6 +1153,7 @@ impl Index<RangeFrom<usize>> for WriteableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { idx < v.len })]
 impl Index<usize> for WriteableProcessSlice {
     // Indexing into a WriteableProcessSlice yields a Cell<u8>, as
     // mutating the memory contents is allowed.

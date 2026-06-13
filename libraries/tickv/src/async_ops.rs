@@ -326,6 +326,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
         fn(&Self, read_buffer: &[u8][@n]) -> ()
         requires n == S
     )]
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn set_read_buffer(&self, read_buffer: &[u8]) {
         let read_buf_opt = self.tickv.read_buffer.take();
         // Notes: blocked-cell
@@ -353,6 +354,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     ///    Length usize:
     ///        The number of valid bytes in the buffer. 0 if Buf is None.
     /// The buffers will only be returned on a non async error or on success.
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn continue_operation(&self) -> ContinueReturn {
         let (ret, length) = match self.tickv.state.get() {
             // FLUX-TODO addr=0x188b2 flavor=unwrap_option

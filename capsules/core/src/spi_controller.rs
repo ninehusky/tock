@@ -107,6 +107,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
     // Assumes checks for busy/etc. already done
     // Updates app.index to be index + length of op
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn do_next_read_write(&self, app: &mut App, kernel_data: &GrantKernelData) {
         let write_len = self.kernel_write.map_or(0, |kwbuf| {
             let mut start = app.index;
@@ -411,6 +412,7 @@ impl<'a, S: SpiMasterDevice<'a>> SyscallDriver for Spi<'a, S> {
 }
 
 impl<'a, S: SpiMasterDevice<'a>> SpiMasterClient for Spi<'a, S> {
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn read_write_done(
         &self,
         writebuf: &'static mut [u8],

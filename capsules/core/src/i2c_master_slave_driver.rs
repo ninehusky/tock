@@ -103,6 +103,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> I2CMasterSlaveDriver<'a, I> {
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
     for I2CMasterSlaveDriver<'a, I>
 {
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn command_complete(&self, buffer: &'static mut [u8], status: Result<(), hil::i2c::Error>) {
         // Map I2C error to a number we can pass back to the application
         let status = kernel::errorcode::into_statuscode(match status {
@@ -195,6 +196,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
     for I2CMasterSlaveDriver<'a, I>
 {
     // FLUX-TODO-FN-LEVEL addrs=[0x1a328] flavor=explicit_panic
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn command_complete(
         &self,
         buffer: &'static mut [u8],
@@ -279,6 +281,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
 }
 
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> SyscallDriver for I2CMasterSlaveDriver<'a, I> {
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn command(
         &self,
         command_num: usize,

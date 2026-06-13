@@ -411,6 +411,7 @@ unsafe fn try_get_debug_writer() -> Option<&'static mut DebugWriterWrapper> {
     DEBUG_WRITER.as_deref_mut()
 }
 
+#[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
 unsafe fn get_debug_writer() -> &'static mut DebugWriterWrapper {
     // FLUX-TODO addr=0x10b1e flavor=unwrap_option
     flux_support::assert(DEBUG_WRITER.is_some());

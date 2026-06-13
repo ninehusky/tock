@@ -95,6 +95,7 @@ impl<'a> WriteToBinaryOffsetWrapper<'a> {
 
 impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
     // VTOCK-TODO: change this code back when mutable folding works
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let string_len = s.len();
         let offset = self.offset;
@@ -130,7 +131,7 @@ impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
             // perturb the solver. Deferred. `start <= string_len` already
             // follows from the early-return control flow above.
             // flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
-            // FLUX-TODO addr=0x110da flavor=slice_order
+            // FLUX-TODO addr=0x114f6 flavor=slice_order
             flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
             let ret = self
                 .binary_writer

@@ -560,6 +560,7 @@ impl<'a> Adc<'a> {
             .write(RESULT_MAXCNT::MAXCNT.val(count as u32));
     }
 
+    #[flux_rs::spec(fn (&Self, u32{frequency != 0}))]
     fn setup_frequency(&self, frequency: u32) {
         // FLUX-TODO addr=0x11a50 flavor=div_by_zero
         flux_support::assert(frequency != 0);

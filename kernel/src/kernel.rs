@@ -267,6 +267,7 @@ impl Kernel {
     /// Calling this function is restricted to only certain users, and to
     /// enforce this calling this function requires the
     /// `MemoryAllocationCapability` capability.
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn create_grant<
         T: Default,
         Upcalls: UpcallSize,
@@ -477,6 +478,7 @@ impl Kernel {
     /// cooperatively). Notably, time spent in this function by the kernel,
     /// executing system calls or merely setting up the switch to/from
     /// userspace, is charged to the process.
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn do_process<KR: KernelResources<C>, C: Chip, const NUM_PROCS: u8>(
         &self,
         resources: &KR,

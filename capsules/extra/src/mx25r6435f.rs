@@ -95,15 +95,19 @@ impl Default for Mx25r6435fSector {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Mx25r6435fSector, idx: int) -> bool { idx < 4096 })]
 impl Index<usize> for Mx25r6435fSector {
     type Output = u8;
 
+    #[flux_rs::sig(fn(&Self, idx: usize{idx < 4096}) -> &u8)]
     fn index(&self, idx: usize) -> &u8 {
         &self.0[idx]
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Mx25r6435fSector, idx: int) -> bool { idx < 4096 })]
 impl IndexMut<usize> for Mx25r6435fSector {
+    #[flux_rs::sig(fn(&mut Self, idx: usize{idx < 4096}) -> &mut u8)]
     fn index_mut(&mut self, idx: usize) -> &mut u8 {
         &mut self.0[idx]
     }

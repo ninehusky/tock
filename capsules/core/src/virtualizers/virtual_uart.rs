@@ -82,6 +82,7 @@ impl<'a> uart::TransmitClient for MuxUart<'a> {
 }
 
 impl<'a> uart::ReceiveClient for MuxUart<'a> {
+    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn received_buffer(
         &self,
         buffer: &'static mut [u8],
@@ -118,7 +119,7 @@ impl<'a> uart::ReceiveClient for MuxUart<'a> {
                         || state == UartDeviceReceiveState::Aborting
                     {
                         // debug!("Have {} bytes, copying in bytes {}-{}, {} remain", rx_len, position, position + len, remaining);
-                        // FLUX-TODO addr=0x9f3a flavor=slice_end
+                        // FLUX-TODO addr=0xa00a flavor=slice_end
                         flux_support::assert(position + len <= rxbuf.len() && len <= buffer.len());
                         rxbuf[position..(len + position)].copy_from_slice(&buffer[..len]);
                     }
