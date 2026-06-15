@@ -27,8 +27,14 @@ every panic-root error in `invariant2_report.json`'s `flux_errors[]` into:
                       such an error does not map to a codegened panic -> the
                       deprioritizable set.
 
-Errors that are not panic-root at all (e.g. precondition diagnostics) are bucket
+Errors that match an *exclude* pattern (e.g. precondition diagnostics) are bucket
 `excluded` and reported separately so the gate stays legible.
+
+An E0999 that matches NEITHER a panic-root nor an exclude pattern is bucket
+`unclassified` -- the message patterns are inherently brittle, so rather than
+silently dropping a reworded diagnostic into `excluded` and under-counting, the
+tool screams and exits non-zero (override with --allow-unclassified). On the
+current tree this is 0; a non-zero count means the patterns need updating.
 
 It runs standalone over the committed reports + source -- it does NOT re-run the
 ~14-minute Flux probe -- and writes a `triage` block back into the report
@@ -74,6 +80,10 @@ PANIC_ROOT_PATTERNS = [
 ]
 EXCLUDE_PATTERNS = [
     r"precondition",
+    # A struct refinement-invariant obligation checked at a fold point. This is a
+    # pure verification obligation -- it does NOT codegen a `bl panic` -- so it is
+    # not panic-root (same rationale as `precondition`).
+    r"type invariant may not hold",
 ]
 
 
@@ -158,13 +168,21 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
     fn_ranges = build_fn_level_ranges(report, cache)
     precise_idx = build_precise_index(report)
 
-    def is_panic_root(e: dict) -> bool:
+    def filter_status(e: dict) -> str:
+        """One of: 'assert' (panic-root by construction), 'panic_root' (message
+        matched a panic-root pattern), 'excluded' (message matched an exclude
+        pattern -- deliberately dropped), or 'unclassified' (matched NEITHER).
+        'unclassified' is the loud case: an E0999 we don't recognize means a
+        Flux diagnostic was reworded (or a new error kind appeared) and the
+        brittle message patterns silently stopped covering it."""
         if e.get("category") == "assert_obligation":
-            return True
+            return "assert"
         msg = e.get("message", "")
         if any(p.search(msg) for p in exclude):
-            return False
-        return any(p.search(msg) for p in panic_root)
+            return "excluded"
+        if any(p.search(msg) for p in panic_root):
+            return "panic_root"
+        return "unclassified"
 
     def precise_addrs(e: dict) -> list[str]:
         """All addrs of precise obligations this error joins to (basename + line +/-1)."""
@@ -197,9 +215,15 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
             "message": e.get("message"),
             "category": e.get("category"),
         }
-        if not is_panic_root(e):
+        status = filter_status(e)
+        if status == "unclassified":
+            rec["bucket"] = "unclassified"
+            rec["reason"] = ("E0999 matched NEITHER a panic-root nor an exclude pattern -- "
+                             "the message patterns no longer cover this diagnostic (reworded "
+                             "Flux output or a new error kind); triage cannot bucket it")
+        elif status == "excluded":
             rec["bucket"] = "excluded"
-            rec["reason"] = "not a panic-root error (precondition / non-panic diagnostic)"
+            rec["reason"] = "matched an exclude pattern (precondition / non-panic diagnostic)"
         elif e.get("category") == "assert_obligation":
             addrs = precise_addrs(e)
             rec["bucket"] = "panicking"
@@ -249,6 +273,10 @@ def main() -> int:
                     help="extra exclude (non-panic-root) message pattern (repeatable)")
     ap.add_argument("--panic-root-only", action="store_true",
                     help="use only --panic-root-regex patterns, dropping the built-in defaults")
+    ap.add_argument("--allow-unclassified", action="store_true",
+                    help="do not fail when an E0999 matches neither panic-root nor exclude "
+                         "patterns (default: scream and exit 1 so reworded Flux diagnostics "
+                         "cannot silently slip through)")
     args = ap.parse_args()
 
     out_path = args.out or args.report
@@ -275,7 +303,8 @@ def main() -> int:
     cache: dict[str, list[str] | None] = {}
     errors = classify(report, survey_addrs, panic_root, exclude, cache)
 
-    counts = {"panicking": 0, "lookup_failed": 0, "non_panicking": 0, "excluded": 0}
+    counts = {"panicking": 0, "lookup_failed": 0, "non_panicking": 0,
+              "excluded": 0, "unclassified": 0}
     for r in errors:
         counts[r["bucket"]] += 1
     total_panic_root = counts["panicking"] + counts["lookup_failed"] + counts["non_panicking"]
@@ -297,6 +326,7 @@ def main() -> int:
             "lookup_failed": counts["lookup_failed"],
             "non_panicking": counts["non_panicking"],
             "excluded": counts["excluded"],
+            "unclassified": counts["unclassified"],
             "total_panic_root": total_panic_root,
             "total_errors": len(errors),
         },
@@ -311,8 +341,25 @@ def main() -> int:
           f"lookup_failed={counts['lookup_failed']} "
           f"non_panicking={counts['non_panicking']} "
           f"excluded={counts['excluded']} "
+          f"unclassified={counts['unclassified']} "
           f"(total panic-root={total_panic_root})")
     print(f"wrote {out_path}")
+
+    if counts["unclassified"]:
+        print("\n" + "!" * 72, file=sys.stderr)
+        print(f"FATAL: {counts['unclassified']} E0999 error(s) matched NEITHER a panic-root "
+              "nor an exclude pattern.", file=sys.stderr)
+        print("The triage's message patterns no longer cover every Flux error -- a reworded "
+              "diagnostic or new error kind is slipping through uncounted.", file=sys.stderr)
+        print("Update PANIC_ROOT_PATTERNS / EXCLUDE_PATTERNS (or pass --panic-root-regex / "
+              "--exclude-regex), or re-run with --allow-unclassified to override.", file=sys.stderr)
+        for r in errors:
+            if r["bucket"] == "unclassified":
+                print(f"  - {r.get('file')}:{r.get('line')} [{r.get('category')}] "
+                      f"{r.get('message')}", file=sys.stderr)
+        print("!" * 72, file=sys.stderr)
+        if not args.allow_unclassified:
+            return 1
     return 0
 
 
