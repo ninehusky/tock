@@ -177,6 +177,7 @@ enum State {
     ReadId,
 }
 
+#[flux_rs::refined_by()]
 pub struct MX25R6435F<
     'a,
     S: hil::spi::SpiMasterDevice<'a> + 'a,
@@ -188,6 +189,7 @@ pub struct MX25R6435F<
     state: Cell<State>,
     write_protect_pin: Option<&'a P>,
     hold_pin: Option<&'a P>,
+    #[flux_rs::field(TakeCell<[u8]{n: n > 0}>)]
     txbuffer: TakeCell<'static, [u8]>,
     rxbuffer: TakeCell<'static, [u8]>,
     client: OptionalCell<&'a dyn hil::flash::Client<MX25R6435F<'a, S, P, A>>>,
@@ -645,6 +647,9 @@ impl<
     }
 }
 
+// `Mx25r6435fSector` wraps `[u8; SECTOR_SIZE]` (SECTOR_SIZE == 4096) and its
+// `as_mut()` returns the whole array, so the page is 4096 bytes.
+#[flux_rs::assoc(fn page_len() -> int { 4096 })]
 impl<
         'a,
         S: hil::spi::SpiMasterDevice<'a> + 'a,
@@ -653,6 +658,13 @@ impl<
     > hil::flash::Flash for MX25R6435F<'a, S, P, A>
 {
     type Page = Mx25r6435fSector;
+
+    // Zero-trust override: `Mx25r6435fSector` is `[u8; 4096]`, so Flux verifies
+    // the returned slice has length 4096 == page_len(). No trust.
+    #[flux_rs::sig(fn(page: &mut Mx25r6435fSector) -> &mut [u8]{n: n == 4096})]
+    fn page_as_bytes(page: &mut Mx25r6435fSector) -> &mut [u8] {
+        &mut page.0
+    }
 
     fn read_page(
         &self,

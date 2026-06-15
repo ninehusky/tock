@@ -113,9 +113,23 @@ pub trait HasClient<'a, C> {
 }
 
 /// A page of writable persistent flash memory.
+// `page_len` is the byte length of `Self::Page` as seen through `AsMut<[u8]>`.
+// Default `0` is deliberately wrong so any impl that fails to override it makes
+// downstream page-length proofs fail loudly rather than silently passing.
+#[flux_rs::assoc(fn page_len() -> int { 0 })]
 pub trait Flash {
     /// Type of a single flash page for the given implementation.
     type Page: AsMut<[u8]> + Default;
+
+    /// View a page as a byte slice; the result has exactly `page_len()` bytes.
+    /// The default delegates to `AsMut` and is trusted because its generic body
+    /// cannot carry a length through the foreign `AsMut::as_mut`. Concrete impls
+    /// SHOULD override with a body Flux can verify (return the inner array).
+    #[flux_rs::trusted]
+    #[flux_rs::sig(fn(page: &mut Self::Page) -> &mut [u8]{n: n == <Self as Flash>::page_len()})]
+    fn page_as_bytes(page: &mut Self::Page) -> &mut [u8] {
+        page.as_mut()
+    }
 
     /// Read a page of flash into the buffer.
     fn read_page(

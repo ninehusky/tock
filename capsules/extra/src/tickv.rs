@@ -235,6 +235,9 @@ impl<'a, F: Flash> TickFSFlashCtrl<'a, F> {
     }
 }
 
+
+// The controller's page buffer is `F::Page`, so its capacity is `F::page_len()`.
+#[flux_rs::assoc(fn page_capacity() -> int { <F as Flash>::page_len() })]
 impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashController<PAGE_SIZE>
     for TickFSFlashCtrl<'a, F>
 {
@@ -260,16 +263,24 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
         }
     }
 
-    #[flux_rs::sig(fn(&Self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> requires PAGE_SIZE > 0)]
+    #[flux_rs::sig(fn(&Self, address: usize, buf: &[u8][@n]) -> Result<(), tickv::error_codes::ErrorCode> requires PAGE_SIZE > 0 && address % PAGE_SIZE + n <= PAGE_SIZE && PAGE_SIZE <= <F as Flash>::page_len())]
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> {
         // FLUX-TODO addr=0x16622 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());
         let data_buf = self.flash_read_buffer.take().unwrap();
 
-        for (i, d) in buf.iter().enumerate() {
-            // FLUX-TODO addr=0x1662e flavor=bounds
-            flux_support::assert(i + (address % PAGE_SIZE) < data_buf.as_mut().len());
-            data_buf.as_mut()[i + (address % PAGE_SIZE)] = *d;
+        // for→while rewrite (semantically identical) so Flux carries `i < buf.len()`
+        // from the loop condition; the iterator extern specs (enumerate/Iter::next)
+        // are not wired up, so a `for` loop leaves `i` unconstrained.
+        let mut i = 0;
+        while i < buf.len() {
+            // `F::page_as_bytes` gives the page's byte length == <F as Flash>::page_len()
+            // (PROVEN per driver via its override; default is trusted). With the sig
+            // preconditions `i < buf.len()`, `address % PAGE_SIZE + buf.len() <=
+            // PAGE_SIZE`, and `PAGE_SIZE <= page_len()`, the index is in bounds.
+            flux_support::assert(i + (address % PAGE_SIZE) < F::page_as_bytes(data_buf).len());
+            F::page_as_bytes(data_buf)[i + (address % PAGE_SIZE)] = buf[i];
+            i += 1;
         }
 
         if self

@@ -53,6 +53,11 @@ use crate::error_codes::ErrorCode;
 ///     }
 /// }
 /// ```
+// `page_capacity` is the byte length of the controller's backing page buffer.
+// A write of `n` bytes at offset `address % S` must fit, so `S <= page_capacity`.
+// Default `0` is deliberately wrong: an impl that fails to override it makes the
+// `S <= page_capacity()` precondition unsatisfiable, surfacing the gap loudly.
+#[flux_rs::assoc(fn page_capacity() -> int { 0 })]
 pub trait FlashController<const S: usize> {
     /// This function must read the data from the flash region specified by
     /// `region_number` into `buf`. The length of the data read should be the
@@ -87,7 +92,7 @@ pub trait FlashController<const S: usize> {
     /// `read_region()` can indicate that the operation should be retried in
     /// the future. Note that that region will not be written
     /// again so the write must occur otherwise the operation fails.
-    #[flux_rs::sig(fn(&Self, address: usize, buf: &[u8]) -> Result<(), ErrorCode> requires S > 0)]
+    #[flux_rs::sig(fn(&Self, address: usize, buf: &[u8][@n]) -> Result<(), ErrorCode> requires S > 0 && address % S + n <= S && S <= <Self as FlashController<S>>::page_capacity())]
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), ErrorCode>;
 
     /// This function must erase the region specified by `region_number`.
