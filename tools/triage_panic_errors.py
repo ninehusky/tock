@@ -40,6 +40,14 @@ It runs standalone over the committed reports + source -- it does NOT re-run the
 ~14-minute Flux probe -- and writes a `triage` block back into the report
 idempotently (re-running overwrites the single `triage` key in place).
 
+Two gates make it fail loudly (non-zero exit) so CI catches regressions:
+  - conservation (exit 3, non-overridable): the buckets must be a complete
+    bijective partition of flux_errors[] -- every E0999 represented exactly once
+    and bucketed. A violation is a tool bug. (summary.conservation_ok records it.)
+  - unclassified (exit 1, --allow-unclassified to override): every E0999 must
+    match a panic-root or exclude pattern; a miss means the brittle patterns
+    stopped covering a reworded/new diagnostic.
+
 Usage:
     python3 tools/triage_panic_errors.py
     python3 tools/triage_panic_errors.py --out /tmp/triage.json   # safe dev run
@@ -54,6 +62,7 @@ import os
 import re
 import sys
 import time
+from collections import Counter
 
 # Reuse step-0's enclosing-fn helpers rather than reimplementing brace counting.
 _TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -254,6 +263,45 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
 
 
 # --------------------------------------------------------------------------- #
+# Conservation gate
+# --------------------------------------------------------------------------- #
+
+_BUCKETS = ("panicking", "lookup_failed", "non_panicking", "excluded", "unclassified")
+
+
+def verify_partition(flux_errors: list[dict], records: list[dict],
+                     counts: dict[str, int]) -> list[str]:
+    """The triage must be a complete, bijective partition of the input: every
+    E0999 in flux_errors[] is represented exactly once in records[], landing in
+    exactly one bucket -- nothing dropped, nothing double-counted. This is a
+    tool-integrity invariant (the classify() loop should guarantee it), so a
+    violation means a real bug, not a frontier finding. Returns a list of
+    human-readable violations (empty == clean)."""
+    def key(x: dict):
+        return (x.get("file"), x.get("line"), x.get("col"), x.get("message"))
+
+    v: list[str] = []
+    if len(records) != len(flux_errors):
+        v.append(f"record count {len(records)} != input flux_errors {len(flux_errors)} "
+                 "(an obligation was dropped or duplicated)")
+    bsum = sum(counts.get(b, 0) for b in _BUCKETS)
+    if bsum != len(records):
+        v.append(f"bucket-count sum {bsum} != record count {len(records)} "
+                 "(a record is unbucketed or counted twice)")
+    no_bucket = [r for r in records if r.get("bucket") not in _BUCKETS]
+    if no_bucket:
+        v.append(f"{len(no_bucket)} record(s) carry no known bucket")
+
+    ki, ko = Counter(key(e) for e in flux_errors), Counter(key(r) for r in records)
+    if ki != ko:
+        missing = sorted(str(k) for k in ki if ki[k] != ko.get(k, 0))[:5]
+        extra = sorted(str(k) for k in ko if ko[k] != ki.get(k, 0))[:5]
+        v.append("input/output error sets differ (not a bijection); "
+                 f"e.g. unmatched-in-input={missing} unmatched-in-output={extra}")
+    return v
+
+
+# --------------------------------------------------------------------------- #
 # Driver
 # --------------------------------------------------------------------------- #
 
@@ -309,6 +357,8 @@ def main() -> int:
         counts[r["bucket"]] += 1
     total_panic_root = counts["panicking"] + counts["lookup_failed"] + counts["non_panicking"]
 
+    partition_violations = verify_partition(report.get("flux_errors", []), errors, counts)
+
     report["triage"] = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "inputs": {
@@ -329,6 +379,7 @@ def main() -> int:
             "unclassified": counts["unclassified"],
             "total_panic_root": total_panic_root,
             "total_errors": len(errors),
+            "conservation_ok": not partition_violations,
         },
         "errors": errors,
     }
@@ -344,6 +395,16 @@ def main() -> int:
           f"unclassified={counts['unclassified']} "
           f"(total panic-root={total_panic_root})")
     print(f"wrote {out_path}")
+
+    if partition_violations:
+        print("\n" + "!" * 72, file=sys.stderr)
+        print("FATAL: triage is not a complete partition of invariant2_report's "
+              "flux_errors[] -- an obligation was dropped, duplicated, or unbucketed. "
+              "This is a tool bug, not a frontier finding.", file=sys.stderr)
+        for msg in partition_violations:
+            print(f"  - {msg}", file=sys.stderr)
+        print("!" * 72, file=sys.stderr)
+        return 3  # non-overridable: conservation must always hold
 
     if counts["unclassified"]:
         print("\n" + "!" * 72, file=sys.stderr)
