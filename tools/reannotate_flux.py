@@ -124,7 +124,7 @@ def load_survey(path: str) -> tuple[list[Record], set[str]]:
 # Source-file discovery (the audit scope)
 # --------------------------------------------------------------------------- #
 
-_SKIP_DIRS = {".git", "target", "node_modules", ".venv"}
+_SKIP_DIRS = {".git", "target", "node_modules", ".venv", ".claude"}
 
 
 def iter_rs_files(repo_root: str):

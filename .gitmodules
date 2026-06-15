@@ -1,0 +1,4 @@
+[submodule "flux"]
+	path = flux
+	url = https://github.com/flux-rs/flux.git
+	branch = main

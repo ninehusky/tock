@@ -69,7 +69,7 @@ const REGS_RANGE: Range<usize> = REGS_IDX..REGS_IDX + 8;
 
 const USIZE_SZ: usize = size_of::<usize>();
 
-#[flux_rs::trusted(reason = "This 4 represents `USIZE_SZ` on cortex-M")]
+#[flux_rs::trusted(reason = "trusted-hw: cortex-M has usize size of 4 bytes, which differs from modern machines")]
 #[flux_rs::sig(fn() -> usize[4])]
 fn my_usize_range() -> usize {
     4
@@ -94,7 +94,6 @@ fn usize_from_u8_slice(slice: &[u8], index: usize) -> Result<usize, ErrorCode> {
 // Trust only the cross-target length-match: src is `&val.to_le_bytes()` =
 // `[u8; size_of::<usize>()]`, which equals 4 on the 32-bit Cortex-M target but
 // is 8 on the 64-bit host Flux runs against.
-#[flux_rs::trusted(reason = "copy_from_slice explodes: `dest` has length 4, but `to_le_bytes` returns `[u8; 8]` on my machine.")]
 #[flux_rs::sig(fn(val: usize, dest: &mut [u8]{n: n == 4}))]
 fn copy_le_into(val: usize, dest: &mut [u8]) {
     dest.copy_from_slice(&val.to_le_bytes());
@@ -103,9 +102,9 @@ fn copy_le_into(val: usize, dest: &mut [u8]) {
 #[flux_rs::sig(fn(val: usize, slice: &mut [u8]{n: n >= (i + 1) * 4}, usize[@i]) requires i < 256)]
 fn write_usize_to_u8_slice(val: usize, slice: &mut [u8], index: usize) {
     let range = usize_byte_range(index);
-    // FLUX-TODO addr=0xf750 flavor=slice_end
+    // FLUX-TODO addr=0xf7a0 flavor=slice_end
     flux_support::assert(range.end <= slice.len());
-    // FLUX-TODO addr=0xf75a flavor=slice_order
+    // FLUX-TODO addr=0xf7aa flavor=slice_order
     flux_support::assert(range.start <= range.end);
     copy_le_into(val, &mut slice[range]);
 }

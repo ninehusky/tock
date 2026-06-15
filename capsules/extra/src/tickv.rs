@@ -238,17 +238,13 @@ impl<'a, F: Flash> TickFSFlashCtrl<'a, F> {
 impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashController<PAGE_SIZE>
     for TickFSFlashCtrl<'a, F>
 {
-    #[flux_rs::trusted(reason = "impls external trait tickv::FlashController, whose \
-        def is not on Flux's include surface, so the body is skipped (E0999 \
-        not-included-when-checking-external-crate); also rests on the blocked-cell \
-        TakeCell invariant. Declared carve-out, matches sibling `write`.")]
     fn read_region(
         &self,
         region_number: usize,
         _buf: &mut [u8; PAGE_SIZE],
     ) -> Result<(), tickv::error_codes::ErrorCode> {
         // NOTES: blocked-cell
-        // FLUX-TODO addr=0x16528 flavor=unwrap_option
+        // FLUX-TODO addr=0x16584 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());
         if self
             .flash
@@ -264,14 +260,13 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
         }
     }
 
-    #[flux_rs::trusted(reason = "temporarily adding this")]
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> {
-        // FLUX-TODO addr=0x165c6 flavor=unwrap_option
+        // FLUX-TODO addr=0x16622 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());
         let data_buf = self.flash_read_buffer.take().unwrap();
 
         for (i, d) in buf.iter().enumerate() {
-            // FLUX-TODO addr=0x165d2 flavor=bounds
+            // FLUX-TODO addr=0x1662e flavor=bounds
             flux_support::assert(i + (address % PAGE_SIZE) < data_buf.as_mut().len());
             data_buf.as_mut()[i + (address % PAGE_SIZE)] = *d;
         }
@@ -357,9 +352,9 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
         match self.next_operation.get() {
             Operation::None | Operation::Init => {}
             Operation::GetKey => {
-                // FLUX-TODO addr=0x18d1e flavor=unwrap_option
+                // FLUX-TODO addr=0x18de6 flavor=unwrap_option
                 flux_support::assert(self.value_buffer.is_some());
-                // FLUX-TODO addr=0x18d30 flavor=unwrap_option
+                // FLUX-TODO addr=0x18df8 flavor=unwrap_option
                 flux_support::assert(self.key_buffer.is_some());
                 match self.get_value(
                     self.key_buffer.take().unwrap(),
@@ -374,9 +369,9 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
                 }
             }
             Operation::AppendKey => {
-                // FLUX-TODO addr=0x18d18 flavor=unwrap_option
+                // FLUX-TODO addr=0x18de0 flavor=unwrap_option
                 flux_support::assert(self.value_buffer.is_some());
-                // FLUX-TODO addr=0x18d2a flavor=unwrap_option
+                // FLUX-TODO addr=0x18df2 flavor=unwrap_option
                 flux_support::assert(self.key_buffer.is_some());
                 match self.append_key(
                     self.key_buffer.take().unwrap(),
@@ -391,7 +386,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
                 }
             }
             Operation::InvalidateKey => {
-                // FLUX-TODO addr=0x18d24 flavor=unwrap_option
+                // FLUX-TODO addr=0x18dec flavor=unwrap_option
                 flux_support::assert(self.key_buffer.is_some());
                 match self.invalidate_key(self.key_buffer.take().unwrap()) {
                     Err((key, error)) => {
@@ -422,7 +417,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
         self.unhashed_key_buffer.replace(data);
 
         // NOTES: blocked-cell
-        // FLUX-TODO addr=0x1caa0 flavor=unwrap_option
+        // FLUX-TODO addr=0x1cb68 flavor=unwrap_option
         flux_support::assert(self.key_buffer.is_some());
 
         self.hasher.run(self.key_buffer.take().unwrap()).unwrap();
@@ -433,7 +428,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
     #[flux_rs::trusted(reason = "ICE: error: internal compiler error: /Users/andrew/research/flux/crates/flux-infer/src/infer.rs:1034:17: assertion `left == right` failed")]
     fn hash_done(&self, _result: Result<(), ErrorCode>, digest: &'static mut [u8; 8]) {
         self.client.map(move |cb| {
-            // FLUX-TODO addr=0x1cb36 flavor=unwrap_option
+            // FLUX-TODO addr=0x1cbfe flavor=unwrap_option
             flux_support::assert(self.unhashed_key_buffer.is_some());
             cb.generate_key_complete(Ok(()), self.unhashed_key_buffer.take().unwrap(), digest);
         });
@@ -483,8 +478,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         self.operation.set(Operation::None);
                         self.client.map(|cb| {
                             flux_support::assert(self.key_buffer.is_some());
-                            // FLUX-TODO addr=0x1cdc8 flavor=unwrap_option
-                            // FLUX-TODO addr=0x1cde0 flavor=unwrap_option
+                            // FLUX-TODO addr=0x1ce90 flavor=unwrap_option
+                            // FLUX-TODO addr=0x1cea8 flavor=unwrap_option
                             flux_support::assert(self.value_buffer.is_some());
                             cb.get_value_complete(
                                 Ok(()),
@@ -502,9 +497,9 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         self.operation.set(Operation::None);
                         self.client.map(|cb| {
 
-                            // FLUX-TODO addr=0x1cdb0 flavor=unwrap_option
+                            // FLUX-TODO addr=0x1ce78 flavor=unwrap_option
                             flux_support::assert(self.key_buffer.is_some());
-                            // FLUX-TODO addr=0x1cdce flavor=unwrap_option
+                            // FLUX-TODO addr=0x1ce96 flavor=unwrap_option
                             flux_support::assert(self.value_buffer.is_some());
                             cb.get_value_complete(
                                 Err(ErrorCode::SIZE),
@@ -527,9 +522,9 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         };
                         self.operation.set(Operation::None);
                         self.client.map(|cb| {
-                            // FLUX-TODO addr=0x1cdb6 flavor=unwrap_option
+                            // FLUX-TODO addr=0x1ce7e flavor=unwrap_option
                             flux_support::assert(self.key_buffer.is_some());
-                            // FLUX-TODO addr=0x1cdd4 flavor=unwrap_option
+                            // FLUX-TODO addr=0x1ce9c flavor=unwrap_option
                             flux_support::assert(self.value_buffer.is_some());
                             cb.get_value_complete(
                                 Err(get_tock_err),
@@ -564,9 +559,9 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                             _ => ErrorCode::FAIL,
                         };
                         self.client.map(|cb| {
-                            // FLUX-TODO addr=0x1cdc2 flavor=unwrap_option
+                            // FLUX-TODO addr=0x1ce8a flavor=unwrap_option
                             flux_support::assert(self.key_buffer.is_some());
-                            // FLUX-TODO addr=0x1cdda flavor=unwrap_option
+                            // FLUX-TODO addr=0x1cea2 flavor=unwrap_option
                             flux_support::assert(self.value_buffer.is_some());
                             cb.append_key_complete(
                                 Err(tock_hil_error),
@@ -597,7 +592,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         _ => ErrorCode::FAIL,
                     };
                     self.client.map(|cb| {
-                        // FLUX-TODO addr=0x1cdbc flavor=unwrap_option
+                        // FLUX-TODO addr=0x1ce84 flavor=unwrap_option
                         flux_support::assert(self.key_buffer.is_some());
                         cb.invalidate_key_complete(
                             Err(tock_hil_error),
@@ -616,7 +611,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                 }
                 _ => {}
             },
-            // FLUX-TODO addr=0x1cdaa flavor=explicit_panic
+            // FLUX-TODO addr=0x1ce72 flavor=explicit_panic
             _ => { flux_support::assert(false); unreachable!() },
         }
     }
@@ -636,9 +631,9 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
             Operation::AppendKey => {
                 self.operation.set(Operation::None);
                 self.client.map(|cb| {
-                    // FLUX-TODO addr=0x1cebc flavor=unwrap_option
+                    // FLUX-TODO addr=0x1cf84 flavor=unwrap_option
                     flux_support::assert(self.key_buffer.is_some());
-                    // FLUX-TODO addr=0x1cec8 flavor=unwrap_option
+                    // FLUX-TODO addr=0x1cf90 flavor=unwrap_option
                     flux_support::assert(self.value_buffer.is_some());
                     cb.append_key_complete(
                         Ok(()),
@@ -650,12 +645,12 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
             Operation::InvalidateKey => {
                 self.operation.set(Operation::None);
                 self.client.map(|cb| {
-                    // FLUX-TODO addr=0x1cec2 flavor=unwrap_option
+                    // FLUX-TODO addr=0x1cf8a flavor=unwrap_option
                     flux_support::assert(self.key_buffer.is_some());
                     cb.invalidate_key_complete(Ok(()), self.key_buffer.take().unwrap());
                 });
             }
-            // FLUX-TODO addr=0x1ceb6 flavor=explicit_panic
+            // FLUX-TODO addr=0x1cf7e flavor=explicit_panic
             _ => { flux_support::assert(false); unreachable!() },
         }
     }
@@ -693,7 +688,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                 }
                 _ => {}
             },
-            // FLUX-TODO addr=0x1cf70 flavor=explicit_panic
+            // FLUX-TODO addr=0x1d038 flavor=explicit_panic
             _ => { flux_support::assert(false); unreachable!() },
         }
     }

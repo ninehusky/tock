@@ -155,7 +155,6 @@ fn encode_key_id(key_id: &KeyId, buf: &mut [u8]) -> SResult {
 }
 
 /// Decodes a key ID that is in the format produced by the userland driver.
-#[flux_rs::trusted(reason = "blocked_flux_stream_combinator: SResult offset<=len invariant not Flux-tracked")]
 fn decode_key_id(buf: &[u8]) -> SResult<KeyId> {
     stream_len_cond!(buf, 1);
     let mode = stream_from_option!(KeyIdModeUserland::from_u8(buf[0]));
@@ -577,7 +576,7 @@ impl<'a, M: device::MacDevice<'a>> framer::DeviceProcedure for RadioDriver<'a, M
     fn lookup_addr_long(&self, addr: MacAddress) -> Option<[u8; 8]> {
         self.neighbors
             .and_then(|neighbors| {
-                // FLUX-TODO addr=0x1bf24 flavor=slice_end
+                // FLUX-TODO addr=0x1bfec flavor=slice_end
                 flux_support::assert(self.num_neighbors.get() <= neighbors.len());
                 neighbors[..self.num_neighbors.get()]
                     .iter()
@@ -608,7 +607,7 @@ impl<'a, M: device::MacDevice<'a>> framer::KeyProcedure for RadioDriver<'a, M> {
     fn lookup_key(&self, level: SecurityLevel, key_id: KeyId) -> Option<[u8; 16]> {
         self.keys
             .and_then(|keys| {
-                // FLUX-TODO addr=0x1bfec flavor=slice_end
+                // FLUX-TODO addr=0x1c0b4 flavor=slice_end
                 flux_support::assert(self.num_keys.get() <= keys.len());
                 keys[..self.num_keys.get()]
                     .iter()
@@ -1077,7 +1076,7 @@ impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
 
                         // Copy the entire frame over to userland, preceded by three metadata bytes:
                         // the header length, the data length, and the MIC length.
-                        // FLUX-TODO addr=0x1bd14 flavor=slice_end
+                        // FLUX-TODO addr=0x1bddc flavor=slice_end
                         flux_support::assert(offset + frame_len + USER_FRAME_METADATA_SIZE <= rbuf.len());
                         rbuf[(offset + USER_FRAME_METADATA_SIZE)
                             ..(offset + frame_len + USER_FRAME_METADATA_SIZE)]

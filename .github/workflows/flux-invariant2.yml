@@ -4,30 +4,91 @@
 
 # Flux panic-verification pipeline — Invariants 0 + 1 + 2
 #
-# Runs on every push to this branch. In sequence:
+# Runs on every push commit. In sequence:
 #   0. python3 tools/reannotate_flux.py --survey tools/panic_survey.json --dry-run
 #      — audits all // FLUX- annotations against the committed survey;
 #      exits 1 on violations (orphan/malformed markers)
 #   1. python3 tools/check_invariant1.py  — reads tools/panic_survey.json
 #      (committed) + source annotations; writes tools/invariant1_report.json
-#   2. python3 tools/check_invariant2.py  — builds Flux from our fork,
-#      rewrites hardcoded local Flux path deps, runs the no-vacuity gate.
+#   2. python3 tools/check_invariant2.py  — builds Flux from the `flux/`
+#      submodule (flux-rs/flux), runs the no-vacuity gate.
 # The job passes iff check_invariant2.py exits 0 (summary: ... gate=pass).
 
 name: flux-invariant2
 
 on:
   push:
-    branches:
-      - "flux-invariant2-silent-triage"
-      - "copilot/flux-invariant2-silent-triage"
 
 jobs:
+  # ------------------------------------------------------------------------ #
+  # Freshness gate: the committed tools/panic_survey.json is a *build product*
+  # of the release binary. Every downstream tool (reannotate_flux.py,
+  # check_invariant1/2.py) reads it as ground truth, so a stale survey makes
+  # the whole pipeline audit against the wrong binary. This job rebuilds the
+  # board, regenerates the survey, and fails if the committed copy no longer
+  # matches the current source (address-independent comparison — absolute
+  # addresses legitimately drift across hosts and are ignored).
+  #
+  # Uses Tock's own rust-toolchain.toml (NOT Flux's), so it must stay a
+  # separate job from flux-invariant2, which swaps that file out.
+  # ------------------------------------------------------------------------ #
+  panic-survey-fresh:
+    runs-on: ubuntu-latest
+    steps:
+      # The Flux compiler lives in the `flux/` git submodule (flux-rs/flux).
+      # `submodules: recursive` checks it out at the pinned commit so the
+      # flux-rs / flux-core path dependencies in the workspace Cargo.toml
+      # files resolve — even though this job builds with Tock's own toolchain
+      # (NOT `cargo flux`), those crates must still resolve for the manifest
+      # to load.
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install ARM binutils (objdump + addr2line)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils-arm-none-eabi
+
+      - name: Install Tock Rust toolchain and embedded target
+        run: |
+          rustup show
+          rustup target add thumbv7em-none-eabi
+
+      # ------------------------------------------------------------------ #
+      # panic_survey.py demangles bl-target symbols with rustfilt to match
+      # them against the demangled sink names in tools/symbols.txt. Without
+      # rustfilt it falls back to an identity map and matches only the one
+      # already-unmangled sink (rust_begin_unwind), so the survey collapses
+      # to 1 site and the freshness comparison spuriously reports STALE.
+      # ------------------------------------------------------------------ #
+      - name: Install rustfilt
+        run: cargo install rustfilt
+
+      - name: Build the nrf52840dk release binary
+        working-directory: boards/nordic/nrf52840dk
+        run: make release
+
+      - name: Regenerate survey and compare against the committed copy
+        run: |
+          python3 tools/panic_survey.py \
+            --skip-build \
+            --objdump arm-none-eabi-objdump \
+            --addr2line arm-none-eabi-addr2line \
+            --out /tmp/fresh_survey.json
+          python3 tools/check_survey_fresh.py tools/panic_survey.json /tmp/fresh_survey.json
+
   flux-invariant2:
     runs-on: ubuntu-latest
 
+    # Flux lives in the `flux/` git submodule (flux-rs/flux, pinned commit).
+    env:
+      FLUX_DIR: ${{ github.workspace }}/flux
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       # ------------------------------------------------------------------ #
       # Install fixpoint (SMT constraint solver used by Flux)
@@ -76,18 +137,6 @@ jobs:
           version: 4.15.3
 
       # ------------------------------------------------------------------ #
-      # Clone OUR Flux fork (carries the --sorted-solution rename + other
-      # fixes that upstream flux-rs/flux does not yet have).
-      # ------------------------------------------------------------------ #
-      - name: Clone Flux fork
-        run: |
-          git clone --depth 1 \
-            --branch ninehusky-with-full-stack-trace \
-            https://github.com/ninehusky/flux.git \
-            "$HOME/flux"
-          echo "FLUX_DIR=$HOME/flux" >> "$GITHUB_ENV"
-
-      # ------------------------------------------------------------------ #
       # Install the Rust toolchain that Flux requires (from its own
       # rust-toolchain.toml) and add the embedded target we need.
       # `rustup show` triggers toolchain installation when rust-toolchain.toml
@@ -121,17 +170,6 @@ jobs:
           echo ~/.cargo/bin >> "$GITHUB_PATH"
 
       # ------------------------------------------------------------------ #
-      # Rewrite hardcoded local Flux path deps in Cargo.toml files.
-      # 14 files reference /Users/andrew/research/flux/... — replace them
-      # with the actual FLUX_DIR for this CI run.
-      # We do NOT commit this rewrite; it lives only in the working tree.
-      # ------------------------------------------------------------------ #
-      - name: Rewrite hardcoded Flux path deps
-        run: |
-          grep -rl '/Users/andrew/research/flux' --include='Cargo.toml' . \
-            | xargs sed -i "s#/Users/andrew/research/flux#${FLUX_DIR}#g"
-
-      # ------------------------------------------------------------------ #
       # Replace Tock's rust-toolchain.toml with Flux's so that `cargo flux`
       # uses the correct nightly. The two repos pin different nightlies; Flux
       # supplies its own rustc so this is safe for the invariant-2 check.
@@ -162,9 +200,8 @@ jobs:
 
       # ------------------------------------------------------------------ #
       # Run Invariant 2: no-vacuity gate.
-      # Exits 0 iff gate=pass (all obligations are discharged, trusted, or
-      # frontier — no SILENT / ICE_MASKED / BLOCKED_DEP_MASKED / NOT_RUN /
-      # TIMEOUT).
+      # Exits 0 iff gate=pass (all obligations are trusted, proven, or
+      # not-proven frontier — no SILENT).
       # ------------------------------------------------------------------ #
       - name: Run Invariant 2 pipeline
         run: |
