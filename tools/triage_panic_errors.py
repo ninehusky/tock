@@ -15,7 +15,12 @@ every panic-root error in `invariant2_report.json`'s `flux_errors[]` into:
 
   1. panicking     -- the error sits at an assert paired with a *precise* FLUX
                       marker whose addr resolves to a `bl panic` in the survey
-                      (these are the `assert_obligation` errors).
+                      (these are the `assert_obligation` errors). NOTE: this is a
+                      raw error count -- a `flux_support::assert(X)` and the implicit
+                      op it guards both join to the same addr, so they appear as two
+                      records for one panic. `summary.panicking_distinct` folds those
+                      (and monomorph duplicates) by addr-set; per-record `dedup_role`
+                      marks each as "primary" (counted) or "folded" (a duplicate).
   2. lookup_failed -- the error is inside a function carrying a FLUX-TODO-FN-LEVEL
                       marker. Those markers exist precisely because addr2line
                       could not pin the panic to a specific source line, so we
@@ -285,6 +290,53 @@ _BUCKETS = ("panicking", "lookup_failed", "non_panicking", "precondition_failed"
             "excluded", "unclassified")
 
 
+def mark_panicking_dedup(records: list[dict]) -> int:
+    """Fold `panicking` records that guard an IDENTICAL set of codegened `bl panic`
+    addrs into one obligation.
+
+    A `flux_support::assert(X)` and the implicit operation it makes explicit (the
+    `.unwrap()` / index it guards) sit on adjacent lines, so the +/-1 line window in
+    `precise_addrs()` joins BOTH to the same precise obligation -> both carry the
+    same addr(s). They are one panic, not two. Likewise N monomorphizations of one
+    generic emit N records sharing the same addr-set. Counting raw records therefore
+    over-counts; the distinct quantity is the number of distinct addr-sets.
+
+    We do NOT drop anything -- every record stays in `errors[]` so the conservation
+    gate's bijection over flux_errors[] still holds, and the explicit asserts remain
+    visible/greppable. Instead each panicking record is tagged with:
+      - addr_group: a stable comma-joined key of its sorted addr-set (None if it
+                    carries no addrs -- those are never folded, each its own group).
+      - dedup_role: "primary" for the first record of a group (the one counted by
+                    panicking_distinct), "folded" for the rest (duplicates).
+    Records are ordered (file, line, col) so "primary" is deterministic. Returns the
+    distinct-obligation count = number of primaries.
+
+    NB: folding by addr-SET (not individual addr) is deliberate -- a single source
+    obligation that guards many monomorphized panics (e.g. one generic -> 50 addrs)
+    is ONE obligation and stays one. To instead count distinct codegened bl-panic
+    instructions, count distinct addrs across the addr_group keys."""
+    groups: dict[tuple, list[dict]] = {}
+    singletons = 0
+    for r in records:
+        if r.get("bucket") != "panicking":
+            continue
+        addrs = r.get("addrs") or []
+        if not addrs:
+            r["addr_group"] = None
+            r["dedup_role"] = "primary"
+            singletons += 1
+            continue
+        groups.setdefault(tuple(sorted(set(addrs))), []).append(r)
+    for key, members in groups.items():
+        gid = ",".join(key)
+        members.sort(key=lambda r: (r.get("file") or "", r.get("line") or 0,
+                                    r.get("col") or 0))
+        for i, r in enumerate(members):
+            r["addr_group"] = gid
+            r["dedup_role"] = "primary" if i == 0 else "folded"
+    return len(groups) + singletons
+
+
 def verify_partition(flux_errors: list[dict], records: list[dict],
                      counts: dict[str, int]) -> list[str]:
     """The triage must be a complete, bijective partition of the input: every
@@ -374,6 +426,11 @@ def main() -> int:
     total_panic_root = (counts["panicking"] + counts["lookup_failed"]
                         + counts["non_panicking"] + counts["precondition_failed"])
 
+    # Fold the explicit-assert / monomorph duplicates within `panicking`: distinct
+    # obligations, not raw error records. Does not touch `counts` (the conservation
+    # gate partitions raw flux_errors[]); reported as an extra summary field.
+    panicking_distinct = mark_panicking_dedup(errors)
+
     partition_violations = verify_partition(report.get("flux_errors", []), errors, counts)
 
     report["triage"] = {
@@ -391,6 +448,7 @@ def main() -> int:
         "summary": {
             "total_errors": len(errors),
             "panicking": counts["panicking"],
+            "panicking_distinct": panicking_distinct,
             "precondition_failed": counts["precondition_failed"],
             "non_panicking": counts["non_panicking"],
             "lookup_failed": counts["lookup_failed"],
@@ -407,6 +465,7 @@ def main() -> int:
         fh.write("\n")
 
     print(f"triage: panicking={counts['panicking']} "
+          f"(distinct={panicking_distinct}) "
           f"precondition_failed={counts['precondition_failed']} "
           f"non_panicking={counts['non_panicking']} "
           f"lookup_failed={counts['lookup_failed']} "
