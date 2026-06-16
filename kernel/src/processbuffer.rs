@@ -1093,6 +1093,20 @@ impl WriteableProcessSlice {
 
     /// Access a portion of the slice with bounds checking. If the access is not
     /// within the slice then `None` is returned.
+    //
+    // Faithful spec of the standard slice `get`: `Some` iff the range is
+    // in-bounds (`start <= end <= self.len`), and the returned slice has the
+    // requested length. Trusted because this is a thin transmute-wrapper over
+    // `<[Cell<u8>]>::get`, which has no Flux extern spec; the sig encodes the
+    // std-library semantics directly (same trust category as the `Option`
+    // extern spec). A zero-trust alternative is a `core::slice::<[T]>::get`
+    // extern spec mirroring the existing `Index<I> for [T]` one.
+    #[flux_rs::trusted]
+    #[flux_rs::sig(
+        fn(&Self[@n], range: Range<usize>)
+            -> Option<&WriteableProcessSlice{s: s.len == range.end - range.start}>
+               [range.start <= range.end && range.end <= n]
+    )]
     pub fn get(&self, range: Range<usize>) -> Option<&WriteableProcessSlice> {
         if let Some(slice) = self.slice.get(range) {
             Some(cast_cell_slice_to_process_slice(slice))

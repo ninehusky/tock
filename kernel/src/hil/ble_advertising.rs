@@ -65,6 +65,11 @@ pub trait BleConfig {
 }
 
 pub trait RxClient {
+    // The radio reports that it read `len` bytes into `buf`, so `buf` must be at
+    // least `len` bytes long. This is the honest HIL contract: the caller (radio
+    // driver) supplies a buffer large enough to hold the bytes it claims to have
+    // received. (Liskov: mirrored on the impl in ble_advertising_driver.rs.)
+    #[flux_rs::sig(fn(&Self, buf: &mut [u8][@n], len: u8{len <= n}, result: Result<(), ErrorCode>))]
     fn receive_event(&self, buf: &'static mut [u8], len: u8, result: Result<(), ErrorCode>);
 }
 
