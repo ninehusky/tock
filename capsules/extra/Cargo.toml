@@ -25,6 +25,13 @@ include = [
     "src/ieee802154/framer.rs",
     "src/ieee802154/mac.rs",
     "src/mx25r6435f.rs",
+    # takecell_demo.rs: living documentation of TakeCell value-refinement (the
+    # "Design C" mechanism used on mx25's txbuffer). DELIBERATELY left out of the
+    # default include — it contains 6 intentional soundness-gate / boundary errors
+    # that are the POINT of the demo, so enabling it here would pollute the
+    # baseline. To run it: temporarily set `include = ["src/takecell_demo.rs"]`,
+    # then `cargo flux clean -p capsules-extra && cargo flux -p capsules-extra`.
+    # "src/takecell_demo.rs",
     "src/net/ipv6/ip_utils.rs",
     "src/net/ipv6/ipv6.rs",
     "src/net/network_capabilities.rs",
