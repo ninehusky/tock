@@ -21,11 +21,17 @@ every panic-root error in `invariant2_report.json`'s `flux_errors[]` into:
                       could not pin the panic to a specific source line, so we
                       know a panic codegens *in the function* but not on which
                       line.
-  3. non_panicking -- a panic-root error with neither of the above: no precise
-                      assert and not inside a fn-level-marked function. By step
-                      1's completeness (every Tock-local binary panic is marked),
-                      such an error does not map to a codegened panic -> the
-                      deprioritizable set.
+  3. non_panicking -- a panic-SHAPED error (assertion might fail: OOB / div-by-zero
+                      / may-panic) with neither of the above: no precise assert and
+                      not inside a fn-level-marked function. By step 1's completeness
+                      (every Tock-local binary panic is marked), such an error does
+                      not map to a codegened panic -> the deprioritizable set.
+  4. precondition_failed -- same "neither of the above" residual as (3), but the
+                      error is a `refinement type error` (a precondition that did
+                      not hold) rather than a panic-shaped assertion. These do not
+                      codegen a `bl panic` either, but they are typically pushed up
+                      from / downstream of a real obligation elsewhere, so they are
+                      split out from (3): they are NOT safe to deprioritize on sight.
 
 Errors that match an *exclude* pattern (e.g. precondition diagnostics) are bucket
 `excluded` and reported separately so the gate stays legible.
@@ -254,10 +260,19 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
                 rec["func"] = func
                 rec["reason"] = (f"inside fn-level-marked function `{func}` -- addr2line could "
                                  f"not pin the panic to a precise line")
+            elif re.search(r"refinement type error", e.get("message", "") or "", re.IGNORECASE):
+                rec["bucket"] = "precondition_failed"
+                rec["reason"] = ("a Flux refinement-type error (a precondition that did not "
+                                 "hold) with no precise-marker assert and not inside a "
+                                 "fn-level-marked function -- not itself a codegened bl panic, "
+                                 "but typically a precondition pushed up from / downstream of a "
+                                 "real obligation elsewhere, so NOT deprioritizable on its own")
             else:
                 rec["bucket"] = "non_panicking"
-                rec["reason"] = ("no precise-marker assert and not inside a fn-level-marked "
-                                 "function -- no codegened bl panic; deprioritizable")
+                rec["reason"] = ("a panic-shaped assertion (out-of-bounds / divide-by-zero / "
+                                 "may-panic) with no precise-marker assert and not inside a "
+                                 "fn-level-marked function -- no codegened bl panic "
+                                 "(optimizer/build proved or dropped it); deprioritizable")
         out.append(rec)
     return out
 
@@ -266,7 +281,8 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
 # Conservation gate
 # --------------------------------------------------------------------------- #
 
-_BUCKETS = ("panicking", "lookup_failed", "non_panicking", "excluded", "unclassified")
+_BUCKETS = ("panicking", "lookup_failed", "non_panicking", "precondition_failed",
+            "excluded", "unclassified")
 
 
 def verify_partition(flux_errors: list[dict], records: list[dict],
@@ -352,10 +368,11 @@ def main() -> int:
     errors = classify(report, survey_addrs, panic_root, exclude, cache)
 
     counts = {"panicking": 0, "lookup_failed": 0, "non_panicking": 0,
-              "excluded": 0, "unclassified": 0}
+              "precondition_failed": 0, "excluded": 0, "unclassified": 0}
     for r in errors:
         counts[r["bucket"]] += 1
-    total_panic_root = counts["panicking"] + counts["lookup_failed"] + counts["non_panicking"]
+    total_panic_root = (counts["panicking"] + counts["lookup_failed"]
+                        + counts["non_panicking"] + counts["precondition_failed"])
 
     partition_violations = verify_partition(report.get("flux_errors", []), errors, counts)
 
@@ -372,13 +389,14 @@ def main() -> int:
                      "other_obligation errors are admitted by message pattern"),
         },
         "summary": {
+            "total_errors": len(errors),
             "panicking": counts["panicking"],
-            "lookup_failed": counts["lookup_failed"],
+            "precondition_failed": counts["precondition_failed"],
             "non_panicking": counts["non_panicking"],
+            "lookup_failed": counts["lookup_failed"],
             "excluded": counts["excluded"],
             "unclassified": counts["unclassified"],
             "total_panic_root": total_panic_root,
-            "total_errors": len(errors),
             "conservation_ok": not partition_violations,
         },
         "errors": errors,
@@ -389,8 +407,9 @@ def main() -> int:
         fh.write("\n")
 
     print(f"triage: panicking={counts['panicking']} "
-          f"lookup_failed={counts['lookup_failed']} "
+          f"precondition_failed={counts['precondition_failed']} "
           f"non_panicking={counts['non_panicking']} "
+          f"lookup_failed={counts['lookup_failed']} "
           f"excluded={counts['excluded']} "
           f"unclassified={counts['unclassified']} "
           f"(total panic-root={total_panic_root})")
