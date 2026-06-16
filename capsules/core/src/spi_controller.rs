@@ -120,7 +120,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         start = cmp::min(start, end);
 
                         for (i, c) in src[start..end].iter().enumerate() {
-                            // FLUX-TODO addr=0x145e8 flavor=bounds
+                            // FLUX-TODO addr=0x15364 flavor=bounds
                             flux_support::assert(i < kwbuf.len());
                             kwbuf[i] = c.get();
                         }
@@ -138,7 +138,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
 
         // TODO verify SPI return value
         let _ = if rlen == 0 {
-            // FLUX-TODO addr=0x145d2 flavor=unwrap_option
+            // FLUX-TODO addr=0x1534e flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master
                 .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
@@ -170,7 +170,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         .unwrap_or(0),
                 });
             app.index += read_len;
-            // FLUX-TODO addr=0x145de flavor=unwrap_option
+            // FLUX-TODO addr=0x1535a flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
@@ -178,7 +178,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                 read_len,
             )
         } else {
-            // FLUX-TODO addr=0x145d8 flavor=unwrap_option
+            // FLUX-TODO addr=0x15354 flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
                 self.kernel_write.take().unwrap(),
@@ -232,7 +232,7 @@ impl<'a, S: SpiMasterDevice<'a>> SyscallDriver for Spi<'a, S> {
     // x+1: unlock spi
     //   - does nothing if lock not held
     //
-    // FLUX-TODO-FN-LEVEL addrs=[0x76d4] flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x7884] flavor=explicit_panic
     fn command(
         &self,
         command_num: usize,

@@ -510,6 +510,7 @@ where
                                 // from the RxClient HIL contract). An undersized buffer takes
                                 // the `None` -> `false` path instead of panicking the kernel.
                                 if let Some(slice) = userland.get(0..len as usize) {
+                                    // FLUX-TODO addr=0x1ed4a flavor=slice_end
                                     flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                     slice.copy_from_slice_or_err(&buf[0..len as usize]).is_ok()
                                 } else {

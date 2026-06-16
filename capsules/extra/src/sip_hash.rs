@@ -166,7 +166,7 @@ fn size_of_u16() -> usize {
 
 #[flux_rs::sig(fn(input: &[u8]{n: n >= 2}) -> u16)]
 fn read_le_u16(input: &[u8]) -> u16 {
-    // FLUX-TODO addr=0xa3da flavor=explicit_panic
+    // FLUX-TODO addr=0xa35a flavor=explicit_panic
     flux_support::assert(size_of_u16() <= input.len());
     let (int_bytes, _rest) = input.split_at(size_of_u16());
     u16::from_le_bytes(int_bytes.try_into().unwrap())
@@ -189,7 +189,7 @@ fn u8to64_le(buf: &[u8], start: usize, len: usize) -> u64 {
         i += 2
     }
     if i < len {
-        // FLUX-TODO addr=0xa3e2 flavor=bounds
+        // FLUX-TODO addr=0xa362 flavor=bounds
         flux_support::assert(start + i < buf.len());
         out |= (buf[start + i] as u64) << (i * 8);
         i += 1;

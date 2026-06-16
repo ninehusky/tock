@@ -155,7 +155,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             _ => {
 
                 // Notes: blocked-cell
-                // FLUX-TODO addr=0x18460 flavor=explicit_panic
+                // FLUX-TODO addr=0x17e04 flavor=explicit_panic
                 flux_support::assert(false);
                 unreachable!()
             },
@@ -227,7 +227,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
 
     /// Get region number from a hashed key
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> usize)]
-    // FLUX-TODO-FN-LEVEL addrs=[0x1632c] flavor=assert
+    // FLUX-TODO-FN-LEVEL addrs=[0x162f0] flavor=assert
     fn get_region(&self, hash: u64) -> usize {
 
 
@@ -240,7 +240,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
         let num_region = self.flash_size / S;
 
         // Determine the block where the data should be
-        // FLUX-TODO addr=0x16314 flavor=rem_by_zero
+        // FLUX-TODO addr=0x162d8 flavor=rem_by_zero
         flux_support::assert(num_region != 0);
         (hash as usize & 0xFFFF) % num_region
     }
@@ -452,14 +452,14 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 State::AppendKey(key_state) => match key_state {
                     KeyState::ReadRegion(reg) => reg,
                 },
-                // FLUX-TODO addr=0x16bf0 flavor=explicit_panic
+                // FLUX-TODO addr=0x16bb4 flavor=explicit_panic
                 _ => { flux_support::assert(false); unreachable!() },
             };
 
             let region_buf_opt = self.read_buffer.take();
 
             // Notes: blocked-cell
-            // FLUX-TODO addr=0x16be6 flavor=unwrap_option
+            // FLUX-TODO addr=0x16baa flavor=unwrap_option
             flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
 
@@ -730,7 +730,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 },
                 _ => {
                     // Notes: blocked-cell
-                    // FLUX-TODO addr=0x16ec6 flavor=explicit_panic
+                    // FLUX-TODO addr=0x16e8a flavor=explicit_panic
                     flux_support::assert(false);
                     unreachable!()
                 },
@@ -740,7 +740,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             let region_buf_opt = self.read_buffer.take();
 
             // Notes: blocked-cell
-            // FLUX-TODO addr=0x16ebc flavor=unwrap_option
+            // FLUX-TODO addr=0x16e80 flavor=unwrap_option
             flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::GetKey(KeyState::ReadRegion(new_region))
@@ -876,7 +876,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 },
                 _ => {
                     // Notes: blocked-cell
-                    // FLUX-TODO addr=0x162d4 flavor=explicit_panic
+                    // FLUX-TODO addr=0x16298 flavor=explicit_panic
                     flux_support::assert(false);
                     unreachable!()
                 },
@@ -885,7 +885,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             // Get the data from that region
             let region_buf_opt = self.read_buffer.take();
             // Notes: blocked-cell
-            // FLUX-TODO addr=0x162ca flavor=unwrap_option
+            // FLUX-TODO addr=0x1628e flavor=unwrap_option
             flux_support::assert(region_buf_opt.is_some());
             let region_data = region_buf_opt.unwrap();
             if self.state.get() != State::InvalidateKey(KeyState::ReadRegion(new_region)) {
@@ -990,7 +990,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
                 },
                 _ => {
                     // Notes: blocked-cell
-                    // FLUX-TODO addr=0x18890 flavor=explicit_panic
+                    // FLUX-TODO addr=0x18234 flavor=explicit_panic
                     flux_support::assert(false);
                     unreachable!()
                 },
@@ -1001,7 +1001,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             // Notes: blocked-cell -- predicate would be `self.read_buffer.get().is_some()`
             // but `Cell::get` requires Copy and the contained `&mut [u8; S]` isn't Copy;
             // leaving as `assert(false)` until a Cell extern_spec lands.
-            // FLUX-TODO addr=0x18886 flavor=unwrap_option
+            // FLUX-TODO addr=0x1822a flavor=unwrap_option
             flux_support::assert(false);
             let region_buf_opt = self.read_buffer.take();
             let region_data = region_buf_opt.unwrap();
@@ -1082,7 +1082,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
         let region_buf_opt = self.read_buffer.take();
 
         // Notes: blocked-cell
-        // FLUX-TODO addr=0x185c0 flavor=unwrap_option
+        // FLUX-TODO addr=0x17f64 flavor=unwrap_option
         flux_support::assert(region_buf_opt.is_some());
         let region_data = region_buf_opt.unwrap();
         if self.state.get() != State::GarbageCollect(RubbishState::ReadRegion(region, flash_freed))
@@ -1215,7 +1215,7 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
             },
             _ => {
                 // Notes: blocked-cell
-                // FLUX-TODO addr=0x185ca flavor=explicit_panic
+                // FLUX-TODO addr=0x17f6e flavor=explicit_panic
                 flux_support::assert(false);
                 unreachable!()
             },

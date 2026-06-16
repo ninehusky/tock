@@ -196,7 +196,7 @@ impl<T: Copy> OptionalCell<T> {
     #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn unwrap_or_panic(&self) -> T {
         // FLUX-TODO flavor=unwrap_option addrs=[
-        //     0x116f8, 0x12542, 0x127de, 0x134e2, 0x134e8,
+        //     0x11664, 0x124ae, 0x1274a, 0x138b6, 0x138bc,
         // ]
         flux_support::assert(self.value.get().is_some());
         self.value.get().unwrap()

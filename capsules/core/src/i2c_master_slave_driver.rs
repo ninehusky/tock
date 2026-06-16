@@ -140,7 +140,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
                                 master_rx.mut_enter(move |app_buffer| {
                                     let len = cmp::min(app_buffer.len(), read_len as usize);
 
-                                    // FLUX-TODO addr=0x1edac flavor=slice_end
+                                    // FLUX-TODO addr=0x1f404 flavor=slice_end
                                     flux_support::assert(len <= buffer.len());
                                     for (i, c) in buffer[0..len].iter().enumerate() {
                                         app_buffer[i].set(*c);
@@ -195,7 +195,7 @@ impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwMasterClient
 impl<'a, I: hil::i2c::I2CMasterSlave<'a>> hil::i2c::I2CHwSlaveClient
     for I2CMasterSlaveDriver<'a, I>
 {
-    // FLUX-TODO-FN-LEVEL addrs=[0x1a328] flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x1a9b8] flavor=explicit_panic
     #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn command_complete(
         &self,

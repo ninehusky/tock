@@ -238,7 +238,7 @@ impl<'a> AesECB<'a> {
         (start, end, take)
     }
 
-    // FLUX-TODO-FN-LEVEL addrs=[0x220ce, 0x220d4, 0x220e4, 0x220ea, 0x220f0] flavor=bounds
+    // FLUX-TODO-FN-LEVEL addrs=[0x2210e, 0x22114, 0x22124, 0x2212a, 0x22130] flavor=bounds
     fn copy_plaintext(&self) {
         let (start, _end, take) = self.get_start_end_take();
 
@@ -351,7 +351,7 @@ impl<'a> AesECB<'a> {
                                 // output buffer.
                                 self.output.map(|output| {
                                     for i in 0..take {
-                                        // FLUX-TODO addr=0x1e80 flavor=bounds
+                                        // FLUX-TODO addr=0x1ee4 flavor=bounds
                                         flux_support::assert(start + i < output.len() && i + PLAINTEXT_END < 48);
                                         let in_byte = output[start + i];
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
@@ -368,7 +368,7 @@ impl<'a> AesECB<'a> {
                                         let in_byte = input[start + i];
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
-                                        // FLUX-TODO addr=0x1e32 flavor=bounds
+                                        // FLUX-TODO addr=0x1e96 flavor=bounds
                                         flux_support::assert(start_idx + current_idx + i < output.len());
                                         output[start_idx + current_idx + i] =
                                             keystream_byte ^ in_byte;
@@ -392,7 +392,7 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x1e12 flavor=bounds
+                                    // FLUX-TODO addr=0x1e76 flavor=bounds
                                     flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
                                 }
@@ -412,7 +412,7 @@ impl<'a> AesECB<'a> {
                                 let dest_idx = start_idx + current_idx + i;
                                 // Copy out of static mut DMA buffer
                                 unsafe {
-                                    // FLUX-TODO addr=0x1e1c flavor=bounds
+                                    // FLUX-TODO addr=0x1e80 flavor=bounds
                                     flux_support::assert(dest_idx < output.len() && i + PLAINTEXT_END < 48 && i + PLAINTEXT_START < 48);
                                     output[dest_idx] = ECB_DATA[i + PLAINTEXT_END];
                                     ECB_DATA[i + PLAINTEXT_START] = ECB_DATA[i + PLAINTEXT_END];
@@ -512,7 +512,7 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             self.crypt();
             None
         } else {
-            // FLUX-TODO addr=0x221ca flavor=unwrap_option
+            // FLUX-TODO addr=0x2220a flavor=unwrap_option
             flux_support::assert(self.output.is_some());
             Some((
                 Err(ErrorCode::INVAL),
