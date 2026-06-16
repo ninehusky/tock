@@ -81,10 +81,10 @@ mod rw_allow {
 #[flux_rs::sig(fn(rc: Result<(), kernel::ErrorCode>{r: !r.b}) -> kernel::ErrorCode)]
 fn result_to_errorcode(rc: Result<(), kernel::ErrorCode>) -> kernel::ErrorCode {
 
+    let rc_into: Result<kernel::ErrorCode, _> = rc.try_into();
+
     // FLUX-TODO addr=0xbe04 flavor=unwrap_result
     flux_support::assert(rc.is_ok());
-
-    let rc_into: Result<kernel::ErrorCode, _> = rc.try_into();
     rc_into.unwrap()
 }
 

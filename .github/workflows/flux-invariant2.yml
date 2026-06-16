@@ -208,6 +208,26 @@ jobs:
           python3 tools/check_invariant2.py
 
       # ------------------------------------------------------------------ #
+      # Triage (issue #15): bucket every panic-root Flux error recorded by
+      # invariant 2 into panicking / lookup_failed / non_panicking by whether
+      # it maps to a codegened `bl panic`. Standalone post-processor — reads
+      # the committed reports + survey + source and writes a `triage` block
+      # back into tools/invariant2_report.json. Must run *after* check_invariant2
+      # (which produces the report it augments).
+      #
+      # GATES (non-zero exit fails this step):
+      #   - conservation: the triage must be a complete bijective partition of
+      #     flux_errors[] (every E0999 represented exactly once, all bucketed).
+      #     A violation is a tool bug. Non-overridable. (exit 3)
+      #   - unclassified: every E0999 must match a panic-root or exclude pattern.
+      #     A miss means a reworded/new Flux diagnostic is slipping through
+      #     uncounted; update the patterns. (exit 1; --allow-unclassified to skip)
+      # ------------------------------------------------------------------ #
+      - name: Triage panic-root Flux errors
+        run: |
+          python3 tools/triage_panic_errors.py
+
+      # ------------------------------------------------------------------ #
       # Upload the full report AND per-crate cargo flux logs as artifacts.
       # The *.baseline.log files contain the raw cargo flux output for each
       # crate — essential for diagnosing SILENT obligations.
