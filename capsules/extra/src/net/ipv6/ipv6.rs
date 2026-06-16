@@ -498,7 +498,7 @@ impl<'a> IP6Packet<'a> {
         self.payload.payload
     }
 
-    #[flux_rs::sig(fn(self: &Self[@p]) -> usize requires p.kind != 1)]
+    #[flux_rs::sig(fn(self: &Self[@p]) -> usize[48] requires p.kind != 1)]
     pub fn get_total_hdr_size(&self) -> usize {
         let transport_hdr_size = match self.payload.header {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),

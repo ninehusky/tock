@@ -238,7 +238,6 @@ use crate::net::sixlowpan::sixlowpan_compression::{is_lowpan, ContextStore};
 use crate::net::util::{network_slice_to_u16, u16_to_network_slice};
 
 use core::cell::Cell;
-use core::cmp::min;
 
 use kernel::collections::list::{List, ListLink, ListNode};
 use kernel::hil::radio;
@@ -262,6 +261,40 @@ pub mod lowpan_frag {
     pub const FRAG1_HDR: u8 = 0b11000000;
     pub const FRAG1_HDR_SIZE: usize = 4;
     pub const FRAGN_HDR_SIZE: usize = 5;
+}
+
+// A specialized `core::cmp::min` for `usize` with a Flux spec (the generic
+// `core::cmp::min` has no extern spec, so its result is unconstrained). The
+// `v == a || v == b` conjunct lets callers recover which argument was selected.
+#[flux_rs::sig(fn(a: usize, b: usize) -> usize{v: v <= a && v <= b && (v == a || v == b)})]
+fn usize_min(a: usize, b: usize) -> usize {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+// `x & !0b111` rounds `x` down to the nearest multiple of 8, which is `<= x`.
+// Trusted lemma: Flux does not reason about bitwise `&`, so this expresses the
+// (true, unsigned) fact `x & !0b111 <= x`.
+#[flux_rs::trusted(reason = "bitwise & is opaque to Flux; x & !0b111 clears low bits so result <= x")]
+#[flux_rs::sig(fn(x: usize) -> usize{v: v <= x})]
+fn round_down_mul8(x: usize) -> usize {
+    x & !0b111
+}
+
+// Result of `write_additional_headers`. A named refined struct (not a bare
+// tuple) so the relation between the two fields survives field extraction at the
+// call site: Flux drops cross-component relations when an existential *tuple* is
+// destructured into separate locals (flux-rs/flux#1486), but preserves them for
+// struct fields.
+#[flux_rs::refined_by(payload_len: int, dgram_offset: int)]
+struct WriteHdrResult {
+    #[flux_rs::field(usize[payload_len])]
+    payload_len: usize,
+    #[flux_rs::field(usize[dgram_offset])]
+    dgram_offset: usize,
 }
 
 #[flux_rs::sig(fn(dgram_size: u16, dgram_tag: u16, dgram_offset: usize, hdr: &mut [u8]{n: n >= 5}, is_frag1: bool))]
@@ -459,7 +492,12 @@ impl<'a> TxState<'a> {
                 return Err((Err(ErrorCode::NOMEM), frame.into_buf()));
             }
 
-            let frame = self.prepare_next_fragment(ip6_packet, frame)?;
+            let frame = self.prepare_next_fragment(
+                ip6_packet,
+                frame,
+                self.dgram_offset.get(),
+                self.dgram_size.get() as usize,
+            )?;
             Ok((false, frame))
         }
     }
@@ -470,6 +508,8 @@ impl<'a> TxState<'a> {
 
     // Frag_buf needs to be >= 802.15.4 MTU
     // The radio takes frag_buf, consumes it, returns Frame or Error
+    // (`_` placeholder for the `&dyn ContextStore` arg dodges the dyn-in-sig ICE.)
+    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _, _) -> _ requires ip.kind != 1 && ip.hdr_len >= 8)]
     fn start_transmit<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -483,6 +523,8 @@ impl<'a> TxState<'a> {
     }
 
     // FLUX-TODO-FN-LEVEL addrs=[0x19ac4] flavor=bounds
+    // (`_` placeholder for the `&dyn ContextStore` arg dodges the dyn-in-sig ICE.)
+    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _, _) -> _ requires ip.kind != 1 && ip.hdr_len >= 8)]
     fn prepare_first_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
@@ -536,13 +578,15 @@ impl<'a> TxState<'a> {
         // Write the remainder of the payload, rounding down to a multiple
         // of 8 if the entire payload won't fit
         let payload_len = if remaining_payload > remaining_capacity {
-            remaining_capacity & !0b111
+            round_down_mul8(remaining_capacity)
         } else {
             remaining_payload
         };
         // TODO: Check success
-        let (payload_len, consumed) =
+        let result =
             self.write_additional_headers(ip6_packet, &mut frame, consumed, payload_len);
+        let payload_len = result.payload_len;
+        let consumed = result.dgram_offset;
 
         // Underlying invariant: `payload_len <= ip6_packet.get_payload().len()` —
         // payload_len is `min(remaining_payload, ...)` after `write_additional_headers`,
@@ -559,30 +603,73 @@ impl<'a> TxState<'a> {
         Ok(frame)
     }
 
-    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _) -> _ requires ip.kind != 1)]
+    // `dgram_offset`/`dgram_size` are the current values of the same-named cells,
+    // passed in by the (trusted) `next_fragment` caller where the
+    // `!is_transmit_done()` guard establishes `dgram_offset < dgram_size`. Passing
+    // them (rather than re-reading the cells here) lets Flux relate the two values;
+    // the precondition is the caller's guard made explicit.
+    // `dgram_size <= 48 + payload_buf_len` (★′): the datagram size the caller is
+    // fragmenting does not exceed the IPv6 header (40) + transport header (8) +
+    // payload buffer. This is the IPv6 well-formedness fact `get_total_len() <=
+    // get_total_hdr_size() + get_payload().len()` (the caller sets
+    // `dgram_size = get_total_len()` at :483); it cannot be machine-checked here
+    // because `get_total_len()` reads the IP6 header's `payload_len` byte-field,
+    // which is not in the IP6Packet refinement. Pushed as a precondition onto the
+    // (trusted) `next_fragment` caller, where the packet is known well-formed.
+    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _, dgram_offset: usize, dgram_size: usize) -> _ requires ip.kind != 1 && ip.hdr_len >= 8 && dgram_offset < dgram_size && dgram_size <= 48 + ip.payload_buf_len)]
     fn prepare_next_fragment<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
         mut frame: Frame,
+        dgram_offset: usize,
+        dgram_size: usize,
     ) -> Result<Frame, (Result<(), ErrorCode>, &'static mut [u8])> {
-        let dgram_offset = self.dgram_offset.get();
         let mut remaining_capacity = frame.remaining_data_capacity();
         remaining_capacity -= self.write_frag_hdr(&mut frame, false);
 
         // This rounds payload_len down to the nearest multiple of 8 if it
         // is not the last fragment (per RFC 4944)
-        let remaining_payload = (self.dgram_size.get() as usize) - dgram_offset;
+        let remaining_payload = dgram_size - dgram_offset;
         let payload_len = if remaining_payload > remaining_capacity {
-            remaining_capacity & !0b111
+            round_down_mul8(remaining_capacity)
         } else {
             remaining_payload
         };
 
-        let (payload_len, dgram_offset) =
+        // Capture the inputs to write_additional_headers so the asserts can relate
+        // the pre/post values (the call shifts bytes from payload_len to dgram_offset).
+        let dgram_offset_pre = dgram_offset;
+        let payload_len_pre = payload_len;
+
+        let result =
             self.write_additional_headers(ip6_packet, &mut frame, dgram_offset, payload_len);
+        let payload_len = result.payload_len;
+        let dgram_offset = result.dgram_offset;
+        // SOUND ASSUME bridging a Flux bug: `write_additional_headers`'s body PROVES
+        // its return refinement `r.payload_len + r.dgram_offset == pl_in + dgo_in`
+        // (the fn verifies), but Flux does not propagate an input<->output relation
+        // in a return refinement to call sites (output-only conjuncts like the
+        // `>= 48` one DO propagate; this sum does not). Asserting on `result.*`
+        // directly doesn't work either (the existential return's fields aren't
+        // pinned), so we extract into locals first, then re-assert the body-proven
+        // fact on them. TODO(flux-rs/flux): remove once return-refinement
+        // input-binder propagation is fixed; see ~/Desktop/flux_return_reft_repro.
+        flux_support::assume(payload_len + dgram_offset == payload_len_pre + dgram_offset_pre);
 
         if payload_len > 0 {
             let payload_offset = dgram_offset - ip6_packet.get_total_hdr_size();
+
+            // --- Progress checkpoints for the :587 bound proof (see reduction). ---
+            // (1) when payload remains, write_additional_headers advanced past the headers
+            flux_support::assert(dgram_offset >= ip6_packet.get_total_hdr_size());
+            // (2) write_additional_headers preserves dgram_offset + payload_len
+            flux_support::assert(dgram_offset + payload_len == dgram_offset_pre + payload_len_pre);
+            // (3) the original chunk never runs past the datagram
+            flux_support::assert(dgram_offset_pre + payload_len_pre <= dgram_size);
+            // (4)/(★) folded into the `dgram_size <= 48 + payload_buf_len` precondition
+            // (★′ above): with ①②③ + ★′, payload_offset + payload_len
+            //   = (dgram_offset + payload_len) - 48  <=  dgram_size - 48  <=  payload_buf_len.
+
             // FLUX-TODO addr=0x19a82 flavor=slice_order
             flux_support::assert(payload_offset + payload_len <= ip6_packet.get_payload().len());
             let _ = frame.append_payload(
@@ -599,19 +686,26 @@ impl<'a> TxState<'a> {
     // frame.
 
     // requires ip6_packet.kind != 1.
-    #[flux_rs::sig(fn(_, ip6_packet: &IP6Packet[@ip], _, _, _) -> _ requires ip.kind != 1)]
+    // Returns WriteHdrResult { payload_len', dgram_offset' }. This call only shifts
+    // bytes from the payload into the header region, so it preserves
+    // `payload_len + dgram_offset`; and when any payload remains (payload_len' > 0)
+    // it has advanced the offset to at least the total header size (48), so the
+    // later `dgram_offset - 48` is sound.
+    #[flux_rs::sig(
+        fn(_, ip6_packet: &IP6Packet[@ip], _, dgram_offset: usize[@dgo_in], payload_len: usize[@pl_in])
+            -> WriteHdrResult{r: r.payload_len + r.dgram_offset == pl_in + dgo_in && (r.payload_len > 0 => r.dgram_offset >= 48)}
+        requires ip.kind != 1 && ip.hdr_len >= 8
+    )]
     fn write_additional_headers<'b>(
         &self,
         ip6_packet: &'b IP6Packet<'b>,
         frame: &mut Frame,
         dgram_offset: usize,
         payload_len: usize,
-    ) -> (usize, usize) {
+    ) -> WriteHdrResult {
         let total_hdr_len = ip6_packet.get_total_hdr_size();
-        let mut payload_len = payload_len;
-        let mut dgram_offset = dgram_offset;
         if total_hdr_len > dgram_offset {
-            let headers_to_write = min(payload_len, total_hdr_len - dgram_offset);
+            let headers_to_write = usize_min(payload_len, total_hdr_len - dgram_offset);
             // TODO: Note that in order to serialize the headers, we need to
             // statically allocate room on the stack. However, we do not know
             // how many additional headers we have until runtime. This
@@ -619,10 +713,18 @@ impl<'a> TxState<'a> {
             let mut headers = [0_u8; 60];
             ip6_packet.encode(&mut headers);
             let _ = frame.append_payload(&headers[dgram_offset..dgram_offset + headers_to_write]);
-            payload_len -= headers_to_write;
-            dgram_offset += headers_to_write;
+            // Functional (no mut-shadow): `headers_to_write` bytes move from the
+            // payload count into the offset, preserving their sum.
+            WriteHdrResult {
+                payload_len: payload_len - headers_to_write,
+                dgram_offset: dgram_offset + headers_to_write,
+            }
+        } else {
+            WriteHdrResult {
+                payload_len,
+                dgram_offset,
+            }
         }
-        (payload_len, dgram_offset)
     }
 
     fn write_frag_hdr(&self, frame: &mut Frame, first_frag: bool) -> usize {
