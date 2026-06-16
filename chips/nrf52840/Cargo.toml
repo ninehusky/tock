@@ -24,7 +24,7 @@ nrf52 = { path = "../nrf52" }
 # flux-rs needed so the #[flux_rs::trusted] carve-out on service_interrupt resolves
 # even when nrf52840 is compiled as a dependency (e.g. by the nrf52840dk board),
 # where cargo flux does not inject flux-rs. See SESSION_2026-06-01 site #2.
-flux-rs = { path = "/Users/andrew/research/flux/lib/flux-rs" }
+flux-rs = { path = "../../flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
 
 [lints]

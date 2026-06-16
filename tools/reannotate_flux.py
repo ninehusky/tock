@@ -394,7 +394,7 @@ def tokens(s: str) -> set[str]:
 
 @dataclass
 class Violation:
-    kind: str          # 'malformed' | 'orphan' | 'ambiguous' | 'double' | 'overspecified' | 'unpaired'
+    kind: str          # 'malformed' | 'orphan' | 'ambiguous' | 'double' | 'overspecified' | 'unpaired' | 'misplaced'
     marker: Marker
     detail: str
     extra: Marker | None = None  # second marker for double-marker
@@ -459,6 +459,13 @@ class Auditor:
         # excluded from the double-marker check.
         self._fnlevel_claims: dict[str, list[tuple[int, int, frozenset[str]]]] = {}
         self._lines_cache: dict[str, list[str]] = {}
+        # per-marker bookkeeping for the assert-above-event check (issue #15):
+        # the survey event line a resolved precise marker mapped to, and the
+        # 0-based source-line index of its paired flux_support::assert(...).
+        # Keyed by id(marker); markers are kept alive for the whole run via the
+        # driver's all_markers list, so ids are stable and collision-free.
+        self._precise_event: dict[int, int] = {}
+        self._assert_idx: dict[int, int | None] = {}
 
     # -- file pass ------------------------------------------------------------
 
@@ -508,7 +515,8 @@ class Auditor:
         claimed: dict[str, set[int]] = defaultdict(set)
         for m in sorted(precise, key=lambda x: x.anchor):
             self._audit_precise(m, lines, claimed)
-            self._audit_precise_pairing(m, lines)
+            self._assert_idx[id(m)] = self._audit_precise_pairing(m, lines)
+        self._audit_assert_above_event(precise, lines)
         return markers
 
     # -- precise markers ------------------------------------------------------
@@ -571,6 +579,7 @@ class Auditor:
         if m.addr_singular is not None:        # addr= form
             if len(addrs) == 1:
                 self.resolutions.append(Resolution(m, new_addr=addrs[0]))
+                self._precise_event[id(m)] = matched_line
             else:
                 self.violations.append(Violation(
                     "ambiguous", m,
@@ -579,6 +588,7 @@ class Auditor:
         else:                                   # addrs=[...] form
             if len(addrs) > 1:
                 self.resolutions.append(Resolution(m, new_addrs=addrs))
+                self._precise_event[id(m)] = matched_line
             else:
                 self.violations.append(Violation(
                     "overspecified", m,
@@ -609,7 +619,9 @@ class Auditor:
         first non-skipped source line must contain a ``flux_support::assert(``
         call; otherwise the marker is unpaired. Stacked precise markers above
         the same panic share one assert — each resolves to it independently
-        via this same scan."""
+        via this same scan. Returns the 0-based index of the paired assert line
+        on success, or ``None`` when the marker is unpaired (a violation is
+        recorded). The index feeds the assert-above-event check below."""
         n = len(lines)
         idx = m.end + 1
         pair_re = (_ASSERT_PAIR_FLUX_SUPPORT if m.path.startswith("flux_support/")
@@ -621,15 +633,169 @@ class Auditor:
                 idx += 1
                 continue
             if pair_re.search(s):
-                return
+                return idx
             preview = stripped if len(stripped) <= 80 else stripped[:77] + "..."
             self.violations.append(Violation(
                 "unpaired", m,
                 f"first source line below marker has no flux_support::assert(...): "
                 f"{preview}"))
-            return
+            return None
         self.violations.append(Violation(
             "unpaired", m, "no source line below marker (end of file)"))
+        return None
+
+    # -- assert-above-event check (issue #15) ---------------------------------
+
+    # a source line ending in one of these is a continuation, not a statement end
+    _CONT_END = set("=+-*/%&|^<>,.:")
+    # a source line *beginning* with one of these continues the previous line
+    # (method chains `.foo()`, wrapped binary ops `| x`, `&& y`, `+ z`, ...)
+    _CONT_START = set(".?|&+-*/<>=")
+
+    @staticmethod
+    def _assert_span(lines: list[str], a_idx: int) -> tuple[int, int]:
+        """1-based inclusive line span of the flux_support::assert(...) call that
+        starts at 0-based ``a_idx``. Multi-line predicates are followed by a
+        parenthesis-balance scan (comments stripped), capped at a few lines so a
+        malformed call can't run away."""
+        depth = 0
+        seen_open = False
+        end = a_idx
+        for idx in range(a_idx, min(a_idx + 6, len(lines))):
+            code = re.sub(r"//.*", "", lines[idx])
+            depth += code.count("(") - code.count(")")
+            if "(" in code:
+                seen_open = True
+            end = idx
+            if seen_open and depth <= 0:
+                break
+        return a_idx + 1, end + 1
+
+    @staticmethod
+    def _next_code_line(lines: list[str], idx: int) -> str | None:
+        """Stripped text of the first non-blank, non-comment line at or after
+        0-based ``idx`` (None if none before EOF)."""
+        for j in range(idx, len(lines)):
+            s = lines[j].strip()
+            if s and not s.startswith("//"):
+                return s
+        return None
+
+    @classmethod
+    def _stmt_span(cls, lines: list[str], start: int) -> tuple[int, int]:
+        """1-based inclusive span of the single (possibly multi-line) statement or
+        expression beginning at 0-based ``start``. Balances ()/[] across lines and
+        treats both a trailing operator (``... =``) and a following line that
+        *begins* with a continuation token (``.foo()`` method chains, ``| x``
+        wrapped binary ops) as part of the same statement -- so a panic the survey
+        attributes to an inner line of one statement (the ``.split_at_mut(...)``
+        line of a two-line ``let ... = ...`` binding, the ``.unwrap()`` line of a
+        method chain, or the ``buf[*c + 2]`` term of a multi-line ``|`` expression)
+        still counts as directly below the assert. Capped so a following block
+        can't run away."""
+        depth = 0
+        opened = False
+        end = start
+        for idx in range(start, min(start + 12, len(lines))):
+            code = re.sub(r"//.*", "", lines[idx])
+            depth += (code.count("(") + code.count("[")
+                      - code.count(")") - code.count("]"))
+            if any(c in code for c in "(["):
+                opened = True
+            end = idx
+            st = code.rstrip()
+            if not st or depth > 0:
+                continue
+            last = st[-1]
+            if last == ";":
+                break
+            if last in cls._CONT_END:           # trailing operator -> continues
+                continue
+            if (last in ")]" and opened) or last not in cls._CONT_END:
+                nxt = cls._next_code_line(lines, idx + 1)
+                if nxt is not None and nxt[:1] in cls._CONT_START:
+                    continue                    # next line continues this statement
+                break
+        return start + 1, end + 1
+
+    def _audit_assert_above_event(self, precise: list[Marker], lines: list[str]):
+        """Issue #15 part 1: a resolved precise marker's paired assert must sit
+        directly above the panic event it guards, i.e.
+
+            // FLUX-TODO addr=0x... flavor=...   <- marker
+            flux_support::assert(cond);          <- paired assert
+            arr[idx]                             <- the panicking event line
+
+        Markers that share one assert (stacked above the same panic) are grouped
+        by their paired-assert index and judged together. The event must lie at or
+        above the end of the single statement *directly below* the assert -- where
+        "directly below" skips blank lines, comments, and *sibling asserts* (a
+        stacked-assert cluster guards one event). A violation fires only when every
+        event is *strictly below* that statement, i.e. a complete unrelated
+        statement sits between the assert and the panic it claims to guard. Events
+        the survey attributes at or above the assert are DWARF line-imprecision (an
+        assert below its marker cannot physically sit below the marker line, which
+        the orphan window pins as the floor), not a misplacement.
+
+        ``assert(false)`` sentinels are exempt: they claim a whole region dead
+        rather than guarding one indexing/unwrap site, so block-level placement is
+        expected.
+
+        Only resolved, non-carved markers with a paired assert participate;
+        orphan/ambiguous/unpaired markers already carry their own violation."""
+        n = len(lines)
+        in_flux_support = bool(precise) and precise[0].path.startswith("flux_support/")
+        pair_re = _ASSERT_PAIR_FLUX_SUPPORT if in_flux_support else _ASSERT_PAIR
+        groups: dict[int, list[Marker]] = defaultdict(list)
+        for m in precise:
+            if id(m) not in self._precise_event:
+                continue
+            a_idx = self._assert_idx.get(id(m))
+            if a_idx is None:
+                continue
+            groups[a_idx].append(m)
+
+        for a_idx, group in groups.items():
+            # sentinels (assert(false)) are dead-code claims, not event guards
+            if re.search(r"assert\s*\(\s*false\s*\)", lines[a_idx]):
+                continue
+
+            assert_start, assert_end = self._assert_span(lines, a_idx)
+            events = {self._precise_event[id(m)] for m in group}
+
+            # first real code line below the assert, skipping blanks, comments,
+            # and sibling asserts (a stacked-assert cluster guards one event)
+            first_below = None
+            j = assert_end  # 1-based; lines[assert_end] is the next 0-based line
+            while j < n:
+                stripped = lines[j].strip()
+                if stripped == "" or stripped.startswith("//") or pair_re.search(lines[j]):
+                    j += 1
+                    continue
+                first_below = j  # 0-based index of the first event-candidate line
+                break
+
+            if first_below is not None:
+                _, stmt_end = self._stmt_span(lines, first_below)
+            else:
+                stmt_end = assert_end  # no code below -> only same-line events pass
+
+            # pass if any event is at or above the directly-below statement's end
+            if any(e <= stmt_end for e in events):
+                continue
+
+            m0 = min(group, key=lambda x: x.anchor)
+            below_txt = (f"line {first_below + 1}" if first_below is not None
+                         else "end of file")
+            self.violations.append(Violation(
+                "misplaced", m0,
+                f"paired assert (line {assert_start}) is not directly above its panic "
+                f"event: the statement directly below ends at line {stmt_end}, but the "
+                f"marker resolves to a panic further down at line {min(events)} "
+                f"(an unrelated statement sits in between)",
+                hint=("move the flux_support::assert(...) to sit immediately above the "
+                      "panicking line it guards (only blank/comment lines or sibling "
+                      "asserts may separate the marker, the assert, and the event)")))
 
     # -- orphan self-diagnosis ------------------------------------------------
 
@@ -851,13 +1017,15 @@ def print_scope_summary(markers: list[Marker]):
 
 
 def report_violations(violations: list[Violation]) -> None:
-    order = ["malformed", "orphan", "ambiguous", "overspecified", "unpaired", "double"]
+    order = ["malformed", "orphan", "ambiguous", "overspecified", "unpaired",
+             "misplaced", "double"]
     label = {
         "malformed": "MALFORMED",
         "orphan": "ORPHANED",
         "ambiguous": "AMBIGUOUS",
         "overspecified": "OVER-SPECIFIED",
         "unpaired": "UNPAIRED-ASSERT",
+        "misplaced": "MISPLACED-ASSERT",
         "double": "DOUBLE-MARKER",
     }
     by_kind: dict[str, list[Violation]] = defaultdict(list)

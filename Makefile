@@ -308,7 +308,8 @@ ci-runner-github-build:\
 	ci-job-syntax\
 	ci-job-compilation\
 	ci-job-debug-support-targets\
-	ci-job-collect-artifacts
+	ci-job-collect-artifacts\
+	ci-job-flux-annotations
 	$(call banner,CI-Runner: GitHub build runner DONE)
 
 .PHONY: ci-runner-github-tests
@@ -440,6 +441,11 @@ ci-job-collect-artifacts: ci-job-compilation
 		do mkdir -p "tools/ci-artifacts/$$(dirname $$f)";\
 		cp "$$f" "tools/ci-artifacts/$$f";\
 		done
+
+.PHONY: ci-job-flux-annotations
+ci-job-flux-annotations:
+	$(call banner,CI-Job: Flux Annotation Count)
+	@tools/count_flux_annotations.sh
 
 
 
