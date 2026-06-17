@@ -1232,7 +1232,6 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// Note, a grant can only be entered once at a time. Attempting to call
     /// `.enter()` on a grant while it is already entered will result in a
     /// `panic!()`. See the comment in `access_grant()` for more information.
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn enter<F, R>(self, fun: F) -> R
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData) -> R,
@@ -1357,7 +1356,6 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
     /// If `panic_on_reenter` is `true`, this will panic if the grant region is
     /// already currently entered. If `panic_on_reenter` is `false`, this will
     /// return `None` if the grant region is entered and do nothing.
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn access_grant_with_allocator<F, R>(self, fun: F, panic_on_reenter: bool) -> Option<R>
     where
         F: FnOnce(&mut GrantData<T>, &GrantKernelData, &mut GrantRegionAllocator) -> R,

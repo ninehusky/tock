@@ -115,7 +115,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// `controller`: An new struct implementing `FlashController`
     /// `flash_size`: The total size of the flash used for TicKV
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn new(controller: C, read_buffer: &'a mut [u8; S], flash_size: usize) -> Self {
         // S is a const generic for the flash region size; a zero-sized region
         // is meaningless. flash_size must accommodate at least one region.
@@ -142,7 +141,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     /// On success nothing will be returned.
     /// On error a `ErrorCode` will be returned.
     #[flux_rs::sig(fn(&Self, hashed_main_key: u64{hashed_main_key != 0 && hashed_main_key != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn initialise(&self, hashed_main_key: u64) -> Result<SuccessCode, ErrorCode> {
         let mut buf: [u8; 0] = [0; 0];
 
@@ -419,7 +417,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// On success nothing will be returned.
     /// On error a `ErrorCode` will be returned.
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn append_key(&self, hash: u64, value: &[u8]) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
         let check_sum = crc32::Crc32::new();
@@ -702,7 +699,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     /// If a power loss occurs before success is returned the data is assumed to
     /// be lost.
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}, buf: &mut [u8]) -> Result<(SuccessCode, usize), ErrorCode>)]
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn get_key(&self, hash: u64, buf: &mut [u8]) -> Result<(SuccessCode, usize), ErrorCode> {
         let region = self.get_region(hash);
 
@@ -854,7 +850,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn invalidate_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
         // (No binary panic: div by const-generic S; Flux obligation only.)
@@ -971,7 +966,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     /// If a power loss occurs before success is returned the data is
     /// assumed to be lost.
     #[flux_rs::sig(fn(&Self, hash: u64{hash != 0 && hash != 0xFFFF_FFFF_FFFF_FFFF}) -> Result<SuccessCode, ErrorCode>)]
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn zeroise_key(&self, hash: u64) -> Result<SuccessCode, ErrorCode> {
         let region = self.get_region(hash);
 
@@ -1072,7 +1066,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
         }
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn garbage_collect_region(
         &self,
         region: usize,
@@ -1196,7 +1189,6 @@ impl<'a, C: FlashController<S>, const S: usize> TicKV<'a, C, S> {
     ///
     /// On success the number of bytes freed will be returned.
     /// On error a `ErrorCode` will be returned.
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn garbage_collect(&self) -> Result<usize, ErrorCode> {
         let num_region = self.flash_size / S;
         let mut flash_freed = 0;

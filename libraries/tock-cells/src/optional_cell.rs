@@ -193,7 +193,6 @@ impl<T: Copy> OptionalCell<T> {
     /// is intended to discourage users from casually adding calls to
     /// `unwrap()` without careful consideration.
     #[track_caller]
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub fn unwrap_or_panic(&self) -> T {
         // FLUX-TODO flavor=unwrap_option addrs=[
         //     0x11664, 0x124ae, 0x1274a, 0x138b6, 0x138bc,

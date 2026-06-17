@@ -191,7 +191,6 @@ impl<'a, I: i2c::I2CMaster<'a>> SyscallDriver for I2CMasterDriver<'a, I> {
 }
 
 impl<'a, I: i2c::I2CMaster<'a>> i2c::I2CHwMasterClient for I2CMasterDriver<'a, I> {
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn command_complete(&self, buffer: &'static mut [u8], status: Result<(), i2c::Error>) {
         self.tx.take().map(|tx| {
             self.apps.enter(tx.processid, |_, kernel_data| {

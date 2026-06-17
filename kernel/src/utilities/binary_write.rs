@@ -95,7 +95,6 @@ impl<'a> WriteToBinaryOffsetWrapper<'a> {
 
 impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
     // VTOCK-TODO: change this code back when mutable folding works
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let string_len = s.len();
         let offset = self.offset;

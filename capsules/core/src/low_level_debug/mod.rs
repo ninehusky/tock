@@ -71,7 +71,6 @@ impl<'u, U: Transmit<'u>> kernel::syscall::SyscallDriver for LowLevelDebug<'u, U
 }
 
 impl<'u, U: Transmit<'u>> TransmitClient for LowLevelDebug<'u, U> {
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn transmitted_buffer(
         &self,
         tx_buffer: &'static mut [u8],

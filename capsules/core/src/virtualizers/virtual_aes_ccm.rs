@@ -335,7 +335,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
     /// `auth_len` (the length of the AuthData field) and `enc_len` (the
     /// combined length of AuthData and PData/CData) are returned. `auth_len` is
     /// guaranteed to be >= AES128_BLOCK_SIZE
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn encode_ccm_buffer(
         buf: &mut [u8],
         nonce: &[u8; CCM_NONCE_LENGTH],
@@ -455,7 +454,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn start_ccm_encrypt(&self) -> Result<(), ErrorCode> {
         if !(self.state.get() == CCMState::Auth)
             && !(self.state.get() == CCMState::Idle && self.reversed())
@@ -512,7 +510,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         }
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn end_ccm(&self) {
         let tag_valid = self.buf.map_or(false, |buf| {
             self.crypt_buf.map_or_else(
@@ -558,7 +555,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn reverse_end_ccm(&self) {
         // Finalize CCM process only in the case where we did CTR before CBC
         let tag_valid = self.buf.map_or(false, |buf| {
@@ -603,7 +599,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn save_tag_block(&self) {
         // Copies [auth_len - AES128_BLOCK_SIZE..auth_len] to saved_tag
         // and zeroes it out
@@ -620,7 +615,6 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         });
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn swap_tag_block(&self) {
         // Swaps [auth_len - AES128_BLOCK_SIZE..auth_len] with
         // the value in saved_tag

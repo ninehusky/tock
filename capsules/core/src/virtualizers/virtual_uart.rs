@@ -82,7 +82,6 @@ impl<'a> uart::TransmitClient for MuxUart<'a> {
 }
 
 impl<'a> uart::ReceiveClient for MuxUart<'a> {
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn received_buffer(
         &self,
         buffer: &'static mut [u8],

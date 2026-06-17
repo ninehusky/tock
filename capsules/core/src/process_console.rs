@@ -293,7 +293,6 @@ impl Command {
         (self.buf).copy_from_slice(buf);
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn insert_byte(&mut self, byte: u8, pos: usize) {
         for i in (pos..self.len).rev() {
             self.buf[i + 1] = self.buf[i];
@@ -305,7 +304,6 @@ impl Command {
         }
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn delete_byte(&mut self, pos: usize) {
         for i in pos..self.len {
             self.buf[i] = self.buf[i + 1];
@@ -359,7 +357,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
     }
 
     /// Creates an empty space in the history for the next command
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn make_space(&mut self, cmd: &[u8]) {
         let mut cmd_arr = [0; COMMAND_BUF_LEN];
         cmd_arr.copy_from_slice(cmd);
@@ -371,7 +368,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
         }
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn write_to_first(&mut self, cmd: &[u8]) {
         let mut cmd_arr = [0; COMMAND_BUF_LEN];
         cmd_arr.copy_from_slice(cmd);
@@ -379,7 +375,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize> CommandHistory<'a, COMMAND_HISTORY_LE
     }
 
     // Set the next index in the command history
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn next_cmd_idx(&mut self) -> Option<usize> {
         if self.cmd_idx + 1 >= COMMAND_HISTORY_LEN {
             None
@@ -420,7 +415,6 @@ impl ConsoleWriter {
     }
 }
 impl fmt::Write for ConsoleWriter {
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let curr = (s).as_bytes().len();
         self.buf[self.size..self.size + curr].copy_from_slice((s).as_bytes());
@@ -430,7 +424,6 @@ impl fmt::Write for ConsoleWriter {
 }
 
 impl BinaryWrite for ConsoleWriter {
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn write_buffer(&mut self, buffer: &[u8]) -> Result<usize, ()> {
         let start = self.size;
         let remaining = self.buf.len() - start;
@@ -757,7 +750,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
     }
 
     // Process the command in the command buffer and clear the buffer.
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn read_command(&self) {
         self.command_buffer.map(|command| {
             let terminator = command.iter().position(|&x| x == 0).unwrap_or(0);
@@ -1051,7 +1043,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         self.create_state_buffer(self.writer_state.get());
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn write_byte(&self, byte: u8) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
@@ -1071,7 +1062,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         }
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn write_bytes(&self, bytes: &[u8]) -> Result<(), ErrorCode> {
         if self.tx_in_progress.get() {
             self.queue_buffer.map(|buf| {
@@ -1098,7 +1088,6 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
     ///
     /// Returns Ok(usize) with the number of bytes sent from the queue. If Ok(0)
     /// is returned, nothing was sent and the UART is free.
-    #[flux_rs::trusted(reason = "TEMP to get capsules/extra to compile")]
     fn handle_queue(&self) -> Result<usize, ErrorCode> {
         if self.tx_in_progress.get() {
             // This shouldn't happen because we should only try to handle the

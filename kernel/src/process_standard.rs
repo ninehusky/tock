@@ -359,7 +359,6 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         }
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn set_fault_state(&self) {
         // Use the per-process fault policy to determine what action the kernel
         // should take since the process faulted.
@@ -532,7 +531,6 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         });
     }
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn setup_mpu(&self) -> MpuConfiguredCapability {
         // Notes: blocked-cell
         // FLUX-TODO addr=0x463a flavor=unwrap_result
@@ -1307,7 +1305,6 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
             usize
         )-> Result<(Option<&_>, &mut [u8]), (ProcessLoadError, &mut [u8])>
     )]
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     pub(crate) unsafe fn create<'a>(
         kernel: &'static Kernel,
         chip: &'static C,

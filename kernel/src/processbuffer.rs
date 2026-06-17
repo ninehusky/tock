@@ -756,7 +756,6 @@ impl ReadableProcessSlice {
         #[inline(never)]
         #[cold]
         #[track_caller]
-        #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
             // FLUX-TODO addr=0x11334 flavor=explicit_panic
             flux_support::assert(false);
@@ -860,7 +859,6 @@ impl Index<Range<usize>> for ReadableProcessSlice {
     // Subslicing will still yield a ReadableProcessSlice reference
     type Output = Self;
 
-    #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
     fn index(&self, idx: Range<usize>) -> &Self::Output {
         // Notes: actionable. Discharge path is known but deferred: give this
         // impl (and the RangeTo/RangeFrom/usize siblings) an `Index::in_bounds`
@@ -1028,7 +1026,6 @@ impl WriteableProcessSlice {
         #[inline(never)]
         #[cold]
         #[track_caller]
-        #[flux_rs::trusted] // TEMPORARY: mask to unblock capsules/extra
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
             // FLUX-TODO addr=0x113fc flavor=explicit_panic
             flux_support::assert(false);
