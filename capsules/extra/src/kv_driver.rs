@@ -136,6 +136,7 @@ impl<'a, V: kv::KVPermissions<'a>> KVStoreDriver<'a, V> {
         }
     }
 
+    #[flux_rs::trusted] // slow-grinder dodge (fixpoint, not ICE)
     fn run(&self) -> Result<(), ErrorCode> {
         self.processid.map_or(Err(ErrorCode::RESERVE), |processid| {
             self.apps

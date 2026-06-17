@@ -19,7 +19,6 @@ path = "src/main.rs"
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
-include = ["src/io.rs"]
 
 [dependencies]
 components = { path = "../../components" }

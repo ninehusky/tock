@@ -255,6 +255,7 @@ impl<
     // we always pass mut data; this callback should never be invoked.
     fn add_data_done(&self, _result: Result<(), ErrorCode>, _data: SubSlice<'static, u8>) {}
 
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn add_mut_data_done(&self, _result: Result<(), ErrorCode>, data: SubSliceMut<'static, u8>) {
         self.processid.map(move |id| {
             self.apps

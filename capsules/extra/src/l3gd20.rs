@@ -415,6 +415,7 @@ impl<'a, S: spi::SpiMasterDevice<'a>> SyscallDriver for L3gd20Spi<'a, S> {
 }
 
 impl<'a, S: spi::SpiMasterDevice<'a>> spi::SpiMasterClient for L3gd20Spi<'a, S> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn read_write_done(
         &self,
         write_buffer: &'static mut [u8],

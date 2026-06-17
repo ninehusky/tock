@@ -234,6 +234,7 @@ impl<'a> UDPDriver<'a> {
     /// returned immediately to the app. Assumes that the driver is currently
     /// idle and the app has a pending transmission.
     #[inline]
+    #[flux_rs::trusted] // residual place_ty.rs:908 UnsolvedEvar ICE-family (non-fatal); needs Flux-driver fix, not annotation
     fn perform_tx_sync(&self, processid: ProcessId) -> Result<(), ErrorCode> {
         self.apps.enter(processid, |app, kernel_data| {
             let addr_ports = match app.pending_tx.take() {

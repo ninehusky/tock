@@ -193,6 +193,7 @@ impl<'a, A: Alarm<'a>> Alarm<'a> for VirtualMuxAlarm<'a, A> {
 }
 
 impl<'a, A: Alarm<'a>> time::AlarmClient for VirtualMuxAlarm<'a, A> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn alarm(&self) {
         self.client.map(|client| client.alarm());
     }
@@ -237,6 +238,7 @@ impl<'a, A: Alarm<'a>> MuxAlarm<'a, A> {
 impl<'a, A: Alarm<'a>> time::AlarmClient for MuxAlarm<'a, A> {
     /// When the underlying alarm has fired, we have to multiplex this event back to the virtual
     /// alarms that should now fire.
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn alarm(&self) {
         // Check whether to fire each alarm. At this level, alarms are one-shot,
         // so a repeating client will set it again in the alarm() callback.
@@ -426,6 +428,7 @@ mod tests {
         }
     }
     impl AlarmClient for ClientCounter {
+        #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
         fn alarm(&self) {
             self.0.set(self.0.get() + 1);
         }
@@ -497,6 +500,7 @@ mod tests {
     }
 
     impl AlarmClient for SetAlarmClient<'_> {
+        #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
         fn alarm(&self) {
             self.alarm.set_alarm(self.alarm.now(), self.dt.into());
         }

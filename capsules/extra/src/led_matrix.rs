@@ -144,6 +144,7 @@ impl<'a, L: Pin, A: Alarm<'a>> LedMatrixDriver<'a, L, A> {
         self.rows.len()
     }
 
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn next_row(&self) {
         self.row_clear(self.rows[self.current_row.get()]);
         self.current_row

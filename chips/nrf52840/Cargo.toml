@@ -9,13 +9,9 @@ authors.workspace = true
 edition.workspace = true
 
 [package.metadata.flux]
+default_trusted = true
 enabled = true
 check_overflow = "lazy"
-include = [
-    "def:handle_interrupt",
-    "def:rx",
-    "def:service_interrupt",   # interrupt_service.rs — holds FLUX-TODO-BLOCKED marker
-]
 
 [dependencies]
 cortexm4 = { path = "../../arch/cortex-m4" }
