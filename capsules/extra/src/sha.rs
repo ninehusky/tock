@@ -229,6 +229,7 @@ impl<
     // we always pass mut data; this callback should never be invoked.
     fn add_data_done(&self, _result: Result<(), ErrorCode>, _data: SubSlice<'static, u8>) {}
 
+    #[flux_rs::trusted] // body-ICE dodge: fixpoint_encoding.rs:1775 'unexpected expr: *' (sibling of hmac::add_mut_data_done)
     fn add_mut_data_done(&self, _result: Result<(), ErrorCode>, data: SubSliceMut<'static, u8>) {
         self.processid.map(move |id| {
             self.apps
