@@ -297,7 +297,9 @@ struct WriteHdrResult {
     dgram_offset: usize,
 }
 
-#[flux_rs::sig(fn(dgram_size: u16, dgram_tag: u16, dgram_offset: usize, hdr: &mut [u8]{n: n >= 5}, is_frag1: bool))]
+// The first fragment (is_frag1) header is 4 bytes; subsequent fragment headers
+// are 5 bytes because they additionally carry the datagram offset in hdr[4].
+#[flux_rs::sig(fn(dgram_size: u16, dgram_tag: u16, dgram_offset: usize, hdr: &mut [u8][@n], is_frag1: bool) requires n >= 4 && (is_frag1 || n >= 5))]
 fn set_frag_hdr(
     dgram_size: u16,
     dgram_tag: u16,
@@ -305,7 +307,6 @@ fn set_frag_hdr(
     hdr: &mut [u8],
     is_frag1: bool,
 ) {
-    flux_support::assert(hdr.len() >= 5);
     let mask = if is_frag1 {
         lowpan_frag::FRAG1_HDR
     } else {
@@ -960,6 +961,7 @@ fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
 
 // This function is called after receiving a frame
 impl<'a, A: time::Alarm<'a>, C: ContextStore> RxClient for Sixlowpan<'a, A, C> {
+    #[flux_rs::sig(fn (_, buf: &[u8][@n], _, _, data_offset: usize, data_len: usize) -> () requires data_offset + data_len <= n)]
     fn receive<'b>(
         &self,
         buf: &'b [u8],
@@ -1074,6 +1076,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         }
     }
 
+    #[flux_rs::sig(fn(self: &Self, payload: &[u8][@n], payload_len: usize, src_mac_addr: MacAddress, dst_mac_addr: MacAddress) -> (Option<&RxState>, Result<(), ErrorCode>) requires n >= payload_len)]
     fn receive_single_packet(
         &self,
         payload: &[u8],

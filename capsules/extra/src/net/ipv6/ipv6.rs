@@ -267,6 +267,7 @@ impl IP6Header {
     /// Utility function for verifying whether a transport layer checksum of a received
     /// packet is correct. Is called on the assocaite IPv6 Header, and passed the buffer
     /// containing the remainder of the packet.
+    #[flux_rs::sig(fn(self: &Self, buf: &[u8][@n]) -> Result<(), ErrorCode> requires n > UDP_HDR_LEN)]
     pub fn check_transport_checksum(&self, buf: &[u8]) -> Result<(), ErrorCode> {
         match self.next_header {
             ip6_nh::UDP => {
@@ -371,6 +372,7 @@ impl<'a> IPPayload<'a> {
     /// `(u8, u16)` - Returns a tuple of the `ip6_nh` type of the
     /// `transport_header` and the total length of the `IPPayload`
     /// (when serialized)
+    #[flux_rs::sig(fn (self: &mut Self[@me], _, payload: &SubSliceMut<u8>[@other]) -> (u8, u16) requires other.hi - other.lo <= me.payload_buf_len)]
     pub fn set_payload(
         &mut self,
         transport_header: TransportHeader,
@@ -553,6 +555,7 @@ impl<'a> IP6Packet<'a> {
     /// `transport_header` - The `TransportHeader` to be set as the next header
     /// `payload` - The transport payload to be copied into the `IPPayload`
     /// transport payload
+    #[flux_rs::sig(fn (self: &mut Self[@me], _, payload: &SubSliceMut<u8>[@other]) requires other.hi - other.lo <= me.payload_buf_len)]
     pub fn set_payload(
         &mut self,
         transport_header: TransportHeader,

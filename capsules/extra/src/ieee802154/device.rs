@@ -115,6 +115,7 @@ pub trait RxClient {
     /// `buf`, so that the payload of the frame is contained in
     /// `buf[data_offset..data_offset + data_len]`.
     /// - `data_len`: Length of the data payload
+    #[flux_rs::sig(fn (_, buf: &[u8][@n], _, _, data_offset: usize, data_len: usize) -> () requires data_offset + data_len <= n)]
     fn receive<'a>(
         &self,
         buf: &'a [u8],
