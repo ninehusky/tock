@@ -9,7 +9,6 @@ authors.workspace = true
 edition.workspace = true
 
 [package.metadata.flux]
-default_trusted = true
 enabled = true
 check_overflow = "lazy"
 

@@ -441,69 +441,48 @@ def disable_flux_cargo(pkg: str, saved_originals: dict):
                         r'\1false', text, count=1, flags=re.S))
 
 
+def set_default_trusted_cargo(pkg: str, saved_originals: dict) -> bool:
+    """Trust the WHOLE crate by setting [package.metadata.flux] default_trusted=true
+    (original saved for restore). Unlike enabled=false, this KEEPS the crate's specs
+    exported, so dependents resolve refinement types cleanly -- no scope-none
+    artifacts. Returns False if the crate has no [package.metadata.flux] block."""
+    p = ROOT / PKGS[pkg] / "Cargo.toml"
+    text = p.read_text()
+    if "[package.metadata.flux]" not in text:
+        return False
+    if str(p) not in saved_originals:
+        saved_originals[str(p)] = text
+    if re.search(r'(?m)^\s*default_trusted\s*=', text):
+        new = re.sub(r'(?m)(^\s*default_trusted\s*=\s*)\w+', r'\1true', text, count=1)
+    else:
+        new = re.sub(r'(\[package\.metadata\.flux\][^\n]*\n)',
+                     r'\1default_trusted = true\n', text, count=1)
+    p.write_text(new)
+    return True
+
+
 def unmask_crate(pkg, target, timeout, deadline, base_errs_full, saved_originals, log):
-    """Trust the crate's erroring fns so dependents compile clean. Iterates
-    per-fn; falls back to trusting every fn in the erroring files. Saved
-    originals recorded for end-of-run restore. Returns the mechanism used."""
+    """Trust the whole crate so its dependents compile clean while its specs stay
+    exported. Primary mechanism: set [package.metadata.flux] default_trusted=true in
+    the crate's Cargo.toml (whole-crate, specs preserved -- the `trust each dep before
+    its dependents` model). Falls back to disabling flux for crates with no flux
+    metadata block. Saved originals recorded for end-of-run restore. Returns the
+    mechanism used."""
     crate_dir = PKGS[pkg]
-    # group baseline errors by file (only this crate's files)
-    by_file = {}
-    for e in base_errs_full:
-        f = e["file"]
-        if f.startswith(crate_dir + "/") or (ROOT / f).exists() and pkg_of_file(f) == pkg:
-            by_file.setdefault(f, []).append(e["line"])
-    if not by_file:
+    has_errs = any(
+        e["file"].startswith(crate_dir + "/")
+        or ((ROOT / e["file"]).exists() and pkg_of_file(e["file"]) == pkg)
+        for e in base_errs_full)
+    if not has_errs:
         return "none"
-
-    # crates without a flux-rs dep can't carry #[flux_rs::trusted] as a dependency
-    # -> disable flux for the whole crate instead (no native specs to lose).
-    if not crate_has_flux_rs(pkg):
-        disable_flux_cargo(pkg, saved_originals)
+    if set_default_trusted_cargo(pkg, saved_originals):
         DP.clean_in_dir(crate_dir, target)
-        log(f"    unmask {pkg}: no flux-rs dep -> disabled flux in Cargo.toml")
-        return "disabled_crate"
-
-    def save(relfile):
-        p = ROOT / relfile
-        if str(p) not in saved_originals:
-            saved_originals[str(p)] = p.read_text()
-
-    # per-fn rounds
-    for rnd in range(5):
-        cur_errs = base_errs_full if rnd == 0 else parse_full_errors(
-            DP.run_flux_in_dir(crate_dir, target, timeout), crate_dir)
-        cur_by_file = {}
-        for e in cur_errs:
-            if e["file"].startswith(crate_dir + "/"):
-                cur_by_file.setdefault(e["file"], []).append(e["line"])
-        if not cur_by_file:
-            log(f"    unmask {pkg}: clean after {rnd} per-fn round(s)")
-            return "per_fn"
-        for relfile, elines in cur_by_file.items():
-            p = ROOT / relfile
-            if not p.exists():
-                continue
-            save(relfile)
-            text = p.read_text()
-            offs = [off_of(text, ln) for ln in elines]
-            decls = fn_decls_covering(text, offs)
-            p.write_text(inject_trusts(text, decls))
-        DP.clean_in_dir(crate_dir, target)
-    # fallback: trust every fn in every erroring file. Restore each file to its
-    # ORIGINAL first (undo the per-fn injections) so whole-file trusting does not
-    # stack a second #[flux_rs::trusted] on the fns per-fn already did — that
-    # stacking is what produced the `duplicated attribute` errors.
-    log(f"    unmask {pkg}: per-fn did not converge -> whole-file fallback")
-    for relfile in by_file:
-        p = ROOT / relfile
-        if not p.exists():
-            continue
-        save(relfile)
-        text = saved_originals[str(p)]          # original, pre-injection
-        decls = {m.start() for m in NP.FN_DECL_RE.finditer(text)}
-        p.write_text(inject_trusts(text, decls))
+        log(f"    unmask {pkg}: default_trusted=true (whole-crate, specs preserved)")
+        return "default_trusted"
+    disable_flux_cargo(pkg, saved_originals)
     DP.clean_in_dir(crate_dir, target)
-    return "whole_file"
+    log(f"    unmask {pkg}: no flux metadata block -> disabled flux in Cargo.toml")
+    return "disabled_crate"
 
 
 # --------------------------------------------------------------------------

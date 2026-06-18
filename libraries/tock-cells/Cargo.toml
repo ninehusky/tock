@@ -9,7 +9,6 @@ authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 edition = "2021"
 
 [package.metadata.flux]
-default_trusted = true
 enabled = true
 check_overflow = "lazy"
 

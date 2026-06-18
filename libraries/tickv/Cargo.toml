@@ -20,7 +20,6 @@ flux-rs = { path = "../../flux/lib/flux-rs" }
 flux_support = { path = "../../flux_support" }
 
 [package.metadata.flux]
-default_trusted = true
 enabled = true
 check_overflow = "lazy"
 
