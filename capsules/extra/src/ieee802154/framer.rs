@@ -194,13 +194,13 @@ impl FrameInfo {
         let private_payload_offset = match self.frame_type {
             FrameType::Beacon => {
                 // Beginning of beacon payload field
-                // FLUX-TODO addr=0xdc52 flavor=explicit_panic
+                // FLUX-TODO addr=0xdb9e flavor=explicit_panic
                 flux_support::assert(false);
                 unimplemented!()
             }
             FrameType::MACCommand => {
                 // Beginning of MAC command content field
-                // FLUX-TODO addr=0xdc5c flavor=explicit_panic
+                // FLUX-TODO addr=0xdba8 flavor=explicit_panic
                 flux_support::assert(false);
                 unimplemented!()
             }
@@ -253,7 +253,7 @@ pub fn get_ccm_nonce(device_addr: &[u8; 8], frame_counter: u32, level: SecurityL
     match encode_ccm_nonce_buf(&mut nonce, device_addr, frame_counter, level).done() {
         None => {
             // This should not be possible
-            // FLUX-TODO addr=0xc6d0 flavor=explicit_panic
+            // FLUX-TODO addr=0xc61c flavor=explicit_panic
             flux_support::assert(false);
             panic!("Failed to produce ccm nonce");
         }
@@ -443,10 +443,10 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
         // The buffer containing the 15.4 packet also contains the PSDU bytes and an LQI
         // byte. We only pass the 15.4 packet up the stack and slice buf accordingly.
 
-        // FLUX-OPT addr=0x1c3e4 flavor=slice_end
+        // FLUX-OPT addr=0x1c370 flavor=slice_end
         flux_support::assert(buf.len() >= radio::PSDU_OFFSET + LQI_SIZE);
 
-        // FLUX-TODO addr=0x1c3da flavor=slice_order
+        // FLUX-TODO addr=0x1c366 flavor=slice_order
         flux_support::assert(radio::PSDU_OFFSET <= buf.len() - LQI_SIZE);
 
         let frame_buffer = &buf[radio::PSDU_OFFSET..(buf.len() - LQI_SIZE)];
@@ -553,7 +553,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
 
     /// Advances the transmission pipeline if it can be advanced.
     fn step_transmit_state(&self) -> Result<(), (ErrorCode, &'static mut [u8])> {
-        // FLUX-TODO addr=0x16046 flavor=explicit_panic
+        // FLUX-TODO addr=0x15fea flavor=explicit_panic
         flux_support::assert(self.tx_state.is_some());
         self.tx_state.take().map_or_else(
             || panic!("missing tx_state"),
@@ -724,7 +724,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
                     // Hence, we can only use the unsecured length from the
                     // frame info, but not the offsets.
                     let frame_len = info.unsecured_length();
-                    // FLUX-TODO addr=0x18c94 flavor=slice_end
+                    // FLUX-TODO addr=0x18c2c flavor=slice_end
                     flux_support::assert(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE <= buf.len());
                     if let Some((data_offset, (header, _))) = Header::decode(
                         &buf[radio::PSDU_OFFSET..(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)],

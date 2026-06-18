@@ -83,7 +83,7 @@ fn result_to_errorcode(rc: Result<(), kernel::ErrorCode>) -> kernel::ErrorCode {
 
     let rc_into: Result<kernel::ErrorCode, _> = rc.try_into();
 
-    // FLUX-TODO addr=0xbe04 flavor=unwrap_result
+    // FLUX-TODO addr=0xbd50 flavor=unwrap_result
     flux_support::assert(rc.is_ok());
     rc_into.unwrap()
 }

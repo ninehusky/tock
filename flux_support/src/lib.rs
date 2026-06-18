@@ -39,7 +39,7 @@ pub const fn assume(b: bool) {
         // will likely be irrelevant. (i.e. we're
         // getting rid of as many `assume`s as we can).
 
-        // FLUX-TODO addr=0x105bc flavor=explicit_panic
+        // FLUX-TODO addr=0x10508 flavor=explicit_panic
         crate::assert(false);
         panic!("assume fails")
     }

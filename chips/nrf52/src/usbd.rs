@@ -53,7 +53,7 @@ macro_rules! internal_warn {
 
 macro_rules! internal_err {
     [ $( $arg:expr ),+ ] => {{
-        // FLUX-TODO addrs=[0x1177a, 0x11890] flavor=explicit_panic
+        // FLUX-TODO addrs=[0x116c6, 0x117dc] flavor=explicit_panic
         flux_support::assert(false);
         panic!($( $arg ),+)
     }};
@@ -642,7 +642,7 @@ impl EndpointState {
     fn ctrl_state(self) -> CtrlState {
         match self {
             EndpointState::Ctrl(state) => state,
-            // FLUX-TODO addr=0x125a8 flavor=explicit_panic
+            // FLUX-TODO addr=0x124f4 flavor=explicit_panic
             _ => { flux_support::assert(false); panic!("Expected EndpointState::Ctrl") },
         }
     }
@@ -653,7 +653,7 @@ impl EndpointState {
             EndpointState::Bulk(transfer_type, in_state, out_state) => {
                 (transfer_type, in_state, out_state)
             }
-            // FLUX-TODO addr=0x115f4 flavor=explicit_panic
+            // FLUX-TODO addr=0x11540 flavor=explicit_panic
             _ => { flux_support::assert(false); panic!("Expected EndpointState::Bulk") },
         }
     }
@@ -1893,14 +1893,14 @@ impl<'a> Usbd<'a> {
     }
 
     fn start_dma_in(&self, endpoint: usize, size: usize) {
-        // FLUX-TODO addr=0x1163c flavor=optional_cell_unwrap
+        // FLUX-TODO addr=0x11588 flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_in.is_some());
         let slice = self.descriptors[endpoint].slice_in.unwrap_or_panic(); // Unwrap fail = No IN slice set for this descriptor
         self.debug_in_packet(size, endpoint);
 
         // Start DMA transfer
         self.set_pending_dma();
-        // FLUX-TODO addr=0x116aa flavor=slice_end
+        // FLUX-TODO addr=0x115f6 flavor=slice_end
         flux_support::assert(size <= slice.len());
         self.registers.epin[endpoint].set_buffer(&slice[..size]);
         debug_tasks!("- task: startepin[{}]", endpoint);
@@ -1908,7 +1908,7 @@ impl<'a> Usbd<'a> {
     }
 
     fn start_dma_out(&self, endpoint: usize) {
-        // FLUX-TODO addr=0x1260c flavor=optional_cell_unwrap
+        // FLUX-TODO addr=0x12558 flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_out.is_some());
         let slice = self.descriptors[endpoint].slice_out.unwrap_or_panic(); // Unwrap fail = No OUT slice set for this descriptor
 
@@ -1921,11 +1921,11 @@ impl<'a> Usbd<'a> {
 
     // Debug-only function
     fn debug_in_packet(&self, size: usize, endpoint: usize) {
-        // FLUX-TODO addr=0x1164a flavor=optional_cell_unwrap
+        // FLUX-TODO addr=0x11596 flavor=optional_cell_unwrap
         flux_support::assert(self.descriptors[endpoint].slice_in.is_some());
         let slice = self.descriptors[endpoint].slice_in.unwrap_or_panic(); // Unwrap fail = No IN slice set for this descriptor
         if size > slice.len() {
-            // FLUX-TODO addr=0x116cc flavor=explicit_panic
+            // FLUX-TODO addr=0x11618 flavor=explicit_panic
             flux_support::assert(false);
             panic!("Packet is too large: {}", size);
         }
@@ -2199,7 +2199,7 @@ fn inter_endepin(ep: usize) -> Field<u32, Interrupt::Register> {
         6 => Interrupt::ENDEPIN6,
         7 => Interrupt::ENDEPIN7,
         _ => {
-            // FLUX-TODO addr=0x1257e flavor=explicit_panic
+            // FLUX-TODO addr=0x124ca flavor=explicit_panic
             flux_support::assert(false);
             unreachable!()
         },
@@ -2217,7 +2217,7 @@ fn inter_endepout(ep: usize) -> Field<u32, Interrupt::Register> {
         5 => Interrupt::ENDEPOUT5,
         6 => Interrupt::ENDEPOUT6,
         7 => Interrupt::ENDEPOUT7,
-        // FLUX-TODO addr=0x1255e flavor=explicit_panic
+        // FLUX-TODO addr=0x124aa flavor=explicit_panic
         _ => { flux_support::assert(false); unreachable!() },
     }
 }
@@ -2239,7 +2239,7 @@ fn packet_to_hex(packet: &[VolatileCell<u8>], packet_hex: &mut [u8]) {
     let mut i = 0;
     while i < packet.len() {
         let x = packet[i].get();
-        // FLUX-TODO addr=0x11748 flavor=bounds
+        // FLUX-TODO addr=0x11694 flavor=bounds
         flux_support::assert(2 * i + 1 < packet_hex.len());
         packet_hex[2 * i] = hex_char(x >> 4);
         packet_hex[2 * i + 1] = hex_char(x & 0x0f);

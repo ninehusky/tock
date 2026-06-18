@@ -64,6 +64,16 @@ ERR_FULL_RE = re.compile(r"error\[(E0999|FLUX[^\]]*)\]:\s*(.*)")
 TRUST_ATTR = "#[flux_rs::trusted]"
 
 
+def apply_edits(text: str, edits):
+    """Apply non-overlapping (start, end, repl) splices to `text`. Edits index into
+    the ORIGINAL text; applying highest-offset-first keeps lower offsets valid.
+    Used to flip many asserts / inject many entry asserts in one file for the
+    single batch flip run."""
+    for start, end, repl in sorted(edits, key=lambda e: -e[0]):
+        text = text[:start] + repl + text[end:]
+    return text
+
+
 # --------------------------------------------------------------------------
 # crate / file mapping + topological order
 # --------------------------------------------------------------------------
@@ -461,20 +471,23 @@ def set_default_trusted_cargo(pkg: str, saved_originals: dict) -> bool:
     return True
 
 
-def unmask_crate(pkg, target, timeout, deadline, base_errs_full, saved_originals, log):
+def unmask_crate(pkg, target, timeout, deadline, base_errs_full, saved_originals, log,
+                 force=False):
     """Trust the whole crate so its dependents compile clean while its specs stay
     exported. Primary mechanism: set [package.metadata.flux] default_trusted=true in
     the crate's Cargo.toml (whole-crate, specs preserved -- the `trust each dep before
     its dependents` model). Falls back to disabling flux for crates with no flux
     metadata block. Saved originals recorded for end-of-run restore. Returns the
-    mechanism used."""
+    mechanism used. `force=True` skips the has-errors short-circuit (used when the
+    crate's baseline failed/ICEd, so it must be trusted for dependents regardless)."""
     crate_dir = PKGS[pkg]
-    has_errs = any(
-        e["file"].startswith(crate_dir + "/")
-        or ((ROOT / e["file"]).exists() and pkg_of_file(e["file"]) == pkg)
-        for e in base_errs_full)
-    if not has_errs:
-        return "none"
+    if not force:
+        has_errs = any(
+            e["file"].startswith(crate_dir + "/")
+            or ((ROOT / e["file"]).exists() and pkg_of_file(e["file"]) == pkg)
+            for e in base_errs_full)
+        if not has_errs:
+            return "none"
     if set_default_trusted_cargo(pkg, saved_originals):
         DP.clean_in_dir(crate_dir, target)
         log(f"    unmask {pkg}: default_trusted=true (whole-crate, specs preserved)")
@@ -514,13 +527,28 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
                 r.update(extra)
             append_obligation(out, r)
 
+    def _contain_failure():
+        # Even when THIS crate's baseline fails (ICE / dep-mask / budget), trust it
+        # whole-crate for its dependents so the failure does not CASCADE: an
+        # untrusted dep that errors or ICEs masks every dependent, so without this a
+        # single ICE (e.g. cortexm) shows up as dozens of phantom ICE_MASKED across
+        # nrf52/nrf52840/boards. Containing it keeps the ICE attributed to the one
+        # crate that actually ICEs — its OWN obligations keep their real failed
+        # status (never rescued past an ICE; per the ICE-as-gate policy a genuine
+        # ICE must still fail the gate).
+        if will_unmask:
+            out["unmask"] = unmask_crate(pkg, target, timeout, deadline, [],
+                                         saved_originals, log, force=True)
+
     if b_verdict in ("BUDGET", "TIMEOUT"):
         out["stopped"] = f"baseline {b_verdict.lower()}"
         emit_all("TIMEOUT" if b_verdict == "TIMEOUT" else "NOT_RUN")
+        _contain_failure()
         return out
     if b_verdict == "ICE":
         out["stopped"] = f"baseline ICE x{b_att}"
         emit_all("ICE_MASKED")
+        _contain_failure()
         return out
     dep = DP.dep_mask(base_log, pkg)
     if dep:
@@ -531,12 +559,32 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
         # on flux having run. So honor it: a dep-masked obligation whose enclosing
         # fn is statically trusted is TRUSTED, not BLOCKED_DEP_MASKED.
         emit_dep_masked(precise, fn_level, dep, crate_dir, out)
+        _contain_failure()
         return out
 
     base_errs = NP.error_lines(base_log, crate_dir)
     full = parse_full_errors(base_log, crate_dir)
 
-    # ---- precise obligations ----
+    # ---------- decide obligations; collect every flip into ONE batch run ----------
+    # `flux_support::assert` has sig `fn(x: bool[true])` with NO `ensures`, so a
+    # flipped `assert(false)` (or an injected entry `assert(false)`) leaves all
+    # downstream path conditions unchanged: each genuinely-checked site reports its
+    # OWN error independently. So instead of a whole-crate re-check PER obligation
+    # (N+1 runs -> blows the budget on big crates like capsules/extra), apply every
+    # flip/inject at once and re-check ONCE, then classify each obligation by whether
+    # its locus errored. Verdict-equivalent to the per-flip probe, ~N x fewer runs.
+    file_edits = {}        # relfile -> [(start, end, repl)] splices into the ORIGINAL text
+    pending = []           # [(r, locus, kind, resolve_fn)] resolved after the batch run
+
+    def emit_now(r, locus, kind):
+        append_obligation(out, r)
+        log(f"    {locus:<28} {r['status']:<16} {kind}")
+
+    def span_checker(rel, sl, el):
+        return lambda errs: any(rf.endswith(rel) and (el is None or sl <= ln <= el)
+                                for (rf, ln) in errs)
+
+    # ---- precise ----
     by_file = {}
     for ob in precise:
         by_file.setdefault(ob["file"], []).append(ob)
@@ -544,145 +592,125 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
         p = ROOT / relfile
         orig = p.read_text()
         sites = {s["start_line"]: s for s in assert_sites(relfile, orig)}
+        rel = str(p.relative_to(ROOT / crate_dir))
         for ob in obs:
             r = {"kind": "precise", **_pub_precise(ob)}
-            if time.time() > deadline:
-                r["status"] = "NOT_RUN"
-                append_obligation(out, r)
-                continue
+            locus = f"{rel}:{ob['assert_line']}"
             if ob.get("no_assert"):
                 r["status"] = "SILENT"   # step-0 invariant says this can't happen
                 r["probe"] = {"note": "no paired assert found below marker"}
-                append_obligation(out, r)
-                continue
+                emit_now(r, locus, "precise"); continue
             site = sites.get(ob["assert_line"])
             if site is None:
                 r["status"] = "SILENT"
                 r["probe"] = {"note": "assert site not found at recorded line"}
-                append_obligation(out, r)
-                continue
-            rel = str(p.relative_to(ROOT / crate_dir))
+                emit_now(r, locus, "precise"); continue
             base_hit = NP.err_at(base_errs, rel, site)
             if site["inner"] == "false":
-                # Dead-code sentinel `assert(false)`. base_hit => Flux flagged it =>
-                # reachable => DEAD_NOT_PROVEN. Otherwise it's a DEAD_PROVEN *candidate*,
-                # but silence at the sentinel is ambiguous: the code is genuinely dead
-                # OR the body was never analyzed (vacuity, same failure mode as SILENT).
-                # Confirm by ENTRY CONTROL: inject assert(false) at the enclosing fn's
-                # body open (always reachable if the body is checked) and re-run.
-                #   error in fn span  => body analyzed => DEAD_PROVEN (genuine dead code)
-                #   still silent       => body unchecked => DEAD_SILENT (vacuous, gated)
+                # Dead-code sentinel `assert(false)`. base_hit => reachable =>
+                # DEAD_NOT_PROVEN. Else silence is ambiguous (genuinely dead OR body
+                # never analyzed), so ENTRY-CONTROL it: inject assert(false) at the
+                # enclosing fn body open. error in fn span => DEAD_PROVEN; else DEAD_SILENT.
                 if base_hit:
                     r["status"] = "DEAD_NOT_PROVEN"
                     r["probe"] = {"baseline": "error_at_site"}
-                elif NP.enclosing_fn_trusted(orig, site["call_off"]):
-                    # silence is due to trust, not a dead-code proof -> declared carve-out
+                    emit_now(r, locus, "precise"); continue
+                if NP.enclosing_fn_trusted(orig, site["call_off"]):
                     r["status"] = "TRUSTED"
                     r["probe"] = {"baseline": "pass", "enclosing_fn": "trusted", "sentinel": True}
-                else:
-                    encl = fn_decls_covering(orig, [site["call_off"]])
-                    sl, el, body_open = fn_span(orig, max(encl)) if encl else (None, None, None)
-                    if body_open is None:
-                        r["status"] = "DEAD_SILENT"
-                        r["probe"] = {"baseline": "pass", "entry_control": "no_enclosing_fn"}
-                    else:
-                        call = "crate::assert(false);" \
-                            if relfile.lstrip("./").startswith("flux_support/") \
-                            else "flux_support::assert(false);"
-                        try:
-                            p.write_text(orig[:body_open + 1] + " " + call + orig[body_open + 1:])
-                            flog, att, verdict = DP.flip_run(crate_dir, target, timeout, deadline)
-                        finally:
-                            p.write_text(orig)
-                        if verdict == "BUDGET":
-                            r["status"] = "NOT_RUN"
-                        elif verdict == "TIMEOUT":
-                            r["status"] = "TIMEOUT"
-                        elif verdict == "ICE":
-                            r["status"] = "ICE_MASKED"
-                        else:
-                            errs = NP.error_lines(flog, crate_dir)
-                            checked = any(rf.endswith(rel) and (el is None or sl <= ln <= el)
-                                          for (rf, ln) in errs)
-                            r["status"] = "DEAD_PROVEN" if checked else "DEAD_SILENT"
-                            r["probe"] = {"baseline": "pass",
-                                          "entry_control": "error_at_entry" if checked else "silent"}
-            elif base_hit:
+                    emit_now(r, locus, "precise"); continue
+                encl = fn_decls_covering(orig, [site["call_off"]])
+                sl, el, body_open = fn_span(orig, max(encl)) if encl else (None, None, None)
+                if body_open is None:
+                    r["status"] = "DEAD_SILENT"
+                    r["probe"] = {"baseline": "pass", "entry_control": "no_enclosing_fn"}
+                    emit_now(r, locus, "precise"); continue
+                call = "crate::assert(false);" \
+                    if relfile.lstrip("./").startswith("flux_support/") \
+                    else "flux_support::assert(false);"
+                file_edits.setdefault(relfile, []).append((body_open + 1, body_open + 1, " " + call))
+                chk = span_checker(rel, sl, el)
+                def resolve(errs, chk=chk):
+                    c = chk(errs)
+                    return ("DEAD_PROVEN" if c else "DEAD_SILENT",
+                            {"baseline": "pass", "entry_control": "error_at_entry" if c else "silent"})
+                pending.append((r, locus, "precise", resolve)); continue
+            if base_hit:
                 r["status"] = "NOT_PROVEN"
                 r["probe"] = {"baseline": "error_at_site"}
-            elif NP.enclosing_fn_trusted(orig, site["call_off"]):
+                emit_now(r, locus, "precise"); continue
+            if NP.enclosing_fn_trusted(orig, site["call_off"]):
                 r["status"] = "TRUSTED"
                 r["probe"] = {"baseline": "pass", "enclosing_fn": "trusted"}
-            else:
-                try:
-                    p.write_text(NP.flip_text(orig, site))
-                    flog, att, verdict = DP.flip_run(crate_dir, target, timeout, deadline)
-                finally:
-                    p.write_text(orig)
-                if verdict == "BUDGET":
-                    r["status"] = "NOT_RUN"
-                elif verdict == "TIMEOUT":
-                    r["status"] = "TIMEOUT"
-                elif verdict == "ICE":
-                    r["status"] = "ICE_MASKED"
-                else:
-                    ferrs = NP.error_lines(flog, crate_dir)
-                    hit = NP.err_at(ferrs, rel, site)
-                    r["status"] = "PROVEN" if hit else "SILENT"
-                r["probe"] = {"baseline": "pass",
-                              "flip": "error_at_site" if r["status"] == "PROVEN" else verdict.lower(),
-                              "attempts": att}
-            append_obligation(out, r)
-            log(f"    {rel}:{ob['assert_line']:<5} {r['status']:<16} precise")
+                emit_now(r, locus, "precise"); continue
+            # genuine flip -> batch
+            file_edits.setdefault(relfile, []).append(
+                (site["arg_start"], site["arg_end"], "false" + "\n" * site["n_nl"]))
+            def resolve(errs, rel=rel, site=site):
+                hit = NP.err_at(errs, rel, site)
+                return ("PROVEN" if hit else "SILENT",
+                        {"baseline": "pass", "flip": "error_at_site" if hit else "silent"})
+            pending.append((r, locus, "precise", resolve))
 
-    # ---- fn-level obligations (entry control) ----
+    # ---- fn-level (entry control) ----
     for ob in fn_level:
         r = {"kind": "fn_level", **_pub_fn(ob)}
-        if time.time() > deadline:
-            r["status"] = "NOT_RUN"
-            append_obligation(out, r)
-            continue
         p = ROOT / ob["file"]
         orig = p.read_text()
         rel = str(p.relative_to(ROOT / crate_dir))
+        locus = f"{rel}:{ob['marker_line']}"
         decl = fn_decl_after(orig, ob["marker_line"])
         if decl is None:
             r["status"] = "SILENT"
             r["probe"] = {"note": "no fn decl found below marker"}
-            append_obligation(out, r)
-            continue
+            emit_now(r, locus, "fn-level"); continue
         sl, el, body_open = fn_span(orig, decl.start())
-        in_fn = lambda errs: any(rf.endswith(rel) and (el is None or sl <= ln <= el)
-                                 for (rf, ln) in errs)
         if NP.enclosing_fn_trusted(orig, decl.start()):
             r["status"] = "TRUSTED"
             r["probe"] = {"enclosing_fn": "trusted"}
-        elif in_fn(base_errs):
+            emit_now(r, locus, "fn-level"); continue
+        if span_checker(rel, sl, el)(base_errs):
             r["status"] = "NOT_PROVEN"
             r["probe"] = {"baseline": "error_in_fn"}
-        elif body_open is None:
+            emit_now(r, locus, "fn-level"); continue
+        if body_open is None:
             r["status"] = "SILENT"
             r["probe"] = {"note": "could not locate fn body"}
+            emit_now(r, locus, "fn-level"); continue
+        file_edits.setdefault(ob["file"], []).append(
+            (body_open + 1, body_open + 1, " flux_support::assert(false);"))
+        chk = span_checker(rel, sl, el)
+        def resolve(errs, chk=chk):
+            c = chk(errs)
+            return ("PROVEN" if c else "SILENT",
+                    {"baseline": "pass", "entry_control": "error_at_entry" if c else "silent"})
+        pending.append((r, locus, "fn-level", resolve))
+
+    # ---------- run the SINGLE batch flip, then classify all pending ----------
+    if pending:
+        if time.time() > deadline:
+            batch_verdict, batch_errs = "BUDGET", set()
         else:
-            inject = orig[:body_open + 1] + " flux_support::assert(false);" + orig[body_open + 1:]
+            originals = {}
             try:
-                p.write_text(inject)
-                flog, att, verdict = DP.flip_run(crate_dir, target, timeout, deadline)
+                for relfile, edits in file_edits.items():
+                    fp = ROOT / relfile
+                    originals[relfile] = fp.read_text()
+                    fp.write_text(apply_edits(originals[relfile], edits))
+                blog, _, batch_verdict = DP.flip_run(crate_dir, target, timeout, deadline)
             finally:
-                p.write_text(orig)
-            if verdict == "BUDGET":
-                r["status"] = "NOT_RUN"
-            elif verdict == "TIMEOUT":
-                r["status"] = "TIMEOUT"
-            elif verdict == "ICE":
-                r["status"] = "ICE_MASKED"
+                for relfile, txt in originals.items():
+                    (ROOT / relfile).write_text(txt)
+            batch_errs = NP.error_lines(blog, crate_dir) if batch_verdict == "OK" else set()
+        mask = {"BUDGET": "NOT_RUN", "TIMEOUT": "TIMEOUT", "ICE": "ICE_MASKED"}.get(batch_verdict)
+        log(f"    batch flip: {len(pending)} obligations across "
+            f"{len(file_edits)} files -> {batch_verdict}")
+        for r, locus, kind, resolve in pending:
+            if mask:
+                r["status"], r["probe"] = mask, {"baseline": "pass", "batch": batch_verdict.lower()}
             else:
-                checked = in_fn(NP.error_lines(flog, crate_dir))
-                r["status"] = "PROVEN" if checked else "SILENT"
-            r["probe"] = {"baseline": "pass",
-                          "entry_control": "error_at_entry" if r["status"] == "PROVEN" else "silent"}
-        append_obligation(out, r)
-        log(f"    {rel}:{ob['marker_line']:<5} {r['status']:<16} fn-level")
+                r["status"], r["probe"] = resolve(batch_errs)
+            emit_now(r, locus, kind)
 
     # ---- full error inventory (classify) ----
     assert_lines = set()
@@ -701,9 +729,19 @@ def probe_crate(pkg, precise, fn_level, log_dir, timeout, budget, will_unmask,
         out["stopped"] = f"budget {budget}s exceeded"
 
     # ---- dependency unmasking (leave trusts applied for dependents) ----
-    if will_unmask:
+    # Unmask if this crate has detected dependents OR has any of its OWN baseline
+    # errors. The own-errors case matters because the dependency graph is computed
+    # only over crates in PKGS: chips depend on `cortexm` *through* `cortexm4`
+    # (arch/cortex-m4, which has no flux + isn't tracked), so `transitive_dependents`
+    # misses the cortexm->nrf52/nrf52840 edge. An erroring-but-"depended-on-by-no-one"
+    # crate left un-trusted gets re-checked when a dependent compiles it and its
+    # errors dep-mask that dependent. Trusting any crate that has its own errors,
+    # once we've measured it, prevents that cascade. (cortexv7m has NO errors as a
+    # host target, so it is NOT unmasked and correctly keeps masking the board via
+    # its as-dependency `unsupported terminator` E0999 -- the intended io.rs carve-out.)
+    if will_unmask or full:
         out["unmask"] = unmask_crate(pkg, target, timeout, deadline, full,
-                                     saved_originals, log)
+                                     saved_originals, log, force=True)
     return out
 
 
@@ -808,6 +846,11 @@ def main() -> int:
     g = rep["summary"]
     print(f"\nsummary: discharged={g['discharged']} frontier={g['frontier']} "
           f"vacuous={g['vacuous']}  gate={g['gate']}")
+    if g["vacuous"]:
+        print(f"  vacuous breakdown: {g['silent_reasons']}")
+    if g["ice_masked"]:
+        print(f"  !!! {g['ice_masked']} obligation(s) ICE-MASKED — a Flux ICE makes "
+              f"the run untrustworthy; gate FAILS on ICE regardless of vacuity.")
     print(f"flux_errors: total={g['flux_errors']['total']} "
           f"assert={g['flux_errors']['assert_obligation']} "
           f"other={g['flux_errors']['other_obligation']}")
@@ -826,6 +869,16 @@ def _write(args, report, crate_results, t_start):
     discharged = sum(by_status.get(s, 0) for s in DISCHARGED)
     frontier = sum(by_status.get(s, 0) for s in FRONTIER)
     vacuous = sum(by_status.get(s, 0) for s in VACUOUS)
+    # break the SILENT bucket down by why it was masked. `ice_masked` is a FIRST-CLASS
+    # gate failure: a run that ICEs cannot be trusted, so we surface its count
+    # distinctly from genuine vacuity / budget cutoffs (which are also gated but mean
+    # different things). All of these still live under `vacuous` and fail the gate.
+    silent_reasons = {}
+    for o in obligations:
+        if o["status"] == "SILENT":
+            sr = o.get("probe", {}).get("silent_reason", "vacuous")
+            silent_reasons[sr] = silent_reasons.get(sr, 0) + 1
+    ice = silent_reasons.get("ice_masked", 0)
     fe = {"total": len(flux_errors),
           "assert_obligation": sum(1 for e in flux_errors if e["category"] == "assert_obligation"),
           "other_obligation": sum(1 for e in flux_errors if e["category"] == "other_obligation")}
@@ -835,6 +888,7 @@ def _write(args, report, crate_results, t_start):
                    "panic_survey_json": str(report.get("inputs", {}).get("panic_survey_json", ""))},
         "summary": {"total_obligations": len(obligations), "by_status": by_status,
                     "discharged": discharged, "frontier": frontier, "vacuous": vacuous,
+                    "ice_masked": ice, "silent_reasons": silent_reasons,
                     "gate": "pass" if vacuous == 0 else "fail", "flux_errors": fe},
         "crates": {p: {k: v for k, v in r.items() if k != "obligations" and k != "flux_errors"}
                    for p, r in crate_results.items()},
