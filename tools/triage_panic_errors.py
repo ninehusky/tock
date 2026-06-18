@@ -41,9 +41,17 @@ every panic-root error in `invariant2_report.json`'s `flux_errors[]` into:
 Errors that match an *exclude* pattern (e.g. precondition diagnostics) are bucket
 `excluded` and reported separately so the gate stays legible.
 
-An E0999 that matches NEITHER a panic-root nor an exclude pattern is bucket
-`unclassified` -- the message patterns are inherently brittle, so rather than
-silently dropping a reworded diagnostic into `excluded` and under-counting, the
+Errors that are Flux *tooling failures* rather than verification obligations --
+"parameter inference error at function call" (Flux could not infer the refinement
+arguments for a call) and "internal flux error: ..." (a Flux crash) -- are bucket
+`tooling_error`. These are not panic-root (Flux never finished analyzing the code,
+so there is no obligation to map to a `bl panic`), but they are also not the same
+as a deliberately-excluded precondition diagnostic, so they get their own bucket
+to stay visible. They do not fail the gate.
+
+An E0999 that matches NEITHER a panic-root, an exclude, nor a tooling-error pattern
+is bucket `unclassified` -- the message patterns are inherently brittle, so rather
+than silently dropping a reworded diagnostic into `excluded` and under-counting, the
 tool screams and exits non-zero (override with --allow-unclassified). On the
 current tree this is 0; a non-zero count means the patterns need updating.
 
@@ -104,6 +112,16 @@ EXCLUDE_PATTERNS = [
     # pure verification obligation -- it does NOT codegen a `bl panic` -- so it is
     # not panic-root (same rationale as `precondition`).
     r"type invariant may not hold",
+]
+# Flux *tooling failures*: the analysis did not produce a verification obligation
+# at all. "parameter inference error at function call" means Flux could not infer a
+# call's refinement arguments (a limitation, needs manual annotation); "internal
+# flux error: ..." is a Flux crash. Neither codegens a `bl panic`, so neither is
+# panic-root -- but they are categorically different from a deliberately-excluded
+# precondition diagnostic, so they get their own bucket instead of `excluded`.
+TOOLING_ERROR_PATTERNS = [
+    r"parameter inference error",
+    r"internal flux error",
 ]
 
 
@@ -184,20 +202,23 @@ def _compile(patterns: list[str]) -> list[re.Pattern]:
 
 
 def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
-             exclude: list[re.Pattern], cache: dict) -> list[dict]:
+             exclude: list[re.Pattern], tooling: list[re.Pattern], cache: dict) -> list[dict]:
     fn_ranges = build_fn_level_ranges(report, cache)
     precise_idx = build_precise_index(report)
 
     def filter_status(e: dict) -> str:
         """One of: 'assert' (panic-root by construction), 'panic_root' (message
         matched a panic-root pattern), 'excluded' (message matched an exclude
-        pattern -- deliberately dropped), or 'unclassified' (matched NEITHER).
+        pattern -- deliberately dropped), 'tooling_error' (a Flux inference/internal
+        failure that produced no obligation), or 'unclassified' (matched NONE).
         'unclassified' is the loud case: an E0999 we don't recognize means a
         Flux diagnostic was reworded (or a new error kind appeared) and the
         brittle message patterns silently stopped covering it."""
         if e.get("category") == "assert_obligation":
             return "assert"
         msg = e.get("message", "")
+        if any(p.search(msg) for p in tooling):
+            return "tooling_error"
         if any(p.search(msg) for p in exclude):
             return "excluded"
         if any(p.search(msg) for p in panic_root):
@@ -241,6 +262,11 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
             rec["reason"] = ("E0999 matched NEITHER a panic-root nor an exclude pattern -- "
                              "the message patterns no longer cover this diagnostic (reworded "
                              "Flux output or a new error kind); triage cannot bucket it")
+        elif status == "tooling_error":
+            rec["bucket"] = "tooling_error"
+            rec["reason"] = ("a Flux tooling failure (parameter inference error / internal "
+                             "flux error) -- the analysis produced no verification obligation, "
+                             "so it is not panic-root and does not codegen a bl panic")
         elif status == "excluded":
             rec["bucket"] = "excluded"
             rec["reason"] = "matched an exclude pattern (precondition / non-panic diagnostic)"
@@ -287,7 +313,7 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
 # --------------------------------------------------------------------------- #
 
 _BUCKETS = ("panicking", "lookup_failed", "non_panicking", "precondition_failed",
-            "excluded", "unclassified")
+            "excluded", "tooling_error", "unclassified")
 
 
 def mark_panicking_dedup(records: list[dict]) -> int:
@@ -387,6 +413,9 @@ def main() -> int:
                     help="extra panic-root message pattern (repeatable)")
     ap.add_argument("--exclude-regex", action="append", default=[],
                     help="extra exclude (non-panic-root) message pattern (repeatable)")
+    ap.add_argument("--tooling-error-regex", action="append", default=[],
+                    help="extra tooling-error message pattern -- a Flux inference/internal "
+                         "failure that produced no obligation (repeatable)")
     ap.add_argument("--panic-root-only", action="store_true",
                     help="use only --panic-root-regex patterns, dropping the built-in defaults")
     ap.add_argument("--allow-unclassified", action="store_true",
@@ -415,12 +444,14 @@ def main() -> int:
     base_root = [] if args.panic_root_only else list(PANIC_ROOT_PATTERNS)
     panic_root = _compile(base_root + args.panic_root_regex)
     exclude = _compile(list(EXCLUDE_PATTERNS) + args.exclude_regex)
+    tooling = _compile(list(TOOLING_ERROR_PATTERNS) + args.tooling_error_regex)
 
     cache: dict[str, list[str] | None] = {}
-    errors = classify(report, survey_addrs, panic_root, exclude, cache)
+    errors = classify(report, survey_addrs, panic_root, exclude, tooling, cache)
 
     counts = {"panicking": 0, "lookup_failed": 0, "non_panicking": 0,
-              "precondition_failed": 0, "excluded": 0, "unclassified": 0}
+              "precondition_failed": 0, "excluded": 0, "tooling_error": 0,
+              "unclassified": 0}
     for r in errors:
         counts[r["bucket"]] += 1
     total_panic_root = (counts["panicking"] + counts["lookup_failed"]
@@ -442,6 +473,7 @@ def main() -> int:
         "filter": {
             "panic_root_patterns": base_root + args.panic_root_regex,
             "exclude_patterns": list(EXCLUDE_PATTERNS) + args.exclude_regex,
+            "tooling_error_patterns": list(TOOLING_ERROR_PATTERNS) + args.tooling_error_regex,
             "note": ("assert_obligation errors are panic-root by construction; "
                      "other_obligation errors are admitted by message pattern"),
         },
@@ -453,6 +485,7 @@ def main() -> int:
             "non_panicking": counts["non_panicking"],
             "lookup_failed": counts["lookup_failed"],
             "excluded": counts["excluded"],
+            "tooling_error": counts["tooling_error"],
             "unclassified": counts["unclassified"],
             "total_panic_root": total_panic_root,
             "conservation_ok": not partition_violations,
@@ -470,6 +503,7 @@ def main() -> int:
           f"non_panicking={counts['non_panicking']} "
           f"lookup_failed={counts['lookup_failed']} "
           f"excluded={counts['excluded']} "
+          f"tooling_error={counts['tooling_error']} "
           f"unclassified={counts['unclassified']} "
           f"(total panic-root={total_panic_root})")
     print(f"wrote {out_path}")
@@ -486,12 +520,13 @@ def main() -> int:
 
     if counts["unclassified"]:
         print("\n" + "!" * 72, file=sys.stderr)
-        print(f"FATAL: {counts['unclassified']} E0999 error(s) matched NEITHER a panic-root "
-              "nor an exclude pattern.", file=sys.stderr)
+        print(f"FATAL: {counts['unclassified']} E0999 error(s) matched NONE of the panic-root, "
+              "exclude, or tooling-error patterns.", file=sys.stderr)
         print("The triage's message patterns no longer cover every Flux error -- a reworded "
               "diagnostic or new error kind is slipping through uncounted.", file=sys.stderr)
-        print("Update PANIC_ROOT_PATTERNS / EXCLUDE_PATTERNS (or pass --panic-root-regex / "
-              "--exclude-regex), or re-run with --allow-unclassified to override.", file=sys.stderr)
+        print("Update PANIC_ROOT_PATTERNS / EXCLUDE_PATTERNS / TOOLING_ERROR_PATTERNS (or pass "
+              "--panic-root-regex / --exclude-regex / --tooling-error-regex), or re-run with "
+              "--allow-unclassified to override.", file=sys.stderr)
         for r in errors:
             if r["bucket"] == "unclassified":
                 print(f"  - {r.get('file')}:{r.get('line')} [{r.get('category')}] "

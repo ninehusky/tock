@@ -219,7 +219,8 @@ jobs:
       #   - conservation: the triage must be a complete bijective partition of
       #     flux_errors[] (every E0999 represented exactly once, all bucketed).
       #     A violation is a tool bug. Non-overridable. (exit 3)
-      #   - unclassified: every E0999 must match a panic-root or exclude pattern.
+      #   - unclassified: every E0999 must match a panic-root, exclude, or
+      #     tooling-error pattern (the last covers Flux inference/internal errors).
       #     A miss means a reworded/new Flux diagnostic is slipping through
       #     uncounted; update the patterns. (exit 1; --allow-unclassified to skip)
       # ------------------------------------------------------------------ #
