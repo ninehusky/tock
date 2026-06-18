@@ -1,4 +1,4 @@
 [submodule "flux"]
 	path = flux
-	url = https://github.com/flux-rs/flux.git
-	branch = main
+	url = https://github.com/ninehusky/flux.git
+	branch = ninehusky-dump-callgraph-json
