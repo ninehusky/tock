@@ -364,6 +364,7 @@ impl<
         const L: usize,
     > digest::ClientHash<L> for ShaDriver<'a, H, L>
 {
+    #[flux_rs::trusted] // body-ICE dodge: internal flux error at flux-refineck/src/type_env.rs:211:24
     fn hash_done(&self, result: Result<(), ErrorCode>, digest: &'static mut [u8; L]) {
         self.processid.map(|id| {
             self.apps

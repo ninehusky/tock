@@ -409,6 +409,7 @@ impl<'a, S: hil::digest::Sha256 + hil::digest::DigestDataHash<'a, 32>> hil::dige
 impl<'a, S: hil::digest::Sha256 + hil::digest::DigestDataHash<'a, 32>> hil::digest::ClientHash<32>
     for HmacSha256Software<'a, S>
 {
+    #[flux_rs::trusted] // body-ICE dodge: internal flux error at flux-infer/src/infer.rs:903:22
     fn hash_done(&self, result: Result<(), ErrorCode>, digest: &'static mut [u8; 32]) {
         let hash_done_error = |error: Result<(), ErrorCode>,
                                error_digest: &'static mut [u8; 32]| {
