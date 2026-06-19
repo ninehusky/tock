@@ -161,6 +161,7 @@ impl<'a, A: Alarm<'a>> Timer<'a> for VirtualTimer<'a, A> {
 }
 
 impl<'a, A: Alarm<'a>> time::AlarmClient for VirtualTimer<'a, A> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn alarm(&self) {
         match self.mode.get() {
             Mode::Disabled => {} // Do nothing
@@ -224,6 +225,7 @@ impl<'a, A: Alarm<'a>> MuxTimer<'a, A> {
 }
 
 impl<'a, A: Alarm<'a>> time::AlarmClient for MuxTimer<'a, A> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn alarm(&self) {
         // The "now" is when the alarm fired, not the current
         // time; this is case there was some delay. This also

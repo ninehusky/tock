@@ -286,6 +286,7 @@ impl<'a, S: spi::SpiMasterDevice<'a>> spi::SpiMasterClient for RF233<'a, S> {
     // This function is a bit confusing because the order of the logic in the
     // function is different than the order of operations during transmission
     // and reception.
+    #[flux_rs::trusted] // slow-grinder dodge (fixpoint, not ICE)
     fn read_write_done(
         &self,
         mut _write: &'static mut [u8],

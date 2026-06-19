@@ -757,7 +757,7 @@ impl ReadableProcessSlice {
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x1146c flavor=explicit_panic
+            // FLUX-TODO addr=0x113b8 flavor=explicit_panic
             flux_support::assert(false);
             panic!(
                 "source slice length ({}) does not match destination slice length ({})",
@@ -868,9 +868,9 @@ impl Index<Range<usize>> for ReadableProcessSlice {
         // spurious MightPanic). Cascades to every `rps[range]` call site.
         // flux_support::assert(idx.end <= self.slice.len());
 
-        // FLUX-TODO addr=0x11008 flavor=slice_end
+        // FLUX-TODO addr=0x10f54 flavor=slice_end
         flux_support::assert(idx.end <= self.slice.len());
-        // FLUX-TODO addr=0x11010 flavor=slice_order
+        // FLUX-TODO addr=0x10f5c flavor=slice_order
         flux_support::assert(idx.start <= idx.end);
 
         cast_byte_slice_to_process_slice(&self.slice[idx])
@@ -1023,7 +1023,7 @@ impl WriteableProcessSlice {
         #[cold]
         #[track_caller]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x114f0 flavor=explicit_panic
+            // FLUX-TODO addr=0x1143c flavor=explicit_panic
             flux_support::assert(false);
             panic!(
                 "src slice len ({}) != dest slice len ({})",

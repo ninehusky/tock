@@ -228,6 +228,7 @@ impl<'a> hil::touch::TouchClient for Touch<'a> {
 }
 
 impl<'a> hil::touch::MultiTouchClient for Touch<'a> {
+    #[flux_rs::trusted] // body-ICE dodge: fixpoint_encoding.rs:721 liquid-fixpoint sort crash (Adt1/Adt0 unify); see report
     fn touch_events(&self, touch_events: &[TouchEvent], num_events: usize) {
         let len = if touch_events.len() < num_events {
             touch_events.len()

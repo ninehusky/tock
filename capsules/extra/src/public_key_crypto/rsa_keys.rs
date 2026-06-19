@@ -233,6 +233,7 @@ impl<const L: usize> PubPrivKeyMut for RSAKeys<L> {
 }
 
 impl<const L: usize> RsaKey for RSAKeys<L> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_modulus(&self, closure: &dyn Fn(&[u8])) -> Option<()> {
         if let Some(public_key) = self.public_key.take() {
             match public_key {
@@ -265,6 +266,7 @@ impl<const L: usize> RsaKey for RSAKeys<L> {
 }
 
 impl<const L: usize> RsaKeyMut for RSAKeys<L> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_modulus(&self, closure: &dyn Fn(&mut [u8])) -> Option<()> {
         if let Some(mut public_key) = self.public_key.take() {
             match public_key {
@@ -297,6 +299,7 @@ impl<const L: usize> RsaKeyMut for RSAKeys<L> {
 }
 
 impl<const L: usize> RsaPrivKey for RSAKeys<L> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_exponent(&self, closure: &dyn Fn(&[u8])) -> Option<()> {
         if let Some(private_key) = self.private_key.take() {
             match private_key {
@@ -325,6 +328,7 @@ impl<const L: usize> RsaPrivKey for RSAKeys<L> {
 }
 
 impl<const L: usize> RsaPrivKeyMut for RSAKeys<L> {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_exponent(&self, closure: &dyn Fn(&mut [u8])) -> Option<()> {
         if let Some(mut private_key) = self.private_key.take() {
             match private_key {
@@ -427,6 +431,7 @@ impl PubPrivKey for RSA2048Keys {
 }
 
 impl RsaKey for RSA2048Keys {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_modulus(&self, closure: &dyn Fn(&[u8])) -> Option<()> {
         RsaKey::map_modulus(&self.0, closure)
     }
@@ -441,6 +446,7 @@ impl RsaKey for RSA2048Keys {
 }
 
 impl RsaPrivKey for RSA2048Keys {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_exponent(&self, closure: &dyn Fn(&[u8])) -> Option<()> {
         RsaPrivKey::map_exponent(&self.0, closure)
     }
@@ -523,6 +529,7 @@ impl PubPrivKeyMut for RSA2048KeysMut {
 }
 
 impl RsaKeyMut for RSA2048KeysMut {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_modulus(&self, closure: &dyn Fn(&mut [u8])) -> Option<()> {
         RsaKeyMut::map_modulus(&self.0, closure)
     }
@@ -537,6 +544,7 @@ impl RsaKeyMut for RSA2048KeysMut {
 }
 
 impl RsaPrivKeyMut for RSA2048KeysMut {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_exponent(&self, closure: &dyn Fn(&mut [u8])) -> Option<()> {
         RsaPrivKeyMut::map_exponent(&self.0, closure)
     }
@@ -621,6 +629,7 @@ impl PubPrivKey for RSA4096Keys {
 }
 
 impl RsaKey for RSA4096Keys {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_modulus(&self, closure: &dyn Fn(&[u8])) -> Option<()> {
         RsaKey::map_modulus(&self.0, closure)
     }
@@ -635,6 +644,7 @@ impl RsaKey for RSA4096Keys {
 }
 
 impl RsaPrivKey for RSA4096Keys {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_exponent(&self, closure: &dyn Fn(&[u8])) -> Option<()> {
         RsaPrivKey::map_exponent(&self.0, closure)
     }
@@ -717,6 +727,7 @@ impl PubPrivKeyMut for RSA4096KeysMut {
 }
 
 impl RsaKeyMut for RSA4096KeysMut {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_modulus(&self, closure: &dyn Fn(&mut [u8])) -> Option<()> {
         RsaKeyMut::map_modulus(&self.0, closure)
     }
@@ -731,6 +742,7 @@ impl RsaKeyMut for RSA4096KeysMut {
 }
 
 impl RsaPrivKeyMut for RSA4096KeysMut {
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn map_exponent(&self, closure: &dyn Fn(&mut [u8])) -> Option<()> {
         RsaPrivKeyMut::map_exponent(&self.0, closure)
     }

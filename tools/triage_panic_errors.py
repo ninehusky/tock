@@ -41,9 +41,20 @@ every panic-root error in `invariant2_report.json`'s `flux_errors[]` into:
 Errors that match an *exclude* pattern (e.g. precondition diagnostics) are bucket
 `excluded` and reported separately so the gate stays legible.
 
-An E0999 that matches NEITHER a panic-root nor an exclude pattern is bucket
-`unclassified` -- the message patterns are inherently brittle, so rather than
-silently dropping a reworded diagnostic into `excluded` and under-counting, the
+A "parameter inference error at function call" (Flux could not infer a call's
+refinement arguments) is bucket `inference_error`: a benign Flux limitation, not a
+verification obligation, so it is not panic-root and does not fail the gate -- but
+it is also not a deliberately-excluded precondition diagnostic, so it gets its own
+bucket to stay visible.
+
+An "internal flux error: ..." is bucket `ice`: an ICE (Flux crashed analyzing the
+code). Per the pipeline's ICE-as-gate policy (check_invariant2.py), a run that ICEs
+cannot be trusted, so an ICE here FAILS the gate (exit 4) -- override with
+--allow-ice for the "pay later" dev workflow.
+
+An E0999 that matches NONE of the panic-root / exclude / inference / ICE patterns
+is bucket `unclassified` -- the message patterns are inherently brittle, so rather
+than silently dropping a reworded diagnostic into `excluded` and under-counting, the
 tool screams and exits non-zero (override with --allow-unclassified). On the
 current tree this is 0; a non-zero count means the patterns need updating.
 
@@ -51,13 +62,15 @@ It runs standalone over the committed reports + source -- it does NOT re-run the
 ~14-minute Flux probe -- and writes a `triage` block back into the report
 idempotently (re-running overwrites the single `triage` key in place).
 
-Two gates make it fail loudly (non-zero exit) so CI catches regressions:
+Three gates make it fail loudly (non-zero exit) so CI catches regressions:
   - conservation (exit 3, non-overridable): the buckets must be a complete
     bijective partition of flux_errors[] -- every E0999 represented exactly once
     and bucketed. A violation is a tool bug. (summary.conservation_ok records it.)
+  - ice (exit 4, --allow-ice to override): no E0999 may be an "internal flux
+    error" -- an ICE means Flux crashed and the run is untrustworthy (ICE-as-gate).
   - unclassified (exit 1, --allow-unclassified to override): every E0999 must
-    match a panic-root or exclude pattern; a miss means the brittle patterns
-    stopped covering a reworded/new diagnostic.
+    match a panic-root, exclude, inference, or ICE pattern; a miss means the
+    brittle patterns stopped covering a reworded/new diagnostic.
 
 Usage:
     python3 tools/triage_panic_errors.py
@@ -104,6 +117,22 @@ EXCLUDE_PATTERNS = [
     # pure verification obligation -- it does NOT codegen a `bl panic` -- so it is
     # not panic-root (same rationale as `precondition`).
     r"type invariant may not hold",
+]
+# Benign Flux *limitation*: "parameter inference error at function call" means Flux
+# could not infer a call's refinement arguments (needs a manual annotation). The
+# analysis did not produce a verification obligation, so it is not panic-root and
+# does not codegen a `bl panic` -- but it is also not a deliberately-excluded
+# precondition diagnostic, so it gets its own non-fatal bucket instead of `excluded`.
+INFERENCE_ERROR_PATTERNS = [
+    r"parameter inference error",
+]
+# An "internal flux error: ..." is an ICE: Flux *crashed* while analyzing this code.
+# Per this pipeline's ICE-as-gate policy (see check_invariant2.py: "a genuine ICE
+# must still fail the gate", ice_masked is a first-class gate failure), a run that
+# ICEs cannot be trusted -- so an ICE in flux_errors[] FAILS the triage gate too
+# (override with --allow-ice for the "pay later" dev workflow).
+ICE_PATTERNS = [
+    r"internal flux error",
 ]
 
 
@@ -184,20 +213,29 @@ def _compile(patterns: list[str]) -> list[re.Pattern]:
 
 
 def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
-             exclude: list[re.Pattern], cache: dict) -> list[dict]:
+             exclude: list[re.Pattern], inference: list[re.Pattern],
+             ice: list[re.Pattern], cache: dict) -> list[dict]:
     fn_ranges = build_fn_level_ranges(report, cache)
     precise_idx = build_precise_index(report)
 
     def filter_status(e: dict) -> str:
-        """One of: 'assert' (panic-root by construction), 'panic_root' (message
-        matched a panic-root pattern), 'excluded' (message matched an exclude
-        pattern -- deliberately dropped), or 'unclassified' (matched NEITHER).
+        """One of: 'ice' (an internal flux error -- Flux crashed; gated), 'assert'
+        (panic-root by construction), 'panic_root' (message matched a panic-root
+        pattern), 'excluded' (message matched an exclude pattern -- deliberately
+        dropped), 'inference_error' (a benign parameter-inference limitation that
+        produced no obligation), or 'unclassified' (matched NONE).
+        An ICE is checked FIRST and by message regardless of category: a crash makes
+        the analysis untrustworthy, so it cannot be re-read as a panic-root assert.
         'unclassified' is the loud case: an E0999 we don't recognize means a
         Flux diagnostic was reworded (or a new error kind appeared) and the
         brittle message patterns silently stopped covering it."""
+        msg = e.get("message", "")
+        if any(p.search(msg) for p in ice):
+            return "ice"
         if e.get("category") == "assert_obligation":
             return "assert"
-        msg = e.get("message", "")
+        if any(p.search(msg) for p in inference):
+            return "inference_error"
         if any(p.search(msg) for p in exclude):
             return "excluded"
         if any(p.search(msg) for p in panic_root):
@@ -238,9 +276,18 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
         status = filter_status(e)
         if status == "unclassified":
             rec["bucket"] = "unclassified"
-            rec["reason"] = ("E0999 matched NEITHER a panic-root nor an exclude pattern -- "
-                             "the message patterns no longer cover this diagnostic (reworded "
-                             "Flux output or a new error kind); triage cannot bucket it")
+            rec["reason"] = ("E0999 matched none of the panic-root / exclude / inference / ICE "
+                             "patterns -- the message patterns no longer cover this diagnostic "
+                             "(reworded Flux output or a new error kind); triage cannot bucket it")
+        elif status == "ice":
+            rec["bucket"] = "ice"
+            rec["reason"] = ("an internal flux error (ICE) -- Flux crashed analyzing this code, "
+                             "so the run is untrustworthy; gated per the ICE-as-gate policy")
+        elif status == "inference_error":
+            rec["bucket"] = "inference_error"
+            rec["reason"] = ("a parameter inference error -- Flux could not infer the call's "
+                             "refinement arguments (a benign limitation); it produced no "
+                             "verification obligation, so it is not panic-root")
         elif status == "excluded":
             rec["bucket"] = "excluded"
             rec["reason"] = "matched an exclude pattern (precondition / non-panic diagnostic)"
@@ -287,7 +334,7 @@ def classify(report: dict, survey_addrs: set[str], panic_root: list[re.Pattern],
 # --------------------------------------------------------------------------- #
 
 _BUCKETS = ("panicking", "lookup_failed", "non_panicking", "precondition_failed",
-            "excluded", "unclassified")
+            "excluded", "inference_error", "ice", "unclassified")
 
 
 def mark_panicking_dedup(records: list[dict]) -> int:
@@ -387,12 +434,21 @@ def main() -> int:
                     help="extra panic-root message pattern (repeatable)")
     ap.add_argument("--exclude-regex", action="append", default=[],
                     help="extra exclude (non-panic-root) message pattern (repeatable)")
+    ap.add_argument("--inference-error-regex", action="append", default=[],
+                    help="extra inference-error message pattern -- a benign Flux limitation "
+                         "that produced no obligation (repeatable)")
+    ap.add_argument("--ice-regex", action="append", default=[],
+                    help="extra ICE (internal flux error) message pattern (repeatable)")
     ap.add_argument("--panic-root-only", action="store_true",
                     help="use only --panic-root-regex patterns, dropping the built-in defaults")
     ap.add_argument("--allow-unclassified", action="store_true",
-                    help="do not fail when an E0999 matches neither panic-root nor exclude "
-                         "patterns (default: scream and exit 1 so reworded Flux diagnostics "
-                         "cannot silently slip through)")
+                    help="do not fail when an E0999 matches none of the panic-root / exclude / "
+                         "inference / ICE patterns (default: scream and exit 1 so reworded Flux "
+                         "diagnostics cannot silently slip through)")
+    ap.add_argument("--allow-ice", action="store_true",
+                    help="do not fail when an E0999 is an internal flux error (ICE). Default is "
+                         "to exit 4 per the ICE-as-gate policy: a crash makes the run "
+                         "untrustworthy. Use for the 'pay later' dev workflow.")
     args = ap.parse_args()
 
     out_path = args.out or args.report
@@ -415,12 +471,15 @@ def main() -> int:
     base_root = [] if args.panic_root_only else list(PANIC_ROOT_PATTERNS)
     panic_root = _compile(base_root + args.panic_root_regex)
     exclude = _compile(list(EXCLUDE_PATTERNS) + args.exclude_regex)
+    inference = _compile(list(INFERENCE_ERROR_PATTERNS) + args.inference_error_regex)
+    ice = _compile(list(ICE_PATTERNS) + args.ice_regex)
 
     cache: dict[str, list[str] | None] = {}
-    errors = classify(report, survey_addrs, panic_root, exclude, cache)
+    errors = classify(report, survey_addrs, panic_root, exclude, inference, ice, cache)
 
     counts = {"panicking": 0, "lookup_failed": 0, "non_panicking": 0,
-              "precondition_failed": 0, "excluded": 0, "unclassified": 0}
+              "precondition_failed": 0, "excluded": 0, "inference_error": 0,
+              "ice": 0, "unclassified": 0}
     for r in errors:
         counts[r["bucket"]] += 1
     total_panic_root = (counts["panicking"] + counts["lookup_failed"]
@@ -442,6 +501,8 @@ def main() -> int:
         "filter": {
             "panic_root_patterns": base_root + args.panic_root_regex,
             "exclude_patterns": list(EXCLUDE_PATTERNS) + args.exclude_regex,
+            "inference_error_patterns": list(INFERENCE_ERROR_PATTERNS) + args.inference_error_regex,
+            "ice_patterns": list(ICE_PATTERNS) + args.ice_regex,
             "note": ("assert_obligation errors are panic-root by construction; "
                      "other_obligation errors are admitted by message pattern"),
         },
@@ -453,6 +514,8 @@ def main() -> int:
             "non_panicking": counts["non_panicking"],
             "lookup_failed": counts["lookup_failed"],
             "excluded": counts["excluded"],
+            "inference_error": counts["inference_error"],
+            "ice": counts["ice"],
             "unclassified": counts["unclassified"],
             "total_panic_root": total_panic_root,
             "conservation_ok": not partition_violations,
@@ -470,6 +533,8 @@ def main() -> int:
           f"non_panicking={counts['non_panicking']} "
           f"lookup_failed={counts['lookup_failed']} "
           f"excluded={counts['excluded']} "
+          f"inference_error={counts['inference_error']} "
+          f"ice={counts['ice']} "
           f"unclassified={counts['unclassified']} "
           f"(total panic-root={total_panic_root})")
     print(f"wrote {out_path}")
@@ -484,22 +549,42 @@ def main() -> int:
         print("!" * 72, file=sys.stderr)
         return 3  # non-overridable: conservation must always hold
 
+    rc = 0
+
+    if counts["ice"]:
+        print("\n" + "!" * 72, file=sys.stderr)
+        print(f"FATAL: {counts['ice']} E0999 error(s) are internal flux errors (ICEs).",
+              file=sys.stderr)
+        print("Flux CRASHED analyzing this code -- the run cannot be trusted. Per the "
+              "ICE-as-gate policy a genuine ICE must fail the gate.", file=sys.stderr)
+        print("Fix the ICE (or #[flux_rs::trusted] the offending item), or re-run with "
+              "--allow-ice to override for the 'pay later' dev workflow.", file=sys.stderr)
+        for r in errors:
+            if r["bucket"] == "ice":
+                print(f"  - {r.get('file')}:{r.get('line')} [{r.get('category')}] "
+                      f"{r.get('message')}", file=sys.stderr)
+        print("!" * 72, file=sys.stderr)
+        if not args.allow_ice:
+            rc = 4
+
     if counts["unclassified"]:
         print("\n" + "!" * 72, file=sys.stderr)
-        print(f"FATAL: {counts['unclassified']} E0999 error(s) matched NEITHER a panic-root "
-              "nor an exclude pattern.", file=sys.stderr)
+        print(f"FATAL: {counts['unclassified']} E0999 error(s) matched NONE of the panic-root, "
+              "exclude, inference, or ICE patterns.", file=sys.stderr)
         print("The triage's message patterns no longer cover every Flux error -- a reworded "
               "diagnostic or new error kind is slipping through uncounted.", file=sys.stderr)
-        print("Update PANIC_ROOT_PATTERNS / EXCLUDE_PATTERNS (or pass --panic-root-regex / "
-              "--exclude-regex), or re-run with --allow-unclassified to override.", file=sys.stderr)
+        print("Update the *_PATTERNS lists (or pass --panic-root-regex / --exclude-regex / "
+              "--inference-error-regex / --ice-regex), or re-run with --allow-unclassified "
+              "to override.", file=sys.stderr)
         for r in errors:
             if r["bucket"] == "unclassified":
                 print(f"  - {r.get('file')}:{r.get('line')} [{r.get('category')}] "
                       f"{r.get('message')}", file=sys.stderr)
         print("!" * 72, file=sys.stderr)
-        if not args.allow_unclassified:
-            return 1
-    return 0
+        if not args.allow_unclassified and rc == 0:
+            rc = 1  # ICE (exit 4) takes precedence if both fire
+
+    return rc
 
 
 if __name__ == "__main__":

@@ -150,7 +150,7 @@ impl<'a, A: Alarm<'a>> AlarmDriver<'a, A> {
     /// - invoke upcalls for all expired app alarms, resetting them afterwards,
     /// - re-arming the alarm for the next earliest [`Expiration`], or
     /// - disarming the alarm if no unexpired [`Expiration`] is found.
-    // FLUX-TODO-FN-LEVEL addrs=[0x1916a] flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x19102] flavor=explicit_panic
     fn process_rearm_or_callback(&self) {
         // Ask the clock about a current reference once. This can incur a
         // volatile read, and this may not be optimized if done in a loop:

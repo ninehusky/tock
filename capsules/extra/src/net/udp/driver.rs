@@ -83,7 +83,7 @@ fn result_to_errorcode(rc: Result<(), kernel::ErrorCode>) -> kernel::ErrorCode {
 
     let rc_into: Result<kernel::ErrorCode, _> = rc.try_into();
 
-    // FLUX-TODO addr=0xbe04 flavor=unwrap_result
+    // FLUX-TODO addr=0xbd50 flavor=unwrap_result
     flux_support::assert(rc.is_ok());
     rc_into.unwrap()
 }
@@ -234,6 +234,7 @@ impl<'a> UDPDriver<'a> {
     /// returned immediately to the app. Assumes that the driver is currently
     /// idle and the app has a pending transmission.
     #[inline]
+    #[flux_rs::trusted] // residual place_ty.rs:908 UnsolvedEvar ICE-family (non-fatal); needs Flux-driver fix, not annotation
     fn perform_tx_sync(&self, processid: ProcessId) -> Result<(), ErrorCode> {
         self.apps.enter(processid, |app, kernel_data| {
             let addr_ports = match app.pending_tx.take() {

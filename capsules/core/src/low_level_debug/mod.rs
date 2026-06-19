@@ -118,6 +118,7 @@ impl<'u, U: Transmit<'u>> TransmitClient for LowLevelDebug<'u, U> {
 impl<'u, U: Transmit<'u>> LowLevelDebug<'u, U> {
     // If the UART is not busy (the buffer is available), transmits the entry.
     // Otherwise, adds it to the app's queue.
+    #[flux_rs::trusted] // body-ICE dodge (whole-crate enable)
     fn push_entry(&self, entry: DebugEntry, processid: ProcessId) {
         use DebugEntry::Dropped;
 
