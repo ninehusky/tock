@@ -481,6 +481,7 @@ where
     B: ble_advertising::BleAdvertisementDriver<'a> + ble_advertising::BleConfig,
     A: kernel::hil::time::Alarm<'a>,
 {
+    // FLUX-TODO-FN-LEVEL addrs=[0x1ed4a] flavor=slice_end
     #[flux_rs::sig(fn(&Self, buf: &mut [u8][@n], len: u8{len <= n}, result: Result<(), ErrorCode>))]
     fn receive_event(&self, buf: &'static mut [u8], len: u8, result: Result<(), ErrorCode>) {
         self.receiving_app.map(|processid| {
@@ -510,7 +511,6 @@ where
                                 // from the RxClient HIL contract). An undersized buffer takes
                                 // the `None` -> `false` path instead of panicking the kernel.
                                 if let Some(slice) = userland.get(0..len as usize) {
-                                    // FLUX-TODO addr=0x1ed4a flavor=slice_end
                                     flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                     slice.copy_from_slice_or_err(&buf[0..len as usize]).is_ok()
                                 } else {
