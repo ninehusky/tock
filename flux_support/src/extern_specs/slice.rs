@@ -57,38 +57,34 @@ impl<T> SliceIndex<[T]> for RangeTo<usize> {}
 impl<T> SliceIndex<[T]> for RangeFrom<usize> {}
 
 #[flux_rs::extern_spec(core::ops)]
-// TODO: drop the `{ true }` default once every `Index<...>`
-// impl's been given an explicit one.
-#[flux_rs::assoc(fn in_bounds(len: int, idx: Idx) -> bool { true })]
-trait Index<Idx>
-where
-    Idx: ?Sized,
-{
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: Idx) -> bool)]
+#[flux_rs::assoc(fn output_pred(v: Self, idx: Idx, out: Self::Output) -> bool { true })]
+trait Index<Idx> {
+    #[flux_rs::sig(fn(self: &Self[@v], index: Idx { <Self as Index<Idx>>::in_bounds(v, index) }) -> &Self::Output{out: <Self as Index<Idx>>::output_pred(v, index, out)})]
+    fn index(&self, index: Idx) -> &Self::Output;
 }
 
-#[flux_rs::extern_spec(core::slice)] #[flux_rs::assoc(fn in_bounds(len: int, idx: I) -> bool {
-    <I as SliceIndex<[T]>>::in_bounds(idx, len)
-})]
+#[flux_rs::extern_spec(core::slice)]
+#[flux_rs::assoc(fn in_bounds(len: int, idx: I) -> bool { <I as SliceIndex<[T]>>::in_bounds(idx, len) })]
+#[flux_rs::assoc(fn output_pred(len: int, idx: I, out: <I as SliceIndex<[T]>>::Output) -> bool { <I as SliceIndex<[T]>>::output_pred(idx, len, out) })]
 impl<T, I: SliceIndex<[T]>> Index<I> for [T] {
-    #[flux_rs::no_panic_if(<Self as Index<I>>::in_bounds(len, idx))]
-    #[flux_rs::sig(fn(&Self[@len], I[@idx]) -> &I::Output{out: <I as SliceIndex<[T]>>::output_pred(idx, len, out)})]
+    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn(&Self[@len], {I[@idx] | <Self as Index<I>>::in_bounds(len, idx)}) -> &I::Output{out: <I as SliceIndex<[T]>>::output_pred(idx, len, out)})]
     fn index(&self, index: I) -> &I::Output;
 }
 
 #[flux_rs::extern_spec(core::ops)]
-#[flux_rs::assoc(fn in_bounds(len: int, idx: Idx) -> bool { true })]
-trait IndexMut<Idx>
-where
-    Idx: ?Sized,
-{
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: Idx) -> bool)]
+trait IndexMut<Idx> {
+    #[flux_rs::sig(fn(self: &mut Self[@v], index: Idx { <Self as IndexMut<Idx>>::in_bounds(v, index) }) -> &mut Self::Output)]
+    fn index_mut(&mut self, index: Idx) -> &mut Self::Output;
 }
 
-#[flux_rs::extern_spec(core::slice)] #[flux_rs::assoc(fn in_bounds(len: int, idx: I) -> bool {
-    <I as SliceIndex<[T]>>::in_bounds(idx, len)
-})]
+#[flux_rs::extern_spec(core::slice)]
+#[flux_rs::assoc(fn in_bounds(len: int, idx: I) -> bool { <I as SliceIndex<[T]>>::in_bounds(idx, len) })]
 impl<T, I: SliceIndex<[T]>> IndexMut<I> for [T] {
-    #[flux_rs::no_panic_if(<Self as IndexMut<I>>::in_bounds(len, idx))]
-    #[flux_rs::sig(fn(&mut Self[@len], I[@idx]) -> &mut I::Output{out: <I as SliceIndex<[T]>>::output_pred(idx, len, out)})]
+    #[flux_rs::no_panic]
+    #[flux_rs::sig(fn(&mut Self[@len], {I[@idx] | <Self as IndexMut<I>>::in_bounds(len, idx)}) -> &mut I::Output{out: <I as SliceIndex<[T]>>::output_pred(idx, len, out)})]
     fn index_mut(&mut self, index: I) -> &mut I::Output;
 }
 
