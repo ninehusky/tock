@@ -49,8 +49,11 @@ impl<'a> ListNode<'a, RoundRobinProcessNode<'a>> for RoundRobinProcessNode<'a> {
 }
 
 /// Round Robin Scheduler
+#[flux_rs::refined_by()]
 pub struct RoundRobinSched<'a> {
+    #[flux_rs::field(Cell<u32{v: v != 0}>)]
     time_remaining: Cell<u32>,
+    #[flux_rs::field(u32{v: v != 0})]
     timeslice_length: u32,
     pub processes: List<'a, RoundRobinProcessNode<'a>>,
     last_rescheduled: Cell<bool>,
@@ -63,6 +66,7 @@ impl<'a> RoundRobinSched<'a> {
         Self::new_with_time(Self::DEFAULT_TIMESLICE_US)
     }
 
+    #[flux_rs::sig(fn (time_us: u32{time_us != 0}) -> RoundRobinSched)]
     pub const fn new_with_time(time_us: u32) -> RoundRobinSched<'a> {
         RoundRobinSched {
             time_remaining: Cell::new(time_us),
