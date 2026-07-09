@@ -756,6 +756,7 @@ impl ReadableProcessSlice {
         #[inline(never)]
         #[cold]
         #[track_caller]
+        #[flux_rs::sig(fn(len: usize, src_len: usize) -> _ requires false)]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
             // FLUX-TODO addr=0x1146c flavor=explicit_panic
             flux_support::assert(false);
@@ -1020,6 +1021,7 @@ impl WriteableProcessSlice {
         #[inline(never)]
         #[cold]
         #[track_caller]
+        #[flux_rs::sig(fn(dst_len: usize, src_len: usize) -> _ requires false)]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
             // FLUX-TODO addr=0x114f0 flavor=explicit_panic
             flux_support::assert(false);
