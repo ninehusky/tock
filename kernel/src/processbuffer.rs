@@ -854,20 +854,13 @@ impl ReadableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: Range<int>) -> bool { idx.start <= idx.end && idx.end <= v.len })]
 impl Index<Range<usize>> for ReadableProcessSlice {
     // Subslicing will still yield a ReadableProcessSlice reference
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &ReadableProcessSlice[@v], idx: Range<usize>{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
-        // Notes: actionable. Discharge path is known but deferred: give this
-        // impl (and the RangeTo/RangeFrom/usize siblings) an `Index::in_bounds`
-        // assoc refinement + `#[no_panic_if(<Self as Index<_>>::in_bounds(len,
-        // idx))]`, and drop this assert (under no_panic_if the inner
-        // self.slice[idx] is checked directly; a bare `requires` doesn't bind to
-        // the trait method, and the cross-crate flux_support::assert trips a
-        // spurious MightPanic). Cascades to every `rps[range]` call site.
-        // flux_support::assert(idx.end <= self.slice.len());
-
         // FLUX-TODO addr=0x11008 flavor=slice_end
         flux_support::assert(idx.end <= self.slice.len());
         // FLUX-TODO addr=0x11010 flavor=slice_order
@@ -877,31 +870,36 @@ impl Index<Range<usize>> for ReadableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeTo<int>) -> bool { idx.end <= v.len })]
 impl Index<RangeTo<usize>> for ReadableProcessSlice {
     // Subslicing will still yield a ReadableProcessSlice reference
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &ReadableProcessSlice[@v], idx: RangeTo<usize>{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: RangeTo<usize>) -> &Self::Output {
         &self[0..idx.end]
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeFrom<int>) -> bool { idx.start <= v.len })]
 impl Index<RangeFrom<usize>> for ReadableProcessSlice {
     // Subslicing will still yield a ReadableProcessSlice reference
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &ReadableProcessSlice[@v], idx: RangeFrom<usize>{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: RangeFrom<usize>) -> &Self::Output {
         &self[idx.start..self.len()]
     }
 }
+
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { idx < v.len })]
 impl Index<usize> for ReadableProcessSlice {
     // Indexing into a ReadableProcessSlice must yield a
     // ReadableProcessByte, to limit the API surface of the wrapped
     // Cell to read-only operations
     type Output = ReadableProcessByte;
 
-    #[flux_rs::trusted_impl(reason = "needs associated refinement on Index trait")]
-    #[flux_rs::sig(fn(self: &ReadableProcessSlice[@len], idx: usize ) -> &Self::Output requires len > idx)]
+    #[flux_rs::sig(fn(self: &ReadableProcessSlice[@v], idx: usize{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: usize) -> &Self::Output {
         // As ReadableProcessSlice is a transparent wrapper around its
         // inner type, [ReadableProcessByte], we can use the regular
@@ -1115,40 +1113,46 @@ impl WriteableProcessSlice {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: Range<int>) -> bool { idx.start <= idx.end && idx.end <= v.len })]
 impl Index<Range<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@v], idx: Range<usize>{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
         cast_cell_slice_to_process_slice(&self.slice[idx])
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeTo<int>) -> bool { idx.end <= v.len })]
 impl Index<RangeTo<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@v], idx: RangeTo<usize>{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: RangeTo<usize>) -> &Self::Output {
         &self[0..idx.end]
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: RangeFrom<int>) -> bool { idx.start <= v.len })]
 impl Index<RangeFrom<usize>> for WriteableProcessSlice {
     // Subslicing will still yield a WriteableProcessSlice reference.
     type Output = Self;
 
+    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@v], idx: RangeFrom<usize>{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: RangeFrom<usize>) -> &Self::Output {
         &self[idx.start..self.len()]
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { idx < v.len })]
 impl Index<usize> for WriteableProcessSlice {
     // Indexing into a WriteableProcessSlice yields a Cell<u8>, as
     // mutating the memory contents is allowed.
     type Output = Cell<u8>;
 
-    #[flux_rs::trusted_impl(reason = "needs associated refinement on Index trait")]
-    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@len], idx: usize) -> &Self::Output requires len > idx)]
+    #[flux_rs::sig(fn(self: &WriteableProcessSlice[@v], idx: usize{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: usize) -> &Self::Output {
         // As WriteableProcessSlice is a transparent wrapper around
         // its inner type, [Cell<u8>], we can use the regular slicing
