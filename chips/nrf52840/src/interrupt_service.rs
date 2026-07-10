@@ -39,7 +39,7 @@ impl<'a> Nrf52840DefaultPeripherals<'a> {
     }
 }
 impl<'a> kernel::platform::chip::InterruptService for Nrf52840DefaultPeripherals<'a> {
-    // FLUX-TODO-FN-LEVEL addrs=[0x1d04] flavor=assert
+    // FLUX-TODO-FN-LEVEL addrs=[0x1d68] flavor=assert
     #[flux_rs::trusted(reason = "TODO: this function is unchecked when running Flux on `chips/nrf52840`.")]
     unsafe fn service_interrupt(&self, interrupt: u32) -> bool {
         match interrupt {

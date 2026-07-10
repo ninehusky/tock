@@ -148,7 +148,7 @@ pub unsafe extern "C" fn unhandled_interrupt() {
 
     interrupt_number &= 0x1ff;
 
-    // FLUX-TODO addr=0xf9b0 flavor=explicit_panic
+    // FLUX-TODO addr=0xf918 flavor=explicit_panic
     flux_support::assert(false);
     panic!("Unhandled Interrupt. ISR {} is active.", interrupt_number);
 }
