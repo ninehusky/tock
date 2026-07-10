@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-07-10T21:38:07.574885+00:00",
-    "generated_at": "2026-07-10T21:38:08.011367+00:00",
+    "elf_mtime": "2026-07-10T22:37:03.579578+00:00",
+    "generated_at": "2026-07-10T22:37:04.027312+00:00",
     "total_sites": 351
   },
   "sites": [
@@ -16302,24 +16302,24 @@
       "innermost_frame": {
         "func": "<kernel::processbuffer::ReadableProcessSlice>::copy_to_slice::len_mismatch_fail",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 763
+        "line": 767
       },
       "effective_frame": {
         "func": "<kernel::processbuffer::ReadableProcessSlice>::copy_to_slice::len_mismatch_fail",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 763
+        "line": 767
       },
       "effective_source": "panic!(",
       "outermost_frame": {
         "func": "<kernel::processbuffer::ReadableProcessSlice>::copy_to_slice::len_mismatch_fail",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 763
+        "line": 767
       },
       "inline_chain": [
         {
           "func": "<kernel::processbuffer::ReadableProcessSlice>::copy_to_slice::len_mismatch_fail",
           "file": "./kernel/src/processbuffer.rs",
-          "line": 763
+          "line": 767
         }
       ],
       "module_bucket": "kernel",
@@ -16340,13 +16340,13 @@
       "effective_frame": {
         "func": "<kernel::processbuffer::ReadableProcessSlice as core::ops::index::Index<core::ops::range::Range<usize>>>::index",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 870
+        "line": 874
       },
       "effective_source": "cast_byte_slice_to_process_slice(&self.slice[idx])",
       "outermost_frame": {
         "func": "<kernel::processbuffer::ReadableProcessSlice as core::ops::index::Index<core::ops::range::Range<usize>>>::index",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 870
+        "line": 874
       },
       "inline_chain": [
         {
@@ -16362,7 +16362,7 @@
         {
           "func": "<kernel::processbuffer::ReadableProcessSlice as core::ops::index::Index<core::ops::range::Range<usize>>>::index",
           "file": "./kernel/src/processbuffer.rs",
-          "line": 870
+          "line": 874
         }
       ],
       "module_bucket": "kernel",
@@ -16383,13 +16383,13 @@
       "effective_frame": {
         "func": "<kernel::processbuffer::ReadableProcessSlice as core::ops::index::Index<core::ops::range::Range<usize>>>::index",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 870
+        "line": 874
       },
       "effective_source": "cast_byte_slice_to_process_slice(&self.slice[idx])",
       "outermost_frame": {
         "func": "<kernel::processbuffer::ReadableProcessSlice as core::ops::index::Index<core::ops::range::Range<usize>>>::index",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 870
+        "line": 874
       },
       "inline_chain": [
         {
@@ -16405,7 +16405,7 @@
         {
           "func": "<kernel::processbuffer::ReadableProcessSlice as core::ops::index::Index<core::ops::range::Range<usize>>>::index",
           "file": "./kernel/src/processbuffer.rs",
-          "line": 870
+          "line": 874
         }
       ],
       "module_bucket": "kernel",
@@ -16421,24 +16421,24 @@
       "innermost_frame": {
         "func": "<kernel::processbuffer::WriteableProcessSlice>::copy_from_slice::len_mismatch_fail",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 1028
+        "line": 1040
       },
       "effective_frame": {
         "func": "<kernel::processbuffer::WriteableProcessSlice>::copy_from_slice::len_mismatch_fail",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 1028
+        "line": 1040
       },
       "effective_source": "panic!(",
       "outermost_frame": {
         "func": "<kernel::processbuffer::WriteableProcessSlice>::copy_from_slice::len_mismatch_fail",
         "file": "./kernel/src/processbuffer.rs",
-        "line": 1028
+        "line": 1040
       },
       "inline_chain": [
         {
           "func": "<kernel::processbuffer::WriteableProcessSlice>::copy_from_slice::len_mismatch_fail",
           "file": "./kernel/src/processbuffer.rs",
-          "line": 1028
+          "line": 1040
         }
       ],
       "module_bucket": "kernel",
