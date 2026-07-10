@@ -749,6 +749,10 @@ impl ReadableProcessSlice {
     /// # Panics
     ///
     /// This function will panic if `self.len() != dest.len()`.
+    // FLUX-TODO-FN-LEVEL addr=0x11390 flavor=explicit_panic
+    // NOTE: See the comment in `copy_to_slice_or_err` for why this `explicit_panic`,
+    // which is attributable to the `len_mismatch_fail` function, is marked up here
+    // rather than at the `panic` call site itself.
     #[flux_rs::sig(fn(self: &Self[@n], dest: &mut [u8][n]))]
     pub fn copy_to_slice(&self, dest: &mut [u8]) {
         // The panic code path was put into a cold function to not
@@ -758,7 +762,7 @@ impl ReadableProcessSlice {
         #[track_caller]
         #[flux_rs::sig(fn(len: usize, src_len: usize) -> _ requires false)]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x11390 flavor=explicit_panic
+            // (former) FLUX-TODO addr=0x11390 flavor=explicit_panic
             flux_support::assert(false);
             panic!(
                 "source slice length ({}) does not match destination slice length ({})",
@@ -1011,6 +1015,14 @@ impl WriteableProcessSlice {
     ///
     /// This function will panic if `src.len() != self.len()`.
     #[flux_rs::sig(fn(self: &Self[@n], src: &[u8][n]))]
+    // FLUX-TODO-FN-LEVEL addr=0x11458 flavor=explicit_panic
+    // Note on the above: we took care of this through the `sig` on `len_mismatch_fail`.
+    // We can actually precisely track where the panic is coming from, but we're
+    // choosing to express that as a `FN-LEVEL` because CI fails when moving the
+    // `assert(false)`. The function body itself is OK not to be trusted:
+    // because the only thing it does is panic, the no-panic proof is actually
+    // discharged by whoever calls `len_mismatch_fail`;
+    // it's not the responsibility of `len_mismatch_fail` to prove that it doesn't panic.
     pub fn copy_from_slice(&self, src: &[u8]) {
         // Method implemetation adopted from the
         // core::slice::copy_from_slice method implementation:
@@ -1023,7 +1035,7 @@ impl WriteableProcessSlice {
         #[track_caller]
         #[flux_rs::sig(fn(dst_len: usize, src_len: usize) -> _ requires false)]
         fn len_mismatch_fail(dst_len: usize, src_len: usize) -> ! {
-            // FLUX-TODO addr=0x11458 flavor=explicit_panic
+            // (former) FLUX-TODO addr=0x11458 flavor=explicit_panic
             flux_support::assert(false);
             panic!(
                 "src slice len ({}) != dest slice len ({})",
