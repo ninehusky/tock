@@ -95,7 +95,8 @@ impl Default for Mx25r6435fSector {
     }
 }
 
-// FLUX-TODO: replace with actual implementation
+// TODO(flux): placeholder in_bounds { true } is unsound; replace with
+// { idx < SECTOR_SIZE } and mark index trusted until then.
 #[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
 impl Index<usize> for Mx25r6435fSector {
     type Output = u8;
@@ -105,7 +106,8 @@ impl Index<usize> for Mx25r6435fSector {
     }
 }
 
-// FLUX-TODO: replace with actual implementation
+// TODO(flux): placeholder in_bounds { true } is unsound; replace with
+// { idx < SECTOR_SIZE } and mark index_mut trusted until then.
 #[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
 impl IndexMut<usize> for Mx25r6435fSector {
     fn index_mut(&mut self, idx: usize) -> &mut u8 {

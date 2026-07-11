@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-07-11T23:37:18.153393+00:00",
-    "generated_at": "2026-07-11T23:37:18.660941+00:00",
+    "elf_mtime": "2026-07-11T23:39:00.810188+00:00",
+    "generated_at": "2026-07-11T23:39:01.297483+00:00",
     "total_sites": 351
   },
   "sites": [
