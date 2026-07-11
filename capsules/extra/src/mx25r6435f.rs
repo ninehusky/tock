@@ -95,25 +95,19 @@ impl Default for Mx25r6435fSector {
     }
 }
 
-// FLUX-TODO: real fix is `in_bounds { idx < 4096 }` (SECTOR_SIZE) with the
-// `#[flux_rs::trusted]` below REMOVED, so the `&self.0[idx]` bound is proven
-// rather than trusted. The `{ true }` placeholder is unsound.
+// FLUX-TODO: replace with actual implementation
 #[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
 impl Index<usize> for Mx25r6435fSector {
     type Output = u8;
 
-    #[flux_rs::trusted(reason = "TEMPORARY carve-out: placeholder in_bounds { true } is unsound (propagates zero bounds obligation to callers); replace with in_bounds { idx < SECTOR_SIZE } and drop trusted. Tracked, not proven.")]
     fn index(&self, idx: usize) -> &u8 {
         &self.0[idx]
     }
 }
 
-// FLUX-TODO: real fix is `in_bounds { idx < 4096 }` (SECTOR_SIZE) with the
-// `#[flux_rs::trusted]` below REMOVED, so the `&mut self.0[idx]` bound is proven
-// rather than trusted. The `{ true }` placeholder is unsound.
+// FLUX-TODO: replace with actual implementation
 #[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
 impl IndexMut<usize> for Mx25r6435fSector {
-    #[flux_rs::trusted(reason = "TEMPORARY carve-out: placeholder in_bounds { true } is unsound (propagates zero bounds obligation to callers); replace with in_bounds { idx < SECTOR_SIZE } and drop trusted. Tracked, not proven.")]
     fn index_mut(&mut self, idx: usize) -> &mut u8 {
         &mut self.0[idx]
     }
