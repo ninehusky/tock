@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-07-10T22:37:03.579578+00:00",
-    "generated_at": "2026-07-10T22:37:04.027312+00:00",
+    "elf_mtime": "2026-07-11T23:37:18.153393+00:00",
+    "generated_at": "2026-07-11T23:37:18.660941+00:00",
     "total_sites": 351
   },
   "sites": [
@@ -258,7 +258,7 @@
       "notes": ""
     },
     {
-      "address": "0x1e6ba",
+      "address": "0x1eada",
       "sink": "core::panicking::panic_fmt",
       "sink_flavor": "explicit_panic",
       "enclosing_asm_label": "_RNvXs2_NtCsbdXGhQuEyfO_13capsules_core3adcINtB5_12AdcDedicatedNtNtCshfPbTpO1oaF_5nrf523adc3AdcENtNtNtCslMPoGoNPYhW_6kernel3hil3adc6Client12sample_readyCs5Ma156fTepR_14nrf52840dk_lib",
@@ -291,7 +291,7 @@
       "notes": ""
     },
     {
-      "address": "0x1eca6",
+      "address": "0x1f106",
       "sink": "core::panicking::panic_fmt",
       "sink_flavor": "explicit_panic",
       "enclosing_asm_label": "_RNvXs3_NtCsbdXGhQuEyfO_13capsules_core3adcINtB5_12AdcDedicatedNtNtCshfPbTpO1oaF_5nrf523adc3AdcENtNtNtCslMPoGoNPYhW_6kernel3hil3adc15HighSpeedClient13samples_readyCs5Ma156fTepR_14nrf52840dk_lib",
@@ -395,7 +395,7 @@
       "notes": ""
     },
     {
-      "address": "0x1ef68",
+      "address": "0x1f3c8",
       "sink": "core::slice::index::slice_end_index_len_fail",
       "sink_flavor": "slice_end",
       "enclosing_asm_label": "_RNvXs_NtCsbdXGhQuEyfO_13capsules_core23i2c_master_slave_driverINtB4_20I2CMasterSlaveDriverNtNtCshfPbTpO1oaF_5nrf523i2c3TWIENtNtNtCslMPoGoNPYhW_6kernel3hil3i2c17I2CHwMasterClient16command_completeCs5Ma156fTepR_14nrf52840dk_lib",
@@ -2573,7 +2573,7 @@
       "notes": ""
     },
     {
-      "address": "0x1e8b0",
+      "address": "0x1ed10",
       "sink": "core::slice::index::slice_end_index_len_fail",
       "sink_flavor": "slice_end",
       "enclosing_asm_label": "_RNvXs3_NtCs92xTz3yoWS2_14capsules_extra22ble_advertising_driverINtB5_3BLENtNtCshfPbTpO1oaF_5nrf529ble_radio5RadioINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers13virtual_alarm15VirtualMuxAlarmNtNtCsg5i6rWMBzgE_5nrf5x3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil15ble_advertising8RxClient13receive_eventCs5Ma156fTepR_14nrf52840dk_lib",
@@ -4159,10 +4159,10 @@
       "notes": ""
     },
     {
-      "address": "0x1f316",
+      "address": "0x1e6ee",
       "sink": "core::panicking::panic_bounds_check",
       "sink_flavor": "bounds",
-      "enclosing_asm_label": "_RNvXs4_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil3spi15SpiMasterClient15read_write_doneCs5Ma156fTepR_14nrf52840dk_lib",
+      "enclosing_asm_label": "_RNvXs2_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil3spi15SpiMasterClient15read_write_doneCs5Ma156fTepR_14nrf52840dk_lib",
       "innermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done",
         "file": "./capsules/extra/src/mx25r6435f.rs",
@@ -4192,10 +4192,10 @@
       "notes": ""
     },
     {
-      "address": "0x1f366",
+      "address": "0x1e73e",
       "sink": "core::panicking::panic_bounds_check",
       "sink_flavor": "bounds",
-      "enclosing_asm_label": "_RNvXs4_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil3spi15SpiMasterClient15read_write_doneCs5Ma156fTepR_14nrf52840dk_lib",
+      "enclosing_asm_label": "_RNvXs2_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil3spi15SpiMasterClient15read_write_doneCs5Ma156fTepR_14nrf52840dk_lib",
       "innermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done",
         "file": "./capsules/extra/src/mx25r6435f.rs",
@@ -4228,28 +4228,28 @@
       "address": "0x166c8",
       "sink": "core::panicking::panic_bounds_check",
       "sink_flavor": "bounds",
-      "enclosing_asm_label": "_RNvMs3_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEE12enable_writeCs5Ma156fTepR_14nrf52840dk_lib",
+      "enclosing_asm_label": "_RNvMs1_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEE12enable_writeCs5Ma156fTepR_14nrf52840dk_lib",
       "innermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::enable_write::{closure#1}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 271
+        "line": 277
       },
       "effective_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::enable_write::{closure#1}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 271
+        "line": 277
       },
       "effective_source": "txbuffer[0] = Opcodes::WREN as u8;",
       "outermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::enable_write",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 266
+        "line": 272
       },
       "inline_chain": [
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::enable_write::{closure#1}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 271
+          "line": 277
         },
         {
           "func": "<core::option::Option<&mut [u8]>>::map_or::<core::result::Result<(), kernel::errorcode::ErrorCode>, <capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::enable_write::{closure#1}>",
@@ -4259,7 +4259,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::enable_write",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 266
+          "line": 272
         }
       ],
       "module_bucket": "capsules/extra",
@@ -4268,31 +4268,31 @@
       "notes": ""
     },
     {
-      "address": "0x1f308",
+      "address": "0x1e6e0",
       "sink": "core::panicking::panic_bounds_check",
       "sink_flavor": "bounds",
-      "enclosing_asm_label": "_RNvXs4_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil3spi15SpiMasterClient15read_write_doneCs5Ma156fTepR_14nrf52840dk_lib",
+      "enclosing_asm_label": "_RNvXs2_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil3spi15SpiMasterClient15read_write_doneCs5Ma156fTepR_14nrf52840dk_lib",
       "innermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done::{closure#5}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 555
+        "line": 561
       },
       "effective_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done::{closure#5}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 555
+        "line": 561
       },
       "effective_source": "write_buffer[i + 4] = sector[i + (page_index * PAGE_SIZE) as usize];",
       "outermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 551
+        "line": 557
       },
       "inline_chain": [
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done::{closure#5}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 555
+          "line": 561
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<capsules_extra::mx25r6435f::Mx25r6435fSector>>::map::<<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done::{closure#5}, ()>::{closure#0}",
@@ -4312,7 +4312,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::spi::SpiMasterClient>::read_write_done",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 551
+          "line": 557
         }
       ],
       "module_bucket": "capsules/extra",
@@ -4321,31 +4321,31 @@
       "notes": ""
     },
     {
-      "address": "0x1f5e2",
+      "address": "0x1eb72",
       "sink": "core::panicking::panic_bounds_check",
       "sink_flavor": "bounds",
-      "enclosing_asm_label": "_RNvXs5_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil4time11AlarmClient5alarmCs5Ma156fTepR_14nrf52840dk_lib",
+      "enclosing_asm_label": "_RNvXs3_NtCs92xTz3yoWS2_14capsules_extra10mx25r6435fINtB5_10MX25R6435FINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers11virtual_spi22VirtualSpiMasterDeviceNtNtCshfPbTpO1oaF_5nrf523spi4SPIMENtNtCsg5i6rWMBzgE_5nrf5x4gpio7GPIOPinINtNtB1a_13virtual_alarm15VirtualMuxAlarmNtNtB36_3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil4time11AlarmClient5alarmCs5Ma156fTepR_14nrf52840dk_lib",
       "innermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm::{closure#0}::{closure#0}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 621
+        "line": 627
       },
       "effective_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm::{closure#0}::{closure#0}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 621
+        "line": 627
       },
       "effective_source": "write_buffer[0] = Opcodes::RDSR as u8;",
       "outermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 617
+        "line": 623
       },
       "inline_chain": [
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm::{closure#0}::{closure#0}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 621
+          "line": 627
         },
         {
           "func": "<core::option::Option<&mut [u8]>>::map::<(), <capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm::{closure#0}::{closure#0}>",
@@ -4355,7 +4355,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm::{closure#0}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 618
+          "line": 624
         },
         {
           "func": "<core::option::Option<&mut [u8]>>::map::<(), <capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm::{closure#0}>",
@@ -4365,7 +4365,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::time::AlarmClient>::alarm",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 617
+          "line": 623
         }
       ],
       "module_bucket": "capsules/extra",
@@ -7075,7 +7075,7 @@
       "effective_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}::{closure#0}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 336
+        "line": 342
       },
       "effective_source": "self.rxbuffer.replace(rxbuffer.unwrap());",
       "outermost_frame": {
@@ -7092,7 +7092,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}::{closure#0}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 336
+          "line": 342
         },
         {
           "func": "<core::option::Option<&mut [u8]>>::map_or::<core::result::Result<(), kernel::errorcode::ErrorCode>, <capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}::{closure#0}>",
@@ -7102,7 +7102,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 306
+          "line": 312
         },
         {
           "func": "<core::option::Option<&mut [u8]>>::map_or::<core::result::Result<(), kernel::errorcode::ErrorCode>, <capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}>",
@@ -7112,12 +7112,12 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 302
+          "line": 308
         },
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::flash::Flash>::read_page",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 658
+          "line": 664
         },
         {
           "func": "<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>> as tickv::flash_controller::FlashController<4096>>::read_region",
@@ -7138,12 +7138,12 @@
       "innermost_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}::{closure#0}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 315
+        "line": 321
       },
       "effective_frame": {
         "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}::{closure#0}",
         "file": "./capsules/extra/src/mx25r6435f.rs",
-        "line": 315
+        "line": 321
       },
       "effective_source": "txbuffer[0] = Opcodes::READ as u8;",
       "outermost_frame": {
@@ -7155,7 +7155,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}::{closure#0}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 315
+          "line": 321
         },
         {
           "func": "<core::option::Option<&mut [u8]>>::map_or::<core::result::Result<(), kernel::errorcode::ErrorCode>, <capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}::{closure#0}>",
@@ -7165,7 +7165,7 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 306
+          "line": 312
         },
         {
           "func": "<core::option::Option<&mut [u8]>>::map_or::<core::result::Result<(), kernel::errorcode::ErrorCode>, <capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector::{closure#0}>",
@@ -7175,12 +7175,12 @@
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::read_sector",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 302
+          "line": 308
         },
         {
           "func": "<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>> as kernel::hil::flash::Flash>::read_page",
           "file": "./capsules/extra/src/mx25r6435f.rs",
-          "line": 658
+          "line": 664
         },
         {
           "func": "<capsules_extra::tickv::TickFSFlashCtrl<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>> as tickv::flash_controller::FlashController<4096>>::read_region",
@@ -12523,7 +12523,7 @@
       "notes": ""
     },
     {
-      "address": "0x1e568",
+      "address": "0x1e988",
       "sink": "core::panicking::panic_fmt",
       "sink_flavor": "explicit_panic",
       "enclosing_asm_label": "_RNvXs2_NtCs92xTz3yoWS2_14capsules_extra22ble_advertising_driverINtB5_3BLENtNtCshfPbTpO1oaF_5nrf529ble_radio5RadioINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers13virtual_alarm15VirtualMuxAlarmNtNtCsg5i6rWMBzgE_5nrf5x3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil4time11AlarmClient5alarmCs5Ma156fTepR_14nrf52840dk_lib",
@@ -12586,7 +12586,7 @@
       "notes": ""
     },
     {
-      "address": "0x1e8c6",
+      "address": "0x1ed26",
       "sink": "core::panicking::panic_fmt",
       "sink_flavor": "explicit_panic",
       "enclosing_asm_label": "_RNvXs3_NtCs92xTz3yoWS2_14capsules_extra22ble_advertising_driverINtB5_3BLENtNtCshfPbTpO1oaF_5nrf529ble_radio5RadioINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers13virtual_alarm15VirtualMuxAlarmNtNtCsg5i6rWMBzgE_5nrf5x3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil15ble_advertising8RxClient13receive_eventCs5Ma156fTepR_14nrf52840dk_lib",
@@ -12669,7 +12669,7 @@
       "notes": ""
     },
     {
-      "address": "0x1f52c",
+      "address": "0x1f56c",
       "sink": "core::panicking::panic_fmt",
       "sink_flavor": "explicit_panic",
       "enclosing_asm_label": "_RNvXs4_NtCs92xTz3yoWS2_14capsules_extra22ble_advertising_driverINtB5_3BLENtNtCshfPbTpO1oaF_5nrf529ble_radio5RadioINtNtNtCsbdXGhQuEyfO_13capsules_core12virtualizers13virtual_alarm15VirtualMuxAlarmNtNtCsg5i6rWMBzgE_5nrf5x3rtc3RtcEENtNtNtCslMPoGoNPYhW_6kernel3hil15ble_advertising8TxClient14transmit_eventCs5Ma156fTepR_14nrf52840dk_lib",
@@ -18698,7 +18698,7 @@
       "notes": ""
     },
     {
-      "address": "0x1ef8a",
+      "address": "0x1f3ea",
       "sink": "core::panicking::panic_fmt",
       "sink_flavor": "explicit_panic",
       "enclosing_asm_label": "_RNvXs_NtCsbdXGhQuEyfO_13capsules_core23i2c_master_slave_driverINtB4_20I2CMasterSlaveDriverNtNtCshfPbTpO1oaF_5nrf523i2c3TWIENtNtNtCslMPoGoNPYhW_6kernel3hil3i2c17I2CHwMasterClient16command_completeCs5Ma156fTepR_14nrf52840dk_lib",
