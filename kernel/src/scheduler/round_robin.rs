@@ -49,8 +49,11 @@ impl<'a> ListNode<'a, RoundRobinProcessNode<'a>> for RoundRobinProcessNode<'a> {
 }
 
 /// Round Robin Scheduler
+#[flux_rs::refined_by()]
 pub struct RoundRobinSched<'a> {
+    #[flux_rs::field(Cell<u32{v: v != 0}>)]
     time_remaining: Cell<u32>,
+    #[flux_rs::field(u32{v: v != 0})]
     timeslice_length: u32,
     pub processes: List<'a, RoundRobinProcessNode<'a>>,
     last_rescheduled: Cell<bool>,
@@ -63,6 +66,7 @@ impl<'a> RoundRobinSched<'a> {
         Self::new_with_time(Self::DEFAULT_TIMESLICE_US)
     }
 
+    #[flux_rs::sig(fn (time_us: u32{time_us != 0}) -> RoundRobinSched)]
     pub const fn new_with_time(time_us: u32) -> RoundRobinSched<'a> {
         RoundRobinSched {
             time_remaining: Cell::new(time_us),
@@ -103,7 +107,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                     // `List::head()` returning `Some(_)` means
                     // that `List::pop_head()` returns `Some(_)` as well.
                     // flux_support::assert(head_opt.is_some());
-                    // FLUX-TODO addr=0x1dcc flavor=unwrap_option
+                    // FLUX-TODO addr=0x1e30 flavor=unwrap_option
                     flux_support::assert(head_opt.is_some());
                     self.processes.push_tail(head_opt.unwrap());
                 }
@@ -134,7 +138,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         // a cell's value or `self.timeslice_length`.
         // flux_support::assert(timeslice != 0);
 
-        // FLUX-TODO addr=0x1d88 flavor=explicit_panic
+        // FLUX-TODO addr=0x1dec flavor=explicit_panic
         flux_support::assert(timeslice != 0);
         assert!(timeslice != 0);
 
@@ -144,7 +148,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
     #[flux_rs::trusted_impl(reason = "TODO: we would need to push a refinement up to the `Scheduler` trait to discharge the precondition, which elicits more proofs about callers.")]
     #[flux_rs::sig(fn (&Self, StoppedExecutingReason, execution_time_us: Option<u32>[true]) -> ())]
     fn result(&self, result: StoppedExecutingReason, execution_time_us: Option<u32>) {
-        // FLUX-OPT addr=0x1d7e flavor=unwrap_option
+        // FLUX-OPT addr=0x1de2 flavor=unwrap_option
         flux_support::assert(execution_time_us.is_some());
         let execution_time_us = execution_time_us.unwrap(); // should never fail
         let reschedule = match result {
@@ -163,7 +167,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
         if !reschedule {
             let head_opt = self.processes.pop_head();
 
-            // FLUX-TODO addr=0x1e7a flavor=unwrap_option
+            // FLUX-TODO addr=0x1ede flavor=unwrap_option
             // Notes: blocked-list
             // Needs same refinement shape as the one mentioned above for the other unwrap_option on `head_opt`.
             // flux_support::assert(head_opt.is_some());

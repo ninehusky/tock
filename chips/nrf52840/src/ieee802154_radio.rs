@@ -756,7 +756,7 @@ impl<'a> Radio<'a> {
 
         // Unwrap fail = Radio RX Buffer is missing (may be due to receive client not replacing in receive(...) method,
         // or some instance in  driver taking buffer without properly replacing).
-        // FLUX-TODO addr=0x12ba2 flavor=unwrap_option
+        // FLUX-TODO addr=0x12b0a flavor=unwrap_option
         flux_support::assert(self.rx_buf.is_some());
         let rbuf = self.rx_buf.take().unwrap();
         self.rx_buf.replace(self.set_dma_ptr(rbuf));
@@ -837,7 +837,7 @@ impl<'a> Radio<'a> {
                     // receive client not replacing in receive(...) method, or
                     // some instance in driver taking buffer without properly
                     // replacing).
-                    // FLUX-TODO addr=0x12ba8 flavor=unwrap_option
+                    // FLUX-TODO addr=0x12b10 flavor=unwrap_option
                     flux_support::assert(self.rx_buf.is_some());
                     let rbuf = self.rx_buf.take().unwrap();
 
@@ -887,10 +887,10 @@ impl<'a> Radio<'a> {
                                 // currently supported so it is reasonable to
                                 // hardcode this.
                                 ack_buf[radio::PSDU_OFFSET] = 2;
-                                // FLUX-TODO addr=0x12bfa flavor=bounds
+                                // FLUX-TODO addr=0x12b62 flavor=bounds
                                 flux_support::assert(radio::PSDU_OFFSET + 1 < ack_buf.len());
                                 ack_buf[radio::PSDU_OFFSET + 1] = 0;
-                                // FLUX-TODO addr=0x12c04 flavor=bounds
+                                // FLUX-TODO addr=0x12b6c flavor=bounds
                                 flux_support::assert(radio::PSDU_OFFSET + radio::MHR_FC_SIZE < ack_buf.len());
                                 ack_buf[radio::PSDU_OFFSET + radio::MHR_FC_SIZE] = sequence_number;
 
@@ -914,7 +914,7 @@ impl<'a> Radio<'a> {
                                 // and reset radio to receiving.
                                 self.rx_client.map(|client| {
                                     start_task = true;
-                                    // FLUX-TODO addr=0x12bc6 flavor=unwrap_option
+                                    // FLUX-TODO addr=0x12b2e flavor=unwrap_option
                                     flux_support::assert(self.rx_buf.is_some());
                                     client.receive(
                                         self.rx_buf.take().unwrap(),
@@ -977,10 +977,10 @@ impl<'a> Radio<'a> {
                         self.cca_count.set(self.cca_count.get() + 1);
                         self.cca_be.set(self.cca_be.get() + 1);
                         let backoff_periods = self.random_nonce() & ((1 << self.cca_be.get()) - 1);
-                        // FLUX-TODO addr=0x12972 flavor=optional_cell_unwrap
+                        // FLUX-TODO addr=0x128da flavor=optional_cell_unwrap
                         flux_support::assert(self.timer0.is_some());
                         let current_time = self.timer0.unwrap_or_panic().now();
-                        // FLUX-TODO addr=0x12986 flavor=optional_cell_unwrap
+                        // FLUX-TODO addr=0x128ee flavor=optional_cell_unwrap
                         flux_support::assert(self.timer0.is_some());
                         self.timer0
                             .unwrap_or_panic() // Unwrap fail = Missing timer reference for CSMA
@@ -1000,7 +1000,7 @@ impl<'a> Radio<'a> {
                             // Unwrap fail = TX Buffer is missing and was
                             // mistakenly not replaced after completion of
                             // set_dma_ptr(...)
-                            // FLUX-TODO addr=0x12bc0 flavor=unwrap_option
+                            // FLUX-TODO addr=0x12b28 flavor=unwrap_option
                             flux_support::assert(self.tx_buf.is_some());
                             let tbuf = self.tx_buf.take().unwrap();
                             client.send_done(tbuf, false, result);
@@ -1020,7 +1020,7 @@ impl<'a> Radio<'a> {
                     self.tx_client.map(|client| {
                         // Unwrap fail = TX Buffer is missing and was mistakenly
                         // not replaced after completion of set_dma_ptr(...)
-                        // FLUX-TODO addr=0x12bb4 flavor=unwrap_option
+                        // FLUX-TODO addr=0x12b1c flavor=unwrap_option
                         flux_support::assert(self.tx_buf.is_some());
                         let tbuf = self.tx_buf.take().unwrap();
                         client.send_done(tbuf, false, result);
@@ -1045,7 +1045,7 @@ impl<'a> Radio<'a> {
 
                     // Unwrap fail = TX Buffer is missing and was mistakenly not
                     // replaced after completion of set_dma_ptr(...)
-                    // FLUX-TODO addr=0x12bae flavor=unwrap_option
+                    // FLUX-TODO addr=0x12b16 flavor=unwrap_option
                     flux_support::assert(self.tx_buf.is_some());
                     let tbuf = self.tx_buf.take().unwrap();
 
@@ -1061,7 +1061,7 @@ impl<'a> Radio<'a> {
                         // to receive client not replacing in receive(...)
                         // method, or some instance in  driver taking buffer
                         // without properly replacing).
-                        // FLUX-TODO addr=0x12bba flavor=unwrap_option
+                        // FLUX-TODO addr=0x12b22 flavor=unwrap_option
                         flux_support::assert(self.rx_buf.is_some());
                         let rbuf = self.rx_buf.take().unwrap();
 

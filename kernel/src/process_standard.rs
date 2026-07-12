@@ -368,7 +368,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
                 // process faulted. Panic and print status
                 self.state.set(State::Faulted);
 
-                // FLUX-TODO addr=0x31fe flavor=explicit_panic
+                // FLUX-TODO addr=0x3206 flavor=explicit_panic
                 flux_support::assert(false);
                 panic!("Process {} had a fault", self.get_process_name());
             }
@@ -460,7 +460,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
         self.tasks.map_or(None, |tasks| tasks.dequeue())
     }
 
-    // FLUX-TODO-FN-LEVEL addrs=[0x2e8c] flavor=bounds
+    // FLUX-TODO-FN-LEVEL addrs=[0x2e94] flavor=bounds
     fn remove_upcall(&self, upcall_id: UpcallId) -> Option<Task> {
         self.tasks.map_or(None, |tasks| {
             tasks.remove_first_matching(|task| match task {
@@ -533,7 +533,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
 
     fn setup_mpu(&self) -> MpuConfiguredCapability {
         // Notes: blocked-cell
-        // FLUX-TODO addr=0x4632 flavor=unwrap_result
+        // FLUX-TODO addr=0x463a flavor=unwrap_result
         flux_support::assert(self.app_memory_allocator.is_some());
         self.app_memory_allocator
             .map_or(Err(()), |am| Ok(am.configure_mpu(self.chip.mpu())))

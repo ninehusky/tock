@@ -178,10 +178,10 @@ use flux_support::*;
 /// A leasable buffer can be used to pass a section of a larger mutable buffer
 /// but still get the entire buffer back in a callback.
 #[derive(Debug, PartialEq)]
-#[flux_rs::refined_by(lo: int, hi: int, len: int)]
-#[flux_rs::invariant(lo <= hi && hi <= len)]
+#[flux_rs::refined_by(lo: int, hi: int, buflen: int)]
+#[flux_rs::invariant(lo <= hi && hi <= buflen)]
 pub struct SubSliceMut<'a, T> {
-    #[field(&mut [T][len])]
+    #[field(&mut [T][buflen])]
     internal: &'a mut [T],
     #[field(FluxRange[lo, hi])]
     active_range: FluxRange,
@@ -192,11 +192,12 @@ pub struct SubSliceMut<'a, T> {
 /// A leasable buffer can be used to pass a section of a larger mutable buffer
 /// but still get the entire buffer back in a callback.
 #[derive(Debug, PartialEq)]
-// #[flux_rs::refined_by(lo: int, hi: int, len: int)]
+#[flux_rs::refined_by(lo: int, hi: int, buflen: int)]
+#[flux_rs::invariant(lo <= hi && hi <= buflen)]
 pub struct SubSlice<'a, T> {
-    // #[field(&[T][len])]
+    #[field(&[T][buflen])]
     internal: &'a [T],
-    // #[field(FluxRange[lo, hi])]
+    #[field(FluxRange[lo, hi])]
     active_range: FluxRange,
 }
 
@@ -205,8 +206,11 @@ pub struct SubSlice<'a, T> {
 /// In cases where code needs to support either a mutable or immutable SubSlice,
 /// `SubSliceMutImmut` allows the code to store a single type which can
 /// represent either option.
+#[flux_rs::refined_by(len: int)]
 pub enum SubSliceMutImmut<'a, T> {
+    #[variant((SubSlice<T>[@lo, @hi, @len]) -> SubSliceMutImmut<T>[hi - lo])]
     Immutable(SubSlice<'a, T>),
+    #[variant((SubSliceMut<T>[@lo, @hi, @len]) -> SubSliceMutImmut<T>[hi - lo])]
     Mutable(SubSliceMut<'a, T>),
 }
 
@@ -235,12 +239,14 @@ impl<'a, T> SubSliceMutImmut<'a, T> {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: I) -> bool { <I as SliceIndex<[T]>>::in_bounds(idx, v.len) })]
 impl<'a, T, I> Index<I> for SubSliceMutImmut<'a, T>
 where
     I: SliceIndex<[T]>,
 {
     type Output = <I as SliceIndex<[T]>>::Output;
 
+    #[flux_rs::sig(fn(self: &SubSliceMutImmut<T>[@v], idx: I{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: I) -> &Self::Output {
         match *self {
             SubSliceMutImmut::Immutable(ref buf) => &buf[idx],
@@ -262,7 +268,7 @@ impl<'a, T> SubSliceMut<'a, T> {
 
     #[flux_rs::sig(fn(&Self[@s]) -> &[T][s.hi - s.lo])]
     fn active_slice(&self) -> &[T] {
-        // FLUX-TODO addr=0xa11c flavor=slice_order
+        // FLUX-TODO addr=0xa0dc flavor=slice_order
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end]
     }
@@ -350,6 +356,10 @@ impl<'a, T> SubSliceMut<'a, T> {
         // assume(end > start);
         let new_end = new_start + (end - start);
 
+        // TODO(@andrew) -- look at this. This is something pretty simple
+        // we should be able to discharge (that `usize_a + usize_b >= usize_a`)
+        flux_support::assert(new_start <= new_end);
+
         self.active_range = FluxRange {
             start: new_start,
             end: new_end,
@@ -357,25 +367,30 @@ impl<'a, T> SubSliceMut<'a, T> {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: I) -> bool { <I as SliceIndex<[T]>>::in_bounds(idx, v.hi - v.lo) })]
 impl<'a, T, I> Index<I> for SubSliceMut<'a, T>
 where
     I: SliceIndex<[T]>,
 {
     type Output = <I as SliceIndex<[T]>>::Output;
 
+    #[flux_rs::sig(fn(self: &SubSliceMut<T>[@v], idx: I{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: I) -> &Self::Output {
-        // FLUX-TODO addrs=[0x1526e, 0x19ea8, 0x1fc0c] flavor=slice_order
-        // FLUX-TODO addrs=[0x15278, 0x19eb2, 0x1fc16, 0x1fc20] flavor=slice_end
-        // FLUX-TODO addr=0x19ece flavor=bounds
+        // FLUX-TODO addrs=[0x14fd2, 0x19e68, 0x1f9c4] flavor=slice_order
+        // FLUX-TODO addrs=[0x14fdc, 0x19e72, 0x1f9ce, 0x1f9d8] flavor=slice_end
+        // FLUX-TODO addr=0x19e8e flavor=bounds
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
         &self.internal[self.active_range.start..self.active_range.end][idx]
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: I) -> bool { <I as SliceIndex<[T]>>::in_bounds(idx, v.hi - v.lo) })]
 impl<'a, T, I> IndexMut<I> for SubSliceMut<'a, T>
 where
     I: SliceIndex<[T]>,
 {
+    #[flux_rs::sig(fn(self: &mut SubSliceMut<T>[@v], idx: I{<Self as IndexMut<I>>::in_bounds(v, idx)}) -> &mut Self::Output)]
+    #[flux_rs::trusted(reason = "We can't re-assert invariant after mutable borrow?")]
     fn index_mut(&mut self, idx: I) -> &mut Self::Output {
         &mut self.internal[self.active_range.start..self.active_range.end][idx]
     }
@@ -485,12 +500,14 @@ impl<'a, T> SubSlice<'a, T> {
     }
 }
 
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: I) -> bool { <I as SliceIndex<[T]>>::in_bounds(idx, v.hi - v.lo) })]
 impl<'a, T, I> Index<I> for SubSlice<'a, T>
 where
     I: SliceIndex<[T]>,
 {
     type Output = <I as SliceIndex<[T]>>::Output;
 
+    #[flux_rs::sig(fn(self: &SubSlice<T>[@v], idx: I{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: I) -> &Self::Output {
         &self.internal[self.active_range.start..self.active_range.end][idx]
     }

@@ -95,6 +95,9 @@ impl Default for Mx25r6435fSector {
     }
 }
 
+// TODO(flux): placeholder in_bounds { true } is unsound; replace with
+// { idx < SECTOR_SIZE } and mark index trusted until then.
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
 impl Index<usize> for Mx25r6435fSector {
     type Output = u8;
 
@@ -103,6 +106,9 @@ impl Index<usize> for Mx25r6435fSector {
     }
 }
 
+// TODO(flux): placeholder in_bounds { true } is unsound; replace with
+// { idx < SECTOR_SIZE } and mark index_mut trusted until then.
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
 impl IndexMut<usize> for Mx25r6435fSector {
     fn index_mut(&mut self, idx: usize) -> &mut u8 {
         &mut self.0[idx]
@@ -266,7 +272,7 @@ impl<
         self.txbuffer
             .take()
             .map_or(Err(ErrorCode::RESERVE), |txbuffer| {
-                // FLUX-TODO addr=0x16708 flavor=bounds
+                // FLUX-TODO addr=0x166c8 flavor=bounds
                 flux_support::assert(txbuffer.len() > 0);
                 txbuffer[0] = Opcodes::WREN as u8;
                 if let Err((err, txbuffer, _)) = self.spi.read_write_bytes(txbuffer, None, 1) {
@@ -309,7 +315,7 @@ impl<
                                 // Setup the read instruction
 
                                 // Notes: blocked-cell
-                                // FLUX-TODO addr=0x16592 flavor=bounds
+                                // FLUX-TODO addr=0x16552 flavor=bounds
                                 flux_support::assert(txbuffer.len() > 3);
 
                                 txbuffer[0] = Opcodes::READ as u8;
@@ -330,7 +336,7 @@ impl<
                                     self.txbuffer.replace(txbuffer);
 
                                     // Notes: blocked-cell
-                                    // FLUX-TODO addr=0x1658a flavor=unwrap_option
+                                    // FLUX-TODO addr=0x1654a flavor=unwrap_option
                                     flux_support::assert(rxbuffer.is_some());
 
                                     self.rxbuffer.replace(rxbuffer.unwrap());
@@ -386,7 +392,7 @@ impl<
         A: hil::time::Alarm<'a> + 'a,
     > hil::spi::SpiMasterClient for MX25R6435F<'a, S, P, A>
 {
-    // FLUX-TODO-FN-LEVEL reason=multi-candidate-fn-entry addrs=[0x1f30c, 0x1f31a, 0x1f36a] flavor=bounds
+    // FLUX-TODO-FN-LEVEL reason=multi-candidate-fn-entry addrs=[0x1e6e0, 0x1e6ee, 0x1e73e] flavor=bounds
     // 2 bounds panics in this fn; 18 candidate arr[i] operations in the body
     // (state-machine dispatcher with many state-specific buffer copies).
     // Cannot disambiguate from DWARF; marker covers fn body.
@@ -616,7 +622,7 @@ impl<
         // operation has finished.
         self.txbuffer.take().map(|write_buffer| {
             self.rxbuffer.take().map(move |read_buffer| {
-                // FLUX-TODO addr=0x1f5e6 flavor=bounds
+                // FLUX-TODO addr=0x1eb72 flavor=bounds
                 flux_support::assert(write_buffer.len() > 0);
                 write_buffer[0] = Opcodes::RDSR as u8;
                 let _ = self
