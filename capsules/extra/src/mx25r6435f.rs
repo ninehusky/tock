@@ -392,7 +392,7 @@ impl<
         A: hil::time::Alarm<'a> + 'a,
     > hil::spi::SpiMasterClient for MX25R6435F<'a, S, P, A>
 {
-    // FLUX-TODO-FN-LEVEL reason=multi-candidate-fn-entry addrs=[0x1f308, 0x1f316, 0x1f366] flavor=bounds
+    // FLUX-TODO-FN-LEVEL reason=multi-candidate-fn-entry addrs=[0x1e6e0, 0x1e6ee, 0x1e73e] flavor=bounds
     // 2 bounds panics in this fn; 18 candidate arr[i] operations in the body
     // (state-machine dispatcher with many state-specific buffer copies).
     // Cannot disambiguate from DWARF; marker covers fn body.
@@ -622,7 +622,7 @@ impl<
         // operation has finished.
         self.txbuffer.take().map(|write_buffer| {
             self.rxbuffer.take().map(move |read_buffer| {
-                // FLUX-TODO addr=0x1f5e2 flavor=bounds
+                // FLUX-TODO addr=0x1eb72 flavor=bounds
                 flux_support::assert(write_buffer.len() > 0);
                 write_buffer[0] = Opcodes::RDSR as u8;
                 let _ = self
