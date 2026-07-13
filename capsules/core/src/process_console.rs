@@ -221,6 +221,7 @@ enum ProcessConsoleState {
     Hibernating,
 }
 
+#[flux_rs::refined_by()]
 pub struct ProcessConsole<
     'a,
     const COMMAND_HISTORY_LEN: usize,
@@ -236,6 +237,7 @@ pub struct ProcessConsole<
     queue_size: Cell<usize>,
     writer_state: Cell<WriterState>,
     rx_buffer: TakeCell<'static, [u8]>,
+    #[field(TakeCell<[u8]{ v : v > 0 }>)]
     command_buffer: TakeCell<'static, [u8]>,
     command_index: Cell<usize>,
 
@@ -437,6 +439,7 @@ impl BinaryWrite for ConsoleWriter {
 impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCapability>
     ProcessConsole<'a, COMMAND_HISTORY_LEN, A, C>
 {
+    #[flux_rs::sig(fn (_, _, _, _, _, _, cmd_buffer: &mut [u8]{v: v != 0}, _, _, _, _, _) -> _)]
     pub fn new(
         uart: &'a dyn uart::UartData<'a>,
         alarm: &'a A,
