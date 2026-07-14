@@ -95,21 +95,19 @@ impl Default for Mx25r6435fSector {
     }
 }
 
-// TODO(flux): placeholder in_bounds { true } is unsound; replace with
-// { idx < SECTOR_SIZE } and mark index trusted until then.
-#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { idx < SECTOR_SIZE })]
 impl Index<usize> for Mx25r6435fSector {
     type Output = u8;
 
+    #[flux_rs::sig(fn(&Self, idx: usize{idx < SECTOR_SIZE}) -> &u8)]
     fn index(&self, idx: usize) -> &u8 {
         &self.0[idx]
     }
 }
 
-// TODO(flux): placeholder in_bounds { true } is unsound; replace with
-// { idx < SECTOR_SIZE } and mark index_mut trusted until then.
-#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { true })]
+#[flux_rs::assoc(fn in_bounds(v: Self, idx: int) -> bool { idx < SECTOR_SIZE })]
 impl IndexMut<usize> for Mx25r6435fSector {
+    #[flux_rs::sig(fn(&mut Self, idx: usize{idx < SECTOR_SIZE}) -> &mut u8)]
     fn index_mut(&mut self, idx: usize) -> &mut u8 {
         &mut self.0[idx]
     }
@@ -179,6 +177,7 @@ enum State {
     ReadId,
 }
 
+#[flux_rs::refined_by()]
 pub struct MX25R6435F<
     'a,
     S: hil::spi::SpiMasterDevice<'a> + 'a,
@@ -190,6 +189,7 @@ pub struct MX25R6435F<
     state: Cell<State>,
     write_protect_pin: Option<&'a P>,
     hold_pin: Option<&'a P>,
+    #[field(TakeCell<[u8]{v: v > 0}>)]
     txbuffer: TakeCell<'static, [u8]>,
     rxbuffer: TakeCell<'static, [u8]>,
     client: OptionalCell<&'a dyn hil::flash::Client<MX25R6435F<'a, S, P, A>>>,
