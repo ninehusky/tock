@@ -65,6 +65,7 @@ pub trait BleConfig {
 }
 
 pub trait RxClient {
+    #[flux_rs::sig(fn(&Self, buf: &mut [u8][@n], len: u8{len <= n}, result: Result<(), ErrorCode>))]
     fn receive_event(&self, buf: &'static mut [u8], len: u8, result: Result<(), ErrorCode>);
 }
 
