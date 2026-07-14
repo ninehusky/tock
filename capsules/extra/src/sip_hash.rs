@@ -155,11 +155,19 @@ fn read_le_u64(input: &[u8]) -> u64 {
     u64::from_le_bytes(eight_buf)
 }
 
+#[flux_rs::trusted(reason = "Architecture-specific details opaque to flux")]
+#[flux_rs::sig(fn() -> usize[2])]
+fn size_of_u16() -> usize {
+    mem::size_of::<u16>()
+}
+
 #[flux_rs::sig(fn(input: &[u8]{n: n >= 2}) -> u16)]
 fn read_le_u16(input: &[u8]) -> u16 {
     // FLUX-TODO addr=0xa35a flavor=explicit_panic
-    flux_support::assert(mem::size_of::<u16>() <= input.len());
-    let (int_bytes, _rest) = input.split_at(mem::size_of::<u16>());
+    let sizeof_u16 = size_of_u16();
+    flux_support::assert(sizeof_u16 <= input.len());
+
+    let (int_bytes, _rest) = input.split_at(sizeof_u16);
     u16::from_le_bytes(int_bytes.try_into().unwrap())
 }
 
