@@ -481,6 +481,7 @@ where
     B: ble_advertising::BleAdvertisementDriver<'a> + ble_advertising::BleConfig,
     A: kernel::hil::time::Alarm<'a>,
 {
+    #[flux_rs::sig(fn(&Self, buf: &mut [u8][@n], len: u8{len <= n}, result: Result<(), ErrorCode>))]
     fn receive_event(&self, buf: &'static mut [u8], len: u8, result: Result<(), ErrorCode>) {
         self.receiving_app.map(|processid| {
             let _ = self.app.enter(processid, |app, kernel_data| {
@@ -500,6 +501,9 @@ where
                         .get_readwrite_processbuffer(rw_allow::SCAN_BUFFER)
                         .and_then(|scan_buffer| {
                             scan_buffer.mut_enter(|userland| {
+                                // TODO: andrew, file a bug report?
+                                // seems like `userland` could be of arbitrary size;
+                                // i assume returning an ErrorCode is preferable to kernel-panic.
                                 // FLUX-TODO addr=0x1ed10 flavor=slice_end
                                 flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                 userland[0..len as usize]
