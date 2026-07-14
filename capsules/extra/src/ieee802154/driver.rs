@@ -224,6 +224,7 @@ pub struct App {
     pending_tx: Option<(u16, Option<(SecurityLevel, KeyId)>)>,
 }
 
+#[flux_rs::refined_by()]
 pub struct RadioDriver<'a, M: device::MacDevice<'a>> {
     /// Underlying MAC device, possibly multiplexed
     mac: &'a M,
@@ -232,6 +233,7 @@ pub struct RadioDriver<'a, M: device::MacDevice<'a>> {
     /// neighbors.
     neighbors: MapCell<[DeviceDescriptor; MAX_NEIGHBORS]>,
     /// Actual number of neighbors in the fixed size array of neighbors.
+    #[field(Cell<usize{v: v <= MAX_NEIGHBORS}> )]
     num_neighbors: Cell<usize>,
 
     /// List of (security level, key_id, key) tuples representing IEEE 802.15.4
