@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-07-16T00:36:33.055419+00:00",
-    "generated_at": "2026-07-16T00:36:33.537636+00:00",
+    "elf_mtime": "2026-07-16T00:39:14.538557+00:00",
+    "generated_at": "2026-07-16T00:39:15.021991+00:00",
     "total_sites": 351
   },
   "sites": [
@@ -6999,13 +6999,13 @@
       "effective_frame": {
         "func": "capsules_extra::sip_hash::read_le_u16",
         "file": "./capsules/extra/src/sip_hash.rs",
-        "line": 165
+        "line": 163
       },
       "effective_source": "let (int_bytes, _rest) = input.split_at(mem::size_of::<u16>());",
       "outermost_frame": {
         "func": "capsules_extra::sip_hash::u8to64_le",
         "file": "./capsules/extra/src/sip_hash.rs",
-        "line": 182
+        "line": 180
       },
       "inline_chain": [
         {
@@ -7016,12 +7016,12 @@
         {
           "func": "capsules_extra::sip_hash::read_le_u16",
           "file": "./capsules/extra/src/sip_hash.rs",
-          "line": 165
+          "line": 163
         },
         {
           "func": "capsules_extra::sip_hash::u8to64_le",
           "file": "./capsules/extra/src/sip_hash.rs",
-          "line": 182
+          "line": 180
         }
       ],
       "module_bucket": "capsules/extra",
@@ -7037,24 +7037,24 @@
       "innermost_frame": {
         "func": "capsules_extra::sip_hash::u8to64_le",
         "file": "./capsules/extra/src/sip_hash.rs",
-        "line": 188
+        "line": 186
       },
       "effective_frame": {
         "func": "capsules_extra::sip_hash::u8to64_le",
         "file": "./capsules/extra/src/sip_hash.rs",
-        "line": 188
+        "line": 186
       },
       "effective_source": "out |= (buf[start + i] as u64) << (i * 8);",
       "outermost_frame": {
         "func": "capsules_extra::sip_hash::u8to64_le",
         "file": "./capsules/extra/src/sip_hash.rs",
-        "line": 188
+        "line": 186
       },
       "inline_chain": [
         {
           "func": "capsules_extra::sip_hash::u8to64_le",
           "file": "./capsules/extra/src/sip_hash.rs",
-          "line": 188
+          "line": 186
         }
       ],
       "module_bucket": "capsules/extra",
@@ -14998,7 +14998,7 @@
         {
           "func": "<capsules_extra::sip_hash::SipHasher24 as kernel::hil::hasher::Hasher<8>>::add_mut_data",
           "file": "./capsules/extra/src/sip_hash.rs",
-          "line": 290
+          "line": 288
         },
         {
           "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as capsules_extra::tickv::KVSystem>::generate_key",
@@ -15051,7 +15051,7 @@
         {
           "func": "<capsules_extra::sip_hash::SipHasher24 as kernel::hil::hasher::Hasher<8>>::add_mut_data",
           "file": "./capsules/extra/src/sip_hash.rs",
-          "line": 290
+          "line": 288
         },
         {
           "func": "<capsules_extra::tickv::TicKVSystem<capsules_extra::mx25r6435f::MX25R6435F<capsules_core::virtualizers::virtual_spi::VirtualSpiMasterDevice<nrf52::spi::SPIM>, nrf5x::gpio::GPIOPin, capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>, capsules_extra::sip_hash::SipHasher24, 4096> as capsules_extra::tickv::KVSystem>::generate_key",
