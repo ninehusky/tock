@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-07-16T00:39:14.538557+00:00",
-    "generated_at": "2026-07-16T00:39:15.021991+00:00",
+    "elf_mtime": "2026-07-16T01:04:32.220992+00:00",
+    "generated_at": "2026-07-16T01:04:32.688750+00:00",
     "total_sites": 351
   },
   "sites": [
@@ -1315,7 +1315,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::crypt_r",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 669
+        "line": 666
       },
       "effective_source": "&buf[m_off..m_off + m_len],",
       "outermost_frame": {
@@ -1337,7 +1337,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::crypt_r",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 669
+          "line": 666
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB>>::do_next_op::{closure#1}",
@@ -1431,7 +1431,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::save_tag_block::{closure#0}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 613
+        "line": 610
       },
       "effective_source": "cbuf_block.copy_from_slice(&cbuf[auth_len - AES128_BLOCK_SIZE..auth_len]);",
       "outermost_frame": {
@@ -1453,7 +1453,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::save_tag_block::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 613
+          "line": 610
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::save_tag_block::{closure#0}, ()>::{closure#0}",
@@ -1473,12 +1473,12 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::save_tag_block",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 608
+          "line": 606
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::crypt_r",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 680
+          "line": 677
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB>>::do_next_op::{closure#1}",
@@ -1572,7 +1572,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#1}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 541
+        "line": 539
       },
       "effective_source": "buf[m_end..m_end + mic_len]",
       "outermost_frame": {
@@ -1594,7 +1594,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#1}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 541
+          "line": 539
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or_else::<bool, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#0}, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#1}>::{closure#1}",
@@ -1614,7 +1614,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 517
+          "line": 515
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}, bool>::{closure#0}",
@@ -1634,12 +1634,12 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 516
+          "line": 514
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 912
+          "line": 909
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -1685,7 +1685,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#1}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 543
+        "line": 541
       },
       "effective_source": ".zip(cbuf[tag_off..tag_off + mic_len].iter())",
       "outermost_frame": {
@@ -1707,7 +1707,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#1}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 543
+          "line": 541
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or_else::<bool, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#0}, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}::{closure#1}>::{closure#1}",
@@ -1727,7 +1727,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 517
+          "line": 515
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm::{closure#0}, bool>::{closure#0}",
@@ -1747,12 +1747,12 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::end_ccm",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 516
+          "line": 514
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 912
+          "line": 909
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -1798,7 +1798,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 586
+        "line": 584
       },
       "effective_source": "buf[m_off + m_len..m_off + m_len + mic_len]",
       "outermost_frame": {
@@ -1820,7 +1820,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 586
+          "line": 584
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or_else::<bool, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#0}, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}>::{closure#1}",
@@ -1840,7 +1840,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 563
+          "line": 561
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}, bool>::{closure#0}",
@@ -1860,12 +1860,12 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 562
+          "line": 560
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 907
+          "line": 904
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -1911,7 +1911,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}::{closure#0}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 884
+        "line": 881
       },
       "effective_source": ".copy_from_slice(&buf[m_off..m_off + m_len]);",
       "outermost_frame": {
@@ -1933,7 +1933,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 884
+          "line": 881
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}::{closure#0}, ()>::{closure#0}",
@@ -1953,7 +1953,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 878
+          "line": 875
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}, ()>::{closure#0}",
@@ -1973,7 +1973,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 865
+          "line": 862
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -2019,7 +2019,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}::{closure#0}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 884
+        "line": 881
       },
       "effective_source": ".copy_from_slice(&buf[m_off..m_off + m_len]);",
       "outermost_frame": {
@@ -2041,7 +2041,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 884
+          "line": 881
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}::{closure#0}, ()>::{closure#0}",
@@ -2061,7 +2061,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 878
+          "line": 875
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}, ()>::{closure#0}",
@@ -2081,7 +2081,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 865
+          "line": 862
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -2127,7 +2127,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 588
+        "line": 586
       },
       "effective_source": ".zip(cbuf[tag_off..tag_off + mic_len].iter())",
       "outermost_frame": {
@@ -2149,7 +2149,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 588
+          "line": 586
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or_else::<bool, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#0}, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}>::{closure#1}",
@@ -2169,7 +2169,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 563
+          "line": 561
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}, bool>::{closure#0}",
@@ -2189,12 +2189,12 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 562
+          "line": 560
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 907
+          "line": 904
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -2235,12 +2235,12 @@
       "innermost_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 874
+        "line": 871
       },
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 874
+        "line": 871
       },
       "effective_source": "cbuf[auth_last + i] = cbuf[enc_last + i];",
       "outermost_frame": {
@@ -2252,7 +2252,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 874
+          "line": 871
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#0}, ()>::{closure#0}",
@@ -2272,7 +2272,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 865
+          "line": 862
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -2318,7 +2318,7 @@
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 575
+        "line": 573
       },
       "effective_source": "self.saved_tag.get()[..mic_len]",
       "outermost_frame": {
@@ -2350,7 +2350,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 575
+          "line": 573
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or_else::<bool, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#0}, <capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}::{closure#1}>::{closure#1}",
@@ -2370,7 +2370,7 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 563
+          "line": 561
         },
         {
           "func": "<tock_cells::take_cell::TakeCell<[u8]>>::map_or::<<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm::{closure#0}, bool>::{closure#0}",
@@ -2390,12 +2390,12 @@
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::reverse_end_ccm",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 562
+          "line": 560
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 907
+          "line": 904
         },
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::MuxAES128CCM<nrf5x::aes::AesECB> as kernel::hil::symmetric_encryption::Client>::crypt_done::{closure#1}",
@@ -2436,24 +2436,24 @@
       "innermost_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::start_ccm_encrypt",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 494
+        "line": 492
       },
       "effective_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::start_ccm_encrypt",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 494
+        "line": 492
       },
       "effective_source": "None => { flux_support::assert(false); panic!(\"Cannot perform CCM* encrypt because crypt_buf is not present.\") },",
       "outermost_frame": {
         "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::start_ccm_encrypt",
         "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-        "line": 494
+        "line": 492
       },
       "inline_chain": [
         {
           "func": "<capsules_core::virtualizers::virtual_aes_ccm::VirtualAES128CCM<nrf5x::aes::AesECB>>::start_ccm_encrypt",
           "file": "./capsules/core/src/virtualizers/virtual_aes_ccm.rs",
-          "line": 494
+          "line": 492
         }
       ],
       "module_bucket": "capsules/core",
