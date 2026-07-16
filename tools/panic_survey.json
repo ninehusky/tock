@@ -1,8 +1,8 @@
 {
   "meta": {
     "binary": "/Users/andrew/research/tock/target/thumbv7em-none-eabi/release/nrf52840dk",
-    "elf_mtime": "2026-07-16T01:04:32.220992+00:00",
-    "generated_at": "2026-07-16T01:04:32.688750+00:00",
+    "elf_mtime": "2026-07-16T01:47:55.065902+00:00",
+    "generated_at": "2026-07-16T01:47:55.553218+00:00",
     "total_sites": 351
   },
   "sites": [
@@ -4591,7 +4591,7 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_first_fragment",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 524
+        "line": 528
       },
       "effective_source": "let _ = frame.append_payload(&lowpan_packet[0..written]);",
       "outermost_frame": {
@@ -4618,17 +4618,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_first_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 524
+          "line": 528
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::start_transmit",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 476
+          "line": 480
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::next_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 443
+          "line": 447
         },
         {
           "func": "<capsules_extra::net::ipv6::ipv6_send::IP6SendStruct<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::send_next_fragment::{closure#0}",
@@ -4674,7 +4674,7 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_first_fragment",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 551
+        "line": 555
       },
       "effective_source": "let _ = frame.append_payload(&ip6_packet.get_payload()[0..payload_len]);",
       "outermost_frame": {
@@ -4696,17 +4696,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_first_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 551
+          "line": 555
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::start_transmit",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 476
+          "line": 480
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::next_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 443
+          "line": 447
         },
         {
           "func": "<capsules_extra::net::ipv6::ipv6_send::IP6SendStruct<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::send_next_fragment::{closure#0}",
@@ -4752,7 +4752,7 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_next_fragment",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 583
+        "line": 587
       },
       "effective_source": "&ip6_packet.get_payload()[payload_offset..payload_offset + payload_len],",
       "outermost_frame": {
@@ -4774,12 +4774,12 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_next_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 583
+          "line": 587
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::next_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 456
+          "line": 460
         },
         {
           "func": "<capsules_extra::net::ipv6::ipv6_send::IP6SendStruct<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::send_next_fragment::{closure#0}",
@@ -4825,7 +4825,7 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_first_fragment",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 490
+        "line": 494
       },
       "effective_source": "match sixlowpan_compression::compress(",
       "outermost_frame": {
@@ -4842,17 +4842,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::prepare_first_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 490
+          "line": 494
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::start_transmit",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 476
+          "line": 480
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::next_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 443
+          "line": 447
         },
         {
           "func": "<capsules_extra::net::ipv6::ipv6_send::IP6SendStruct<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>>>::send_next_fragment::{closure#0}",
@@ -6012,24 +6012,24 @@
       "innermost_frame": {
         "func": "capsules_extra::net::sixlowpan::sixlowpan_state::set_frag_hdr",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 287
+        "line": 292
       },
       "effective_frame": {
         "func": "capsules_extra::net::sixlowpan::sixlowpan_state::set_frag_hdr",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 287
+        "line": 292
       },
       "effective_source": "hdr[4] = (dgram_offset / 8) as u8;",
       "outermost_frame": {
         "func": "capsules_extra::net::sixlowpan::sixlowpan_state::set_frag_hdr",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 287
+        "line": 292
       },
       "inline_chain": [
         {
           "func": "capsules_extra::net::sixlowpan::sixlowpan_state::set_frag_hdr",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 287
+          "line": 292
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6056,7 +6056,7 @@
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 611
+        "line": 615
       },
       "inline_chain": [
         {
@@ -6087,7 +6087,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 611
+          "line": 615
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6114,7 +6114,7 @@
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 611
+        "line": 615
       },
       "inline_chain": [
         {
@@ -6130,7 +6130,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 611
+          "line": 615
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6157,7 +6157,7 @@
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 611
+        "line": 615
       },
       "inline_chain": [
         {
@@ -6178,7 +6178,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 611
+          "line": 615
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6205,7 +6205,7 @@
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 611
+        "line": 615
       },
       "inline_chain": [
         {
@@ -6226,7 +6226,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 611
+          "line": 615
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6253,7 +6253,7 @@
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 611
+        "line": 615
       },
       "inline_chain": [
         {
@@ -6269,7 +6269,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::TxState>::write_additional_headers",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 611
+          "line": 615
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6290,13 +6290,13 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::end_receive::{closure#1}",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 812
+        "line": 816
       },
       "effective_source": "self.packet",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::end_receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 802
+        "line": 806
       },
       "inline_chain": [
         {
@@ -6307,7 +6307,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::end_receive::{closure#1}",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 812
+          "line": 816
         },
         {
           "func": "<core::option::Option<&dyn capsules_extra::net::sixlowpan::sixlowpan_state::SixlowpanRxClient>>::map::<(), <capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::end_receive::{closure#1}>",
@@ -6317,7 +6317,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::end_receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 802
+          "line": 806
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6338,13 +6338,13 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_frame",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 946
+        "line": 950
       },
       "effective_source": "let (is_frag1, dgram_size, dgram_tag, dgram_offset) = get_frag_hdr(&packet[0..5]);",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 867
+        "line": 871
       },
       "inline_chain": [
         {
@@ -6360,12 +6360,12 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 946
+          "line": 950
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 867
+          "line": 871
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6386,13 +6386,13 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet::{closure#1}",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 990
+        "line": 994
       },
       "effective_source": "let packet = state.packet.take().unwrap();",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 867
+        "line": 871
       },
       "inline_chain": [
         {
@@ -6403,7 +6403,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet::{closure#1}",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 990
+          "line": 994
         },
         {
           "func": "<core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>>::map_or::<(core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>, core::result::Result<(), kernel::errorcode::ErrorCode>), <capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet::{closure#1}>",
@@ -6413,17 +6413,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 977
+          "line": 981
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 962
+          "line": 966
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 867
+          "line": 871
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6444,13 +6444,13 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::receive_next_frame",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 777
+        "line": 781
       },
       "effective_source": ".copy_from_slice(&payload[0..payload_len]);",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 867
+        "line": 871
       },
       "inline_chain": [
         {
@@ -6466,12 +6466,12 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::receive_next_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 777
+          "line": 781
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment::{closure#3}",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 1067
+          "line": 1071
         },
         {
           "func": "<core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>>::map_or::<(core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>, core::result::Result<(), kernel::errorcode::ErrorCode>), <capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment::{closure#3}>",
@@ -6481,17 +6481,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 1065
+          "line": 1069
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 952
+          "line": 956
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 867
+          "line": 871
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6512,13 +6512,13 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet::{closure#1}",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 1012
+        "line": 1016
       },
       "effective_source": ".copy_from_slice(&payload[consumed..consumed + remaining]);",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 867
+        "line": 871
       },
       "inline_chain": [
         {
@@ -6534,7 +6534,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet::{closure#1}",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 1012
+          "line": 1016
         },
         {
           "func": "<core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>>::map_or::<(core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>, core::result::Result<(), kernel::errorcode::ErrorCode>), <capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet::{closure#1}>",
@@ -6544,17 +6544,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_single_packet",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 977
+          "line": 981
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 962
+          "line": 966
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 867
+          "line": 871
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6575,13 +6575,13 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::receive_next_frame",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 761
+        "line": 765
       },
       "effective_source": "&payload[0..payload_len],",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 867
+        "line": 871
       },
       "inline_chain": [
         {
@@ -6597,12 +6597,12 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::RxState>::receive_next_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 761
+          "line": 765
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment::{closure#3}",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 1067
+          "line": 1071
         },
         {
           "func": "<core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>>::map_or::<(core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>, core::result::Result<(), kernel::errorcode::ErrorCode>), <capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment::{closure#3}>",
@@ -6612,17 +6612,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 1065
+          "line": 1069
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 952
+          "line": 956
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 867
+          "line": 871
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6643,13 +6643,13 @@
       "effective_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment::{closure#3}",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 1067
+        "line": 1071
       },
       "effective_source": "let res = state.receive_next_frame(",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 867
+        "line": 871
       },
       "inline_chain": [
         {
@@ -6660,7 +6660,7 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment::{closure#3}",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 1067
+          "line": 1071
         },
         {
           "func": "<core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>>::map_or::<(core::option::Option<&capsules_extra::net::sixlowpan::sixlowpan_state::RxState>, core::result::Result<(), kernel::errorcode::ErrorCode>), <capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment::{closure#3}>",
@@ -6670,17 +6670,17 @@
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_fragment",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 1065
+          "line": 1069
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context>>::receive_frame",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 952
+          "line": 956
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 867
+          "line": 871
         }
       ],
       "module_bucket": "capsules/extra",
@@ -6701,13 +6701,13 @@
       "effective_frame": {
         "func": "capsules_extra::net::sixlowpan::sixlowpan_state::slice_view",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 847
+        "line": 851
       },
       "effective_source": "&buf[off..off + len]",
       "outermost_frame": {
         "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
         "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-        "line": 868
+        "line": 872
       },
       "inline_chain": [
         {
@@ -6723,12 +6723,12 @@
         {
           "func": "capsules_extra::net::sixlowpan::sixlowpan_state::slice_view",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 847
+          "line": 851
         },
         {
           "func": "<capsules_extra::net::sixlowpan::sixlowpan_state::Sixlowpan<capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<nrf5x::rtc::Rtc>, capsules_extra::net::sixlowpan::sixlowpan_compression::Context> as capsules_extra::ieee802154::device::RxClient>::receive",
           "file": "./capsules/extra/src/net/sixlowpan/sixlowpan_state.rs",
-          "line": 868
+          "line": 872
         }
       ],
       "module_bucket": "capsules/extra",
