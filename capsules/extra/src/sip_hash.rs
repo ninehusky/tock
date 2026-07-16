@@ -159,6 +159,7 @@ fn read_le_u64(input: &[u8]) -> u64 {
 fn read_le_u16(input: &[u8]) -> u16 {
     // FLUX-TODO addr=0xa35a flavor=explicit_panic
     flux_support::assert(mem::size_of::<u16>() <= input.len());
+
     let (int_bytes, _rest) = input.split_at(mem::size_of::<u16>());
     u16::from_le_bytes(int_bytes.try_into().unwrap())
 }

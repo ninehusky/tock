@@ -60,6 +60,7 @@ pub trait RxClient {
     ///   - `ErrorCode::NOMEM`: Ack was requested, but there was no buffer
     ///     available to transmit an ACK.
     ///   - `ErrorCode::FAIL`: Internal error occurred.
+    #[flux_rs::sig(fn(&Self, buf: &mut [u8][@n], usize, u8, bool, Result<(), ErrorCode>) requires n >= PSDU_OFFSET + MAX_FRAME_SIZE)]
     fn receive(
         &self,
         buf: &'static mut [u8],

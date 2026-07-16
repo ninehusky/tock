@@ -3,3 +3,7 @@
 #[flux_rs::extern_spec(core::mem)]
 #[flux_rs::sig(fn<T>() -> usize{align: align > 0})]
 fn align_of<T>() -> usize;
+
+#[flux_rs::extern_spec(core::mem)]
+#[flux_rs::sig(fn<T>() -> usize[T::size_of()])]
+fn size_of<T>() -> usize;

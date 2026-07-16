@@ -174,6 +174,7 @@ impl<'a, R: radio::Radio<'a>> radio::TxClient for AwakeMac<'a, R> {
 }
 
 impl<'a, R: radio::Radio<'a>> radio::RxClient for AwakeMac<'a, R> {
+    #[flux_rs::sig(fn(&Self, buf: &mut [u8][@n], usize, u8, bool, Result<(), ErrorCode>) requires n >= radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)]
     fn receive(
         &self,
         buf: &'static mut [u8],
