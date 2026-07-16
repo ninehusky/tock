@@ -7,6 +7,9 @@ edition.workspace = true
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
+# Trusted as a dependency for downstream proving passes (e.g. capsules/core,
+# issue #25). Specs/refinements still export; only body verification is skipped.
+default_trusted = true
 
 [dependencies]
 tock-registers = { path = "../libraries/tock-register-interface" }
