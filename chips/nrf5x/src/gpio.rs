@@ -358,12 +358,14 @@ enum_from_primitive! {
     }
 }
 
+#[flux_rs::refined_by()]
 pub struct GPIOPin<'a> {
     pin: u8,
     port: u8,
     client: OptionalCell<&'a dyn hil::gpio::Client>,
     gpiote_registers: StaticRef<GpioteRegisters>,
     gpio_registers: StaticRef<GpioRegisters>,
+    #[field(OptionalCell<usize{v : v < NUM_GPIOTE}>)]
     allocated_channel: OptionalCell<usize>,
 }
 
@@ -552,12 +554,24 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
 impl GPIOPin<'_> {
     /// Allocate a GPIOTE channel
     /// If the channel couldn't be allocated return error instead
+    #[flux_rs::sig(fn (&Self) -> Result<usize { v : v < NUM_GPIOTE }, ()>)]
     fn allocate_channel(&self) -> Result<usize, ()> {
-        for (i, ch) in self.gpiote_registers.config.iter().enumerate() {
+        // Rewrite as while-loop.
+        let mut i = 0;
+        while i < self.gpiote_registers.config.len() {
+            let ch = &self.gpiote_registers.config[i];
             if ch.matches_all(Config::MODE::Disabled) {
                 return Ok(i);
             }
+            i += 1;
         }
+
+        // for (i, ch) in self.gpiote_registers.config.iter().enumerate() {
+        //     if ch.matches_all(Config::MODE::Disabled) {
+        //         return Ok(i);
+        //     }
+        // }
+
         Err(())
     }
 

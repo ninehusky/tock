@@ -24,6 +24,7 @@ include = [
 kernel = { path = "../../kernel" }
 enum_primitive = { path = "../../libraries/enum_primitive" }
 flux_support = { path = "../../flux_support" }
+flux-rs = { path = "../../flux/lib/flux-rs" }
 
 [features]
 default = []
