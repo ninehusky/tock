@@ -56,7 +56,7 @@ struct KeyHeader {
 
 impl KeyHeader {
     /// Create a new `KeyHeader` from a buffer
-    // FLUX-TODO-FN-LEVEL addrs=[0xc76e] flavor=slice_end
+    // FLUX-TODO-FN-LEVEL addrs=[0xc7ea] flavor=slice_end
     fn new_from_buf(buf: &[u8]) -> Self {
         Self {
             version: buf[0],

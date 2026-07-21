@@ -561,7 +561,7 @@ impl<'a> Adc<'a> {
     }
 
     fn setup_frequency(&self, frequency: u32) {
-        // FLUX-TODO addr=0x119b8 flavor=div_by_zero
+        // FLUX-TODO addr=0x11a34 flavor=div_by_zero
         flux_support::assert(frequency != 0);
         let raw_cc = 16000000 / frequency;
         let cc = if raw_cc > 2047 {

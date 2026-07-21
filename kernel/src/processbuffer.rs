@@ -749,7 +749,7 @@ impl ReadableProcessSlice {
     /// # Panics
     ///
     /// This function will panic if `self.len() != dest.len()`.
-    // FLUX-TODO-FN-LEVEL addrs=[0x11390] flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x1140c] flavor=explicit_panic
     // NOTE: See the comment in `copy_to_slice_or_err` for why this `explicit_panic`,
     // which is attributable to the `len_mismatch_fail` function, is marked up here
     // rather than at the `panic` call site itself.
@@ -866,9 +866,9 @@ impl Index<Range<usize>> for ReadableProcessSlice {
 
     #[flux_rs::sig(fn(self: &ReadableProcessSlice[@v], idx: Range<usize>{Self::in_bounds(v, idx)}) -> &Self::Output)]
     fn index(&self, idx: Range<usize>) -> &Self::Output {
-        // FLUX-TODO addr=0x113b8 flavor=slice_end
+        // FLUX-TODO addr=0x11434 flavor=slice_end
         flux_support::assert(idx.end <= self.slice.len());
-        // FLUX-TODO addr=0x113c0 flavor=slice_order
+        // FLUX-TODO addr=0x1143c flavor=slice_order
         flux_support::assert(idx.start <= idx.end);
 
         cast_byte_slice_to_process_slice(&self.slice[idx])
@@ -1015,7 +1015,7 @@ impl WriteableProcessSlice {
     ///
     /// This function will panic if `src.len() != self.len()`.
     #[flux_rs::sig(fn(self: &Self[@n], src: &[u8][n]))]
-    // FLUX-TODO-FN-LEVEL addrs=[0x11458] flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x114d4] flavor=explicit_panic
     // Note on the above: we took care of this through the `sig` on `len_mismatch_fail`.
     // We can actually precisely track where the panic is coming from, but we're
     // choosing to express that as a `FN-LEVEL` because CI fails when moving the
