@@ -1584,7 +1584,7 @@ impl<C: 'static + Chip> ProcessStandard<'_, C> {
         // allocation sizes relate to remaining_memory) plus a split_at_mut
         // extern spec; deferred, not an infra blocker.
 
-        // FLUX-TODO addr=0x9098 flavor=explicit_panic
+        // FLUX-TODO addr=0x9094 flavor=explicit_panic
         flux_support::assert(app_memory_start_offset + allocation_size <= remaining_memory.len());
 
         let (_allocated_padded_memory, unused_memory) =

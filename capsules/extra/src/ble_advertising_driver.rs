@@ -504,7 +504,7 @@ where
                                 // TODO: andrew, file a bug report?
                                 // seems like `userland` could be of arbitrary size;
                                 // i assume returning an ErrorCode is preferable to kernel-panic.
-                                // FLUX-TODO addr=0x1ed10 flavor=slice_end
+                                // FLUX-TODO addr=0x1ece8 flavor=slice_end
                                 flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                 userland[0..len as usize]
                                     .copy_from_slice_or_err(&buf[0..len as usize])
@@ -611,7 +611,7 @@ where
     B: ble_advertising::BleAdvertisementDriver<'a> + ble_advertising::BleConfig,
     A: kernel::hil::time::Alarm<'a>,
 {
-    // FLUX-TODO-FN-LEVEL addrs=[0x63a2] flavor=explicit_panic
+    // FLUX-TODO-FN-LEVEL addrs=[0x639e] flavor=explicit_panic
     fn command(
         &self,
         command_num: usize,
