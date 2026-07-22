@@ -18,6 +18,13 @@ include = [
     "def:disable_interrupts",
     "def:enable_interrupts",
     "src/pinmux.rs",
+    # TxPower is embedded as Cell<TxPower> in nrf52::ble_radio::Radio and
+    # nrf52840::ieee802154_radio::Radio. Once flux is enabled on nrf5x, those
+    # downstream structs need TxPower's spec in nrf5x's flux metadata; without
+    # this include TxPower isn't *reached*, so its spec is never encoded ->
+    # `E0999: not included when checking external crate` on the Radio struct ->
+    # flux ICE -> nrf52/nrf52840 obligations masked (invariant2 vacuity).
+    "def:TxPower",
 ]
 
 [dependencies]
