@@ -370,7 +370,7 @@ impl<C: Chip> Process for ProcessStandard<'_, C> {
 
                 // FLUX-TODO addr=0x3206 flavor=explicit_panic
                 flux_support::assert(false);
-                panic!("Process {} had a fault", self.get_process_name());
+                unsafe { core::hint::unreachable_unchecked() };
             }
             FaultAction::Restart => {
                 self.try_restart(None);

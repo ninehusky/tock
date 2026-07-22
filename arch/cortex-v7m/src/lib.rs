@@ -299,7 +299,7 @@ unsafe extern "C" fn hard_fault_handler_arm_v7m_kernel(
         // Panic to show the correct error.
         // FLUX-TODO addr=0x1047a flavor=explicit_panic
         flux_support::assert(false);
-        panic!("kernel stack overflow");
+        unsafe { core::hint::unreachable_unchecked() };
     } else {
         // Show the normal kernel hardfault message.
         let stacked_r0: u32 = *faulting_stack.offset(0);

@@ -196,13 +196,13 @@ impl FrameInfo {
                 // Beginning of beacon payload field
                 // FLUX-TODO addr=0xdbba flavor=explicit_panic
                 flux_support::assert(false);
-                unimplemented!()
+                unsafe { core::hint::unreachable_unchecked() }
             }
             FrameType::MACCommand => {
                 // Beginning of MAC command content field
                 // FLUX-TODO addr=0xdbc4 flavor=explicit_panic
                 flux_support::assert(false);
-                unimplemented!()
+                unsafe { core::hint::unreachable_unchecked() }
             }
             _ => {
                 // MAC payload field, which includes payload IEs
@@ -255,7 +255,7 @@ pub fn get_ccm_nonce(device_addr: &[u8; 8], frame_counter: u32, level: SecurityL
             // This should not be possible
             // FLUX-TODO addr=0xc638 flavor=explicit_panic
             flux_support::assert(false);
-            panic!("Failed to produce ccm nonce");
+            unsafe { core::hint::unreachable_unchecked() };
         }
         Some(_) => nonce,
     }
@@ -449,7 +449,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
         // FLUX-TODO addr=0x1c846 flavor=slice_order
         flux_support::assert(radio::PSDU_OFFSET <= buf.len() - LQI_SIZE);
 
-        let frame_buffer = &buf[radio::PSDU_OFFSET..(buf.len() - LQI_SIZE)];
+        let frame_buffer = &buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((radio::PSDU_OFFSET) <= ((buf.len() - LQI_SIZE)) && ((buf.len() - LQI_SIZE)) <= (__b).len()) }; radio::PSDU_OFFSET..(buf.len() - LQI_SIZE) }];
 
         let result = Header::decode(frame_buffer, false)
             .done()
@@ -727,7 +727,7 @@ impl<'a, M: Mac<'a>, A: AES128CCM<'a>> Framer<'a, M, A> {
                     // FLUX-TODO addr=0x18c54 flavor=slice_end
                     flux_support::assert(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE <= buf.len());
                     if let Some((data_offset, (header, _))) = Header::decode(
-                        &buf[radio::PSDU_OFFSET..(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)],
+                        &buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((radio::PSDU_OFFSET) <= ((radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)) && ((radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE)) <= (__b).len()) }; radio::PSDU_OFFSET..(radio::PSDU_OFFSET + radio::MAX_FRAME_SIZE) }],
                         true,
                     )
                     .done()

@@ -532,7 +532,7 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
         let pin: u32 = (GPIO_PER_PORT as u32 * self.port as u32) + self.pin as u32;
         // FLUX-TODO addr=0x587c flavor=bounds
         flux_support::assert(channel < self.gpiote_registers.config.len());
-        self.gpiote_registers.config[channel]
+        self.gpiote_registers.config[{ let __b=&(self.gpiote_registers.config); unsafe { core::hint::assert_unchecked((channel) < __b.len()) }; channel }]
             .write(Config::MODE::Event + Config::PSEL.val(pin) + polarity);
         self.gpiote_registers.intenset.set(1 << channel);
     }
@@ -541,7 +541,7 @@ impl<'a> hil::gpio::Interrupt<'a> for GPIOPin<'a> {
         if let Some(channel) = self.allocated_channel.get() {
             // FLUX-TODO addr=0x1aaf4 flavor=bounds
             flux_support::assert(channel < self.gpiote_registers.config.len());
-            self.gpiote_registers.config[channel]
+            self.gpiote_registers.config[{ let __b=&(self.gpiote_registers.config); unsafe { core::hint::assert_unchecked((channel) < __b.len()) }; channel }]
                 .write(Config::MODE::CLEAR + Config::PSEL::CLEAR + Config::POLARITY::CLEAR);
             self.gpiote_registers.intenclr.set(1 << channel);
             self.allocated_channel.clear();

@@ -55,7 +55,7 @@ macro_rules! internal_err {
     [ $( $arg:expr ),+ ] => {{
         // FLUX-TODO addrs=[0x116e2, 0x117f8] flavor=explicit_panic
         flux_support::assert(false);
-        panic!($( $arg ),+)
+        unsafe { core::hint::unreachable_unchecked() }
     }};
 }
 
@@ -643,7 +643,7 @@ impl EndpointState {
         match self {
             EndpointState::Ctrl(state) => state,
             // FLUX-TODO addr=0x12510 flavor=explicit_panic
-            _ => { flux_support::assert(false); panic!("Expected EndpointState::Ctrl") },
+            _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
         }
     }
 
@@ -654,7 +654,7 @@ impl EndpointState {
                 (transfer_type, in_state, out_state)
             }
             // FLUX-TODO addr=0x1155c flavor=explicit_panic
-            _ => { flux_support::assert(false); panic!("Expected EndpointState::Bulk") },
+            _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
         }
     }
 }
@@ -1902,7 +1902,7 @@ impl<'a> Usbd<'a> {
         self.set_pending_dma();
         // FLUX-TODO addr=0x11612 flavor=slice_end
         flux_support::assert(size <= slice.len());
-        self.registers.epin[endpoint].set_buffer(&slice[..size]);
+        self.registers.epin[endpoint].set_buffer(&slice[{ let __b=&(slice); unsafe { core::hint::assert_unchecked((size) <= (__b).len()) }; ..size }]);
         debug_tasks!("- task: startepin[{}]", endpoint);
         self.registers.task_startepin[endpoint].write(Task::ENABLE::SET);
     }
@@ -1927,7 +1927,7 @@ impl<'a> Usbd<'a> {
         if size > slice.len() {
             // FLUX-TODO addr=0x11634 flavor=explicit_panic
             flux_support::assert(false);
-            panic!("Packet is too large: {}", size);
+            unsafe { core::hint::unreachable_unchecked() };
         }
 
         let mut packet_hex = [0; 128];
@@ -2201,7 +2201,7 @@ fn inter_endepin(ep: usize) -> Field<u32, Interrupt::Register> {
         _ => {
             // FLUX-TODO addr=0x124e6 flavor=explicit_panic
             flux_support::assert(false);
-            unreachable!()
+            unsafe { core::hint::unreachable_unchecked() }
         },
     }
 }
@@ -2218,7 +2218,7 @@ fn inter_endepout(ep: usize) -> Field<u32, Interrupt::Register> {
         6 => Interrupt::ENDEPOUT6,
         7 => Interrupt::ENDEPOUT7,
         // FLUX-TODO addr=0x124c6 flavor=explicit_panic
-        _ => { flux_support::assert(false); unreachable!() },
+        _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
     }
 }
 
@@ -2241,7 +2241,7 @@ fn packet_to_hex(packet: &[VolatileCell<u8>], packet_hex: &mut [u8]) {
         let x = packet[i].get();
         // FLUX-TODO addr=0x116b0 flavor=bounds
         flux_support::assert(2 * i + 1 < packet_hex.len());
-        packet_hex[2 * i] = hex_char(x >> 4);
+        packet_hex[{ let __b=&(packet_hex); unsafe { core::hint::assert_unchecked((2 * i) < __b.len()) }; 2 * i }] = hex_char(x >> 4);
         packet_hex[2 * i + 1] = hex_char(x & 0x0f);
         i += 1;
     }

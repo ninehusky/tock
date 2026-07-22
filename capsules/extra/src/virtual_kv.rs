@@ -125,7 +125,7 @@ impl<'a, V: kv::KVPermissions<'a>> VirtualKVPermissions<'a, V> {
         flux_support::assert(self.key.is_some() && self.value.is_some());
         self.mux_kv
             .do_next_op(false)
-            .map_err(|e| (self.key.take().unwrap(), self.value.take().unwrap(), e))
+            .map_err(|e| (self.key.take().unwrap(), self.value.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), e))
     }
 }
 
@@ -161,7 +161,7 @@ impl<'a, V: kv::KVPermissions<'a>> kv::KVPermissions<'a> for VirtualKVPermission
         flux_support::assert(self.key.is_some() && self.value.is_some());
         self.mux_kv
             .do_next_op(false)
-            .map_err(|e| (self.key.take().unwrap(), self.value.take().unwrap(), e))
+            .map_err(|e| (self.key.take().unwrap(), self.value.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), e))
     }
 
     fn set(
@@ -230,7 +230,7 @@ impl<'a, V: kv::KVPermissions<'a>> kv::KVPermissions<'a> for VirtualKVPermission
         flux_support::assert(self.key.is_some());
         self.mux_kv
             .do_next_op(false)
-            .map_err(|e| (self.key.take().unwrap(), e))
+            .map_err(|e| (self.key.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), e))
     }
 
     fn header_size(&self) -> usize {

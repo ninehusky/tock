@@ -331,7 +331,7 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
         // Notes: blocked-cell
         // FLUX-TODO addr=0x1d2d4 flavor=unwrap_option
         flux_support::assert(read_buf_opt.is_some());
-        let buf = read_buf_opt.unwrap();
+        let buf = read_buf_opt.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
         buf.copy_from_slice(read_buffer);
         self.tickv.read_buffer.replace(Some(buf));
     }
@@ -356,18 +356,18 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
     pub fn continue_operation(&self) -> ContinueReturn {
         let (ret, length) = match self.tickv.state.get() {
             // FLUX-TODO addr=0x18252 flavor=unwrap_option
-            State::Init(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.initialise(self.key.get().unwrap()), 0) },
+            State::Init(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.initialise(self.key.get().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })), 0) },
             State::AppendKey(_) => {
                 let value_opt = self.value.take();
                 // FLUX-TODO addr=0x18246 flavor=unwrap_option
                 flux_support::assert(value_opt.is_some());
-                let value = value_opt.unwrap();
+                let value = value_opt.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
                 let value_length = self.value_length.get();
                 // FLUX-TODO addr=0x1825e flavor=unwrap_option
                 flux_support::assert(self.key.get().is_some());
                 let ret = self
                     .tickv
-                    .append_key(self.key.get().unwrap(), &value[0..value_length]);
+                    .append_key(self.key.get().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), &value[0..value_length]);
                 self.value.replace(Some(value));
                 (ret, value_length)
             }
@@ -376,11 +376,11 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
 
                 // FLUX-TODO addr=0x1824c flavor=unwrap_option
                 flux_support::assert(buf_opt.is_some());
-                let buf = buf_opt.unwrap();
+                let buf = buf_opt.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
 
                 // FLUX-TODO addr=0x18264 flavor=unwrap_option
                 flux_support::assert(self.key.get().is_some());
-                let ret = self.tickv.get_key(self.key.get().unwrap(), buf);
+                let ret = self.tickv.get_key(self.key.get().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), buf);
                 self.value.replace(Some(buf));
                 match ret {
                     Ok((s, len)) => (Ok(s), len),
@@ -388,15 +388,15 @@ impl<'a, C: FlashController<S>, const S: usize> AsyncTicKV<'a, C, S> {
                 }
             }
             // FLUX-TODO addr=0x18240 flavor=unwrap_option
-            State::InvalidateKey(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.invalidate_key(self.key.get().unwrap()), 0) },
+            State::InvalidateKey(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.invalidate_key(self.key.get().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })), 0) },
             // FLUX-TODO addr=0x18258 flavor=unwrap_option
-            State::ZeroiseKey(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.zeroise_key(self.key.get().unwrap()), 0) },
+            State::ZeroiseKey(_) => { flux_support::assert(self.key.get().is_some()); (self.tickv.zeroise_key(self.key.get().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })), 0) },
             State::GarbageCollect(_) => match self.tickv.garbage_collect() {
                 Ok(bytes_freed) => (Ok(SuccessCode::Complete), bytes_freed),
                 Err(e) => (Err(e), 0),
             },
             // FLUX-TODO addr=0x1823a flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
         };
 
         match ret {

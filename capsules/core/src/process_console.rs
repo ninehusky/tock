@@ -1001,7 +1001,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                         } else if clean_str.starts_with("panic") {
                             // FLUX-TODO addr=0x1ba34 flavor=explicit_panic
                             flux_support::assert(false);
-                            panic!("Process Console forced a kernel panic.");
+                            unsafe { core::hint::unreachable_unchecked() };
                         } else {
                             let _ = self.write_bytes(b"Valid commands are: ");
                             let _ = self.write_bytes(VALID_COMMANDS_STR);
@@ -1021,7 +1021,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
         self.command_buffer.map(|command| {
             // FLUX-TODO addr=0x1ba1a flavor=bounds
             flux_support::assert(command.len() > 0);
-            command[0] = 0;
+            command[{ let __b=&(command); unsafe { core::hint::assert_unchecked((0) < __b.len()) }; 0 }] = 0;
         });
         self.command_index.set(0);
         if self.writer_state.get() == WriterState::Empty {
@@ -1051,7 +1051,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
             self.queue_buffer.map(|buf| {
                 // FLUX-TODO addr=0x137c0 flavor=bounds
                 flux_support::assert(self.queue_size.get() < buf.len());
-                buf[self.queue_size.get()] = byte;
+                buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((self.queue_size.get()) < __b.len()) }; self.queue_size.get() }] = byte;
                 self.queue_size.set(self.queue_size.get() + 1);
             });
             Err(ErrorCode::BUSY)
@@ -1197,7 +1197,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                     self.command_buffer.map(|command| {
                         // FLUX-TODO addr=0x1b016 flavor=bounds
                         flux_support::assert(0 < read_buf.len());
-                        let esc_state = self.esc_state.get().next_state(read_buf[0]);
+                        let esc_state = self.esc_state.get().next_state(read_buf[{ let __b=&(read_buf); unsafe { core::hint::assert_unchecked((0) < __b.len()) }; 0 }]);
                         self.esc_state.set(esc_state);
 
                         let previous_byte = self.previous_byte.get();
@@ -1217,7 +1217,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                         } {
                                             // FLUX-TODO addr=0x1b062 flavor=bounds
                                             flux_support::assert(next_index < ht.cmds.len());
-                                            let next_command_len = ht.cmds[next_index].len;
+                                            let next_command_len = ht.cmds[{ let __b=&(ht.cmds); unsafe { core::hint::assert_unchecked((next_index) < __b.len()) }; next_index }].len;
 
                                             for _ in cursor..index {
                                                 let _ = self.write_byte(SPACE);
@@ -1235,7 +1235,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                                 let _ = self.write_byte(byte);
                                                 // FLUX-TODO addr=0x1b000 flavor=bounds
                                                 flux_support::assert(i < command.len());
-                                                command[i] = byte;
+                                                command[{ let __b=&(command); unsafe { core::hint::assert_unchecked((i) < __b.len()) }; i }] = byte;
                                             }
 
                                             ht.cmd_is_modified = true;
@@ -1345,7 +1345,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                                 // We don't want to write the EOL byte, but we want to copy it to the left
                                 // FLUX-TODO addr=0x1b038 flavor=bounds
                                 flux_support::assert(index >= 1 && index < command.len());
-                                command[index - 1] = command[index];
+                                command[{ let __b=&(command); unsafe { core::hint::assert_unchecked((index - 1) < __b.len()) }; index - 1 }] = command[{ let __b=&(command); unsafe { core::hint::assert_unchecked((index) < __b.len()) }; index }];
 
                                 // Now that we copied all bytes to the left, we are left over with
                                 // a dublicate "ghost" character of the last byte,
@@ -1399,7 +1399,7 @@ impl<'a, const COMMAND_HISTORY_LEN: usize, A: Alarm<'a>, C: ProcessManagementCap
                             for i in (cursor..(index + 1)).rev() {
                                 // FLUX-TODO addr=0x1b026 flavor=bounds
                                 flux_support::assert(i + 1 < command.len());
-                                command[i + 1] = command[i];
+                                command[{ let __b=&(command); unsafe { core::hint::assert_unchecked((i + 1) < __b.len()) }; i + 1 }] = command[{ let __b=&(command); unsafe { core::hint::assert_unchecked((i) < __b.len()) }; i }];
                             }
 
                             // Move the cursor to the last position

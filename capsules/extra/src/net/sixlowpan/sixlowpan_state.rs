@@ -289,7 +289,7 @@ fn set_frag_hdr(
     if !is_frag1 {
         // FLUX-TODO addr=0xdb76 flavor=bounds
         flux_support::assert(4 < hdr.len());
-        hdr[4] = (dgram_offset / 8) as u8;
+        hdr[{ let __b=&(hdr); unsafe { core::hint::assert_unchecked((4) < __b.len()) }; 4 }] = (dgram_offset / 8) as u8;
     }
 }
 
@@ -525,7 +525,7 @@ impl<'a> TxState<'a> {
             flux_support::assume(written <= lowpan_packet.len());
             // FLUX-TODO addr=0x19a32 flavor=slice_end
             flux_support::assert(written <= lowpan_packet.len());
-            let _ = frame.append_payload(&lowpan_packet[0..written]);
+            let _ = frame.append_payload(&lowpan_packet[{ let __b=&(lowpan_packet); unsafe { core::hint::assert_unchecked((0) <= (written) && (written) <= (__b).len()) }; 0..written }]);
             remaining_capacity -= written;
         } else {
             return Err((Err(ErrorCode::SIZE), frame.into_buf()));
@@ -552,7 +552,7 @@ impl<'a> TxState<'a> {
         flux_support::assume(payload_len <= ip6_packet.get_payload().len());
         // FLUX-TODO addr=0x19a3c flavor=slice_end
         flux_support::assert(payload_len <= ip6_packet.get_payload().len());
-        let _ = frame.append_payload(&ip6_packet.get_payload()[0..payload_len]);
+        let _ = frame.append_payload(&ip6_packet.get_payload()[{ let __b=&(ip6_packet.get_payload()); unsafe { core::hint::assert_unchecked((0) <= (payload_len) && (payload_len) <= (__b).len()) }; 0..payload_len }]);
         self.dgram_offset.set(consumed + payload_len);
         Ok(frame)
     }
@@ -584,7 +584,7 @@ impl<'a> TxState<'a> {
             // FLUX-TODO addr=0x19a42 flavor=slice_order
             flux_support::assert(payload_offset + payload_len <= ip6_packet.get_payload().len());
             let _ = frame.append_payload(
-                &ip6_packet.get_payload()[payload_offset..payload_offset + payload_len],
+                &ip6_packet.get_payload()[{ let __b=&(ip6_packet.get_payload()); unsafe { core::hint::assert_unchecked((payload_offset) <= (payload_offset + payload_len) && (payload_offset + payload_len) <= (__b).len()) }; payload_offset..payload_offset + payload_len }],
             );
         }
 
@@ -762,7 +762,7 @@ impl<'a> RxState<'a> {
             flux_support::assert(payload_len <= payload.len());
             let (consumed, written) = sixlowpan_compression::decompress(
                 ctx_store,
-                &payload[0..payload_len],
+                &payload[{ let __b=&(payload); unsafe { core::hint::assert_unchecked((0) <= (payload_len) && (payload_len) <= (__b).len()) }; 0..payload_len }],
                 self.src_mac_addr.get(),
                 self.dst_mac_addr.get(),
                 packet,
@@ -778,7 +778,7 @@ impl<'a> RxState<'a> {
             // FLUX-TODO addr=0x1e1de flavor=slice_end
             flux_support::assert(dgram_offset + payload_len <= packet.len() && payload_len <= payload.len());
             packet[dgram_offset..dgram_offset + payload_len]
-                .copy_from_slice(&payload[0..payload_len]);
+                .copy_from_slice(&payload[{ let __b=&(payload); unsafe { core::hint::assert_unchecked((0) <= (payload_len) && (payload_len) <= (__b).len()) }; 0..payload_len }]);
             payload_len
         };
         self.packet.replace(packet);
@@ -848,7 +848,7 @@ pub struct Sixlowpan<'a, A: time::Alarm<'a>, C: ContextStore> {
 fn slice_view(buf: &[u8], off: usize, len: usize) -> &[u8] {
     // FLUX-TODO addr=0x1e1bc flavor=slice_order
     flux_support::assert(off + len <= buf.len());
-    &buf[off..off + len]
+    &buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((off) <= (off + len) && (off + len) <= (__b).len()) }; off..off + len }]
 }
 
 // This function is called after receiving a frame
@@ -947,7 +947,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
         if is_fragment(packet) {
             // FLUX-TODO addr=0x1e1ce flavor=slice_end
             flux_support::assert(packet.len() >= 5);
-            let (is_frag1, dgram_size, dgram_tag, dgram_offset) = get_frag_hdr(&packet[0..5]);
+            let (is_frag1, dgram_size, dgram_tag, dgram_offset) = get_frag_hdr(&packet[{ let __b=&(packet); unsafe { core::hint::assert_unchecked((0) <= (5) && (5) <= (__b).len()) }; 0..5 }]);
             let offset_to_payload = if is_frag1 {
                 lowpan_frag::FRAG1_HDR_SIZE
             } else {
@@ -991,7 +991,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
             // Otherwise, we are in an inconsistent state and can fail.
             // FLUX-TODO addr=0x1e1d4 flavor=unwrap_option
             flux_support::assert(state.packet.is_some());
-            let packet = state.packet.take().unwrap();
+            let packet = state.packet.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
 
             // Filter non 6LoWPAN packets and return
             if !is_lowpan(payload) {
@@ -1013,7 +1013,7 @@ impl<'a, A: time::Alarm<'a>, C: ContextStore> Sixlowpan<'a, A, C> {
                     // FLUX-TODO addr=0x1e1e8 flavor=slice_order
                     flux_support::assert(written + remaining <= packet.len() && consumed + remaining <= payload.len());
                     packet[written..written + remaining]
-                        .copy_from_slice(&payload[consumed..consumed + remaining]);
+                        .copy_from_slice(&payload[{ let __b=&(payload); unsafe { core::hint::assert_unchecked((consumed) <= (consumed + remaining) && (consumed + remaining) <= (__b).len()) }; consumed..consumed + remaining }]);
                     // Want dgram_size to contain decompressed size of packet
                     state.dgram_size.set((written + remaining) as u16);
                 }

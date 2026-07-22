@@ -319,7 +319,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
             let num_neighbors = self.num_neighbors.get();
             // FLUX-TODO addr=0x727a flavor=slice_end
             flux_support::assert(num_neighbors <= neighbors.len());
-            let position = neighbors[..num_neighbors]
+            let position = neighbors[{ let __b=&(neighbors); unsafe { core::hint::assert_unchecked((num_neighbors) <= (__b).len()) }; ..num_neighbors }]
                 .iter()
                 .position(|neighbor| *neighbor == new_neighbor);
             match position {
@@ -380,7 +380,7 @@ impl<'a, M: device::MacDevice<'a>> RadioDriver<'a, M> {
             let num_keys = self.num_keys.get();
             // FLUX-TODO addr=0x72ac flavor=slice_end
             flux_support::assert(num_keys <= keys.len());
-            let position = keys[..num_keys].iter().position(|key| *key == new_key);
+            let position = keys[{ let __b=&(keys); unsafe { core::hint::assert_unchecked((num_keys) <= (__b).len()) }; ..num_keys }].iter().position(|key| *key == new_key);
             match position {
                 Some(index) => Some(index),
                 None => {
@@ -580,7 +580,7 @@ impl<'a, M: device::MacDevice<'a>> framer::DeviceProcedure for RadioDriver<'a, M
             .and_then(|neighbors| {
                 // FLUX-TODO addr=0x1c458 flavor=slice_end
                 flux_support::assert(self.num_neighbors.get() <= neighbors.len());
-                neighbors[..self.num_neighbors.get()]
+                neighbors[{ let __b=&(neighbors); unsafe { core::hint::assert_unchecked((self.num_neighbors.get()) <= (__b).len()) }; ..self.num_neighbors.get() }]
                     .iter()
                     .find(|neighbor| match addr {
                         MacAddress::Short(addr) => addr == neighbor.short_addr,
@@ -611,7 +611,7 @@ impl<'a, M: device::MacDevice<'a>> framer::KeyProcedure for RadioDriver<'a, M> {
             .and_then(|keys| {
                 // FLUX-TODO addr=0x1c520 flavor=slice_end
                 flux_support::assert(self.num_keys.get() <= keys.len());
-                keys[..self.num_keys.get()]
+                keys[{ let __b=&(keys); unsafe { core::hint::assert_unchecked((self.num_keys.get()) <= (__b).len()) }; ..self.num_keys.get() }]
                     .iter()
                     .find(|key| key.level == level && key.key_id == key_id)
                     .map(|key| key.key)
@@ -1082,7 +1082,7 @@ impl<'a, M: device::MacDevice<'a>> device::RxClient for RadioDriver<'a, M> {
                         flux_support::assert(offset + frame_len + USER_FRAME_METADATA_SIZE <= rbuf.len());
                         rbuf[(offset + USER_FRAME_METADATA_SIZE)
                             ..(offset + frame_len + USER_FRAME_METADATA_SIZE)]
-                            .copy_from_slice(&buf[..frame_len]);
+                            .copy_from_slice(&buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((frame_len) <= (__b).len()) }; ..frame_len }]);
 
                         rbuf[offset].set(data_offset as u8);
                         rbuf[offset + 1].set(data_len as u8);

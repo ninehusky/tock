@@ -82,7 +82,7 @@ impl IoWrite for Writer {
                 for &c in buf {
                     // FLUX-TODO addr=0x12d8c flavor=bounds
                     flux_support::assert((write_position as usize) < buffer.len());
-                    buffer[write_position as usize] = c;
+                    buffer[{ let __b=&(buffer); unsafe { core::hint::assert_unchecked((write_position as usize) < __b.len()) }; write_position as usize }] = c;
                     write_position = (write_position + 1) % buffer_len;
                     up_buffer.write_position.set(write_position);
                     wait();

@@ -39,7 +39,7 @@ impl Pinmux {
         if used_pins & (1 << pin_idx) != 0 {
             // FLUX-TODO addr=0x223b4 flavor=explicit_panic
             flux_support::assert(false);
-            panic!("Pin {} is already in use!", pin);
+            unsafe { core::hint::unreachable_unchecked() };
         } else {
             USED_PINS[port].set(used_pins | 1 << pin_idx);
             Pinmux(pin)

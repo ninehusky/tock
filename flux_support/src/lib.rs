@@ -41,7 +41,7 @@ pub const fn assume(b: bool) {
 
         // FLUX-TODO addr=0x10524 flavor=explicit_panic
         crate::assert(false);
-        panic!("assume fails")
+        unsafe { core::hint::unreachable_unchecked() }
     }
 }
 

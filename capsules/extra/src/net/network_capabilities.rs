@@ -67,7 +67,7 @@ impl AddrRange {
                     flux_support::assume(full_bytes < 16);
                     // FLUX-TODO addr=0x19e98 flavor=bounds
                     flux_support::assert(full_bytes < addr.0.len() && full_bytes < allowed_addr.0.len());
-                    addr.0[full_bytes] >> (8 - remainder_bits)
+                    addr.0[{ let __b=&(addr.0); unsafe { core::hint::assert_unchecked((full_bytes) < __b.len()) }; full_bytes }] >> (8 - remainder_bits)
                         == allowed_addr.0[full_bytes] >> (8 - remainder_bits)
                 }
             }

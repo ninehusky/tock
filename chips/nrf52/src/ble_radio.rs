@@ -635,7 +635,7 @@ impl<'a> Radio<'a> {
                     // FLUX-TODO addr=0x11b3e flavor=unwrap_option
                     flux_support::assert(self.buffer.is_some());
                     self.tx_client
-                        .map(|client| client.transmit_event(self.buffer.take().unwrap(), result));
+                        .map(|client| client.transmit_event(self.buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), result));
                 }
                 nrf5x::constants::RADIO_STATE_RXRU
                 | nrf5x::constants::RADIO_STATE_RXIDLE

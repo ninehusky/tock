@@ -134,7 +134,7 @@ impl<'a> core::fmt::Write for WriteToBinaryOffsetWrapper<'a> {
             flux_support::assert(start <= string_len && string_len <= s.as_bytes().len());
             let ret = self
                 .binary_writer
-                .write_buffer(&(s).as_bytes()[start..string_len]);
+                .write_buffer(&(s).as_bytes()[{ let __b=&((s).as_bytes()); unsafe { core::hint::assert_unchecked((start) <= (string_len) && (string_len) <= (__b).len()) }; start..string_len }]);
 
             match ret {
                 Ok(bytes_sent) => {

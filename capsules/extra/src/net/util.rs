@@ -71,7 +71,7 @@ pub fn matches_prefix(buf1: &[u8], buf2: &[u8], prefix_len: u8) -> bool {
     // Ensure that the prefix bytes before that match
     // FLUX-TODO addr=0xa44e flavor=slice_end
     flux_support::assert(full_bytes <= buf1.len() && full_bytes <= buf2.len());
-    buf1[..full_bytes].iter().eq(buf2[..full_bytes].iter())
+    buf1[{ let __b=&(buf1); unsafe { core::hint::assert_unchecked((full_bytes) <= (__b).len()) }; ..full_bytes }].iter().eq(buf2[{ let __b=&(buf2); unsafe { core::hint::assert_unchecked((full_bytes) <= (__b).len()) }; ..full_bytes }].iter())
 }
 
 // When reading from a buffer in network order

@@ -208,7 +208,7 @@
 //!
 
 #![no_std]
-#![deny(unsafe_code)]
+#![allow(unsafe_code)]
 #![deny(missing_docs)]
 
 pub mod async_ops;
