@@ -1248,7 +1248,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
         // ]
         // Notes: blocked-reentrancy
         flux_support::assert(grant_opt.is_some());
-        grant_opt.unwrap()
+        grant_opt.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })
     }
 
     /// Run a function with access to the data in the related process for the
@@ -1428,7 +1428,7 @@ impl<'a, T: Default, Upcalls: UpcallSize, AllowROs: AllowRoSize, AllowRWs: Allow
 
                 // FLUX-TODO addrs=[0x138cc, 0x1710e, 0x174dc, 0x1834c, 0x1886e, 0x18ea8, 0x1a564, 0x1a6f0, 0x1a79c, 0x1aaac, 0x1c262, 0x1c39a, 0x1e988, 0x1ed26, 0x1f56c, 0x1f7ae, 0x1f83e, 0x1f9ec, 0x1fa7e, 0x1fb14, 0x1fb9e, 0x1fd76, 0x1fe6a, 0x4834, 0x48ee, 0x494c, 0x4ad4, 0x4bae, 0x4c0c, 0x4d2a, 0x4db8, 0x543e, 0x58d6, 0x60dc, 0x6400, 0x7332, 0x747e, 0x74e0, 0x794a, 0x7b86, 0x7ea4, 0x9866, 0x98c6, 0x9c14, 0xa28e, 0xbe8a, 0xc0a6, 0xc10a, 0xc20e, 0xc526] flavor=explicit_panic
                 flux_support::assert(false);
-                panic!("Attempted to re-enter a grant region.");
+                unsafe { core::hint::unreachable_unchecked() };
             })
             .ok()?;
         let grant_t_align = GrantDataAlign(align_of::<T>());

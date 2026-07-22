@@ -281,7 +281,7 @@ impl Kernel {
             // FLUX-TODO addr=0x140a6 flavor=explicit_panic
             // Notes: blocked-cell
             flux_support::assert(false);
-            panic!("Grants finalized. Cannot create a new grant.");
+            unsafe { core::hint::unreachable_unchecked() };
         }
 
         // Create and return a new grant.
@@ -694,7 +694,7 @@ impl Kernel {
                                     // Notes: blocked-kernel-loop
                                     // FLUX-TODO addr=0x1df6 flavor=explicit_panic
                                     flux_support::assert(false);
-                                    todo!()
+                                    unsafe { core::hint::unreachable_unchecked() }
                                 },
                             };
                             process

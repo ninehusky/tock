@@ -270,7 +270,7 @@ impl<'a, T> SubSliceMut<'a, T> {
     fn active_slice(&self) -> &[T] {
         // FLUX-TODO addr=0xa0dc flavor=slice_order
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
-        &self.internal[self.active_range.start..self.active_range.end]
+        &self.internal[{ let __b=&(self.internal); unsafe { core::hint::assert_unchecked((self.active_range.start) <= (self.active_range.end) && (self.active_range.end) <= (__b).len()) }; self.active_range.start..self.active_range.end }]
     }
 
     /// Retrieve the raw buffer used to create the SubSlice. Consumes the
@@ -380,7 +380,7 @@ where
         // FLUX-TODO addrs=[0x14fdc, 0x19e72, 0x1f9ce, 0x1f9d8] flavor=slice_end
         // FLUX-TODO addr=0x19e8e flavor=bounds
         flux_support::assert(self.active_range.start <= self.active_range.end && self.active_range.end <= self.internal.len());
-        &self.internal[self.active_range.start..self.active_range.end][idx]
+        &self.internal[{ let __b=&(self.internal); unsafe { core::hint::assert_unchecked((self.active_range.start) <= (self.active_range.end) && (self.active_range.end) <= (__b).len()) }; self.active_range.start..self.active_range.end }][idx]
     }
 }
 

@@ -415,18 +415,18 @@ impl<'a> IPPayload<'a> {
                 let done = udp_header.encode(buf, offset).done();
                 // FLUX-TODO addr=0xda88 flavor=unwrap_option
                 flux_support::assert(done.is_some());
-                done.unwrap()
+                done.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })
             }
             TransportHeader::ICMP(icmp_header) => {
                 let done = icmp_header.encode(buf, offset).done();
                 // FLUX-TODO addr=0xda8e flavor=unwrap_option
                 flux_support::assert(done.is_some());
-                done.unwrap()
+                done.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })
             }
             _ => {
                 // FLUX-TODO addr=0xda82 flavor=explicit_panic
                 flux_support::assert(false);
-                unimplemented!();
+                unsafe { core::hint::unreachable_unchecked() };
             }
         };
         let payload_length = self.get_payload_length();
@@ -437,7 +437,7 @@ impl<'a> IPPayload<'a> {
         // marked `#[flux_rs::no_panic]`, the slice-op bounds check wouldn't fire without this explicit assert.
         // FLUX-OPT addr=0xda78 flavor=slice_end
         flux_support::assert(payload_length <= self.payload.len());
-        let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[..payload_length]);
+        let offset = enc_consume!(buf, offset; encode_bytes, &self.payload[{ let __b=&(self.payload); unsafe { core::hint::assert_unchecked((payload_length) <= (__b).len()) }; ..payload_length }]);
         stream_done!(offset, offset)
     }
 
@@ -504,7 +504,7 @@ impl<'a> IP6Packet<'a> {
             TransportHeader::UDP(udp_hdr) => udp_hdr.get_hdr_size(),
             TransportHeader::ICMP(icmp_header) => icmp_header.get_hdr_size(),
             // FLUX-TODO addr=0xdaf2 flavor=explicit_panic
-            _ => { flux_support::assert(false); unimplemented!() },
+            _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
         };
         40 + transport_hdr_size
     }
@@ -534,7 +534,7 @@ impl<'a> IP6Packet<'a> {
             _ => {
                 // FLUX-TODO addr=0x19e7c flavor=explicit_panic
                 flux_support::assert(false);
-                unimplemented!();
+                unsafe { core::hint::unreachable_unchecked() };
             }
         }
     }
@@ -570,7 +570,7 @@ impl<'a> IP6Packet<'a> {
         let done = ip6_header.encode(buf).done();
         // FLUX-OPT addr=0xda94 flavor=unwrap_option
         flux_support::assert(done.is_some());
-        let (off, _) = done.unwrap();
+        let (off, _) = done.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
         self.payload.encode(buf, off)
     }
 }

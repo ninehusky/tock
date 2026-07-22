@@ -758,7 +758,7 @@ impl<'a> Radio<'a> {
         // or some instance in  driver taking buffer without properly replacing).
         // FLUX-TODO addr=0x12b0a flavor=unwrap_option
         flux_support::assert(self.rx_buf.is_some());
-        let rbuf = self.rx_buf.take().unwrap();
+        let rbuf = self.rx_buf.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
         self.rx_buf.replace(self.set_dma_ptr(rbuf));
 
         // Instruct radio hardware to automatically progress from RXIDLE to RX
@@ -839,7 +839,7 @@ impl<'a> Radio<'a> {
                     // replacing).
                     // FLUX-TODO addr=0x12b10 flavor=unwrap_option
                     flux_support::assert(self.rx_buf.is_some());
-                    let rbuf = self.rx_buf.take().unwrap();
+                    let rbuf = self.rx_buf.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
 
                     // Data buffer format: | PREFIX | PHR | PSDU | LQI |
                     //
@@ -889,10 +889,10 @@ impl<'a> Radio<'a> {
                                 ack_buf[radio::PSDU_OFFSET] = 2;
                                 // FLUX-TODO addr=0x12b62 flavor=bounds
                                 flux_support::assert(radio::PSDU_OFFSET + 1 < ack_buf.len());
-                                ack_buf[radio::PSDU_OFFSET + 1] = 0;
+                                ack_buf[{ let __b=&(ack_buf); unsafe { core::hint::assert_unchecked((radio::PSDU_OFFSET + 1) < __b.len()) }; radio::PSDU_OFFSET + 1 }] = 0;
                                 // FLUX-TODO addr=0x12b6c flavor=bounds
                                 flux_support::assert(radio::PSDU_OFFSET + radio::MHR_FC_SIZE < ack_buf.len());
-                                ack_buf[radio::PSDU_OFFSET + radio::MHR_FC_SIZE] = sequence_number;
+                                ack_buf[{ let __b=&(ack_buf); unsafe { core::hint::assert_unchecked((radio::PSDU_OFFSET + radio::MHR_FC_SIZE) < __b.len()) }; radio::PSDU_OFFSET + radio::MHR_FC_SIZE }] = sequence_number;
 
                                 // Ensure we replace our RX buffer for the time
                                 // being.
@@ -917,7 +917,7 @@ impl<'a> Radio<'a> {
                                     // FLUX-TODO addr=0x12b2e flavor=unwrap_option
                                     flux_support::assert(self.rx_buf.is_some());
                                     client.receive(
-                                        self.rx_buf.take().unwrap(),
+                                        self.rx_buf.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                                         frame_len,
                                         lqi,
                                         crc.is_ok(),
@@ -1002,7 +1002,7 @@ impl<'a> Radio<'a> {
                             // set_dma_ptr(...)
                             // FLUX-TODO addr=0x12b28 flavor=unwrap_option
                             flux_support::assert(self.tx_buf.is_some());
-                            let tbuf = self.tx_buf.take().unwrap();
+                            let tbuf = self.tx_buf.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
                             client.send_done(tbuf, false, result);
                         });
                         rx_init = true;
@@ -1022,7 +1022,7 @@ impl<'a> Radio<'a> {
                         // not replaced after completion of set_dma_ptr(...)
                         // FLUX-TODO addr=0x12b1c flavor=unwrap_option
                         flux_support::assert(self.tx_buf.is_some());
-                        let tbuf = self.tx_buf.take().unwrap();
+                        let tbuf = self.tx_buf.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
                         client.send_done(tbuf, false, result);
                     });
                     rx_init = true;
@@ -1047,7 +1047,7 @@ impl<'a> Radio<'a> {
                     // replaced after completion of set_dma_ptr(...)
                     // FLUX-TODO addr=0x12b16 flavor=unwrap_option
                     flux_support::assert(self.tx_buf.is_some());
-                    let tbuf = self.tx_buf.take().unwrap();
+                    let tbuf = self.tx_buf.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
 
                     // We must replace the ACK buffer that was passed to tx_buf
                     self.ack_buf.replace(tbuf);
@@ -1063,7 +1063,7 @@ impl<'a> Radio<'a> {
                         // without properly replacing).
                         // FLUX-TODO addr=0x12b22 flavor=unwrap_option
                         flux_support::assert(self.rx_buf.is_some());
-                        let rbuf = self.rx_buf.take().unwrap();
+                        let rbuf = self.rx_buf.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
 
                         // Data buffer format: | PREFIX | PHR | PSDU | LQI |
                         //

@@ -181,7 +181,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> MuxAES128CCM<'a, A> 
                 self.inflight.set(node);
                 // FLUX-TODO addr=0x13de2 flavor=unwrap_option
                 flux_support::assert(node.queued_up.is_some());
-                let parameters: CryptFunctionParameters = node.queued_up.take().unwrap();
+                let parameters: CryptFunctionParameters = node.queued_up.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
                 // now, eat the parameters
                 let _ = node.crypt_r(parameters).map_err(|(ecode, _)| {
                     // notice that we didn't put the parameters back...
@@ -489,7 +489,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
         self.aes.start_message();
         let crypt_buf = match self.crypt_buf.take() {
             // FLUX-TODO addr=0x14076 flavor=explicit_panic
-            None => { flux_support::assert(false); panic!("Cannot perform CCM* encrypt because crypt_buf is not present.") },
+            None => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
             Some(buf) => buf,
         };
 
@@ -536,9 +536,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                         flux_support::assert(m_end + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
                         // FLUX-TODO addr=0x1d90e flavor=slice_order
                         flux_support::assert(tag_off + mic_len < cbuf.len());
-                        buf[m_end..m_end + mic_len]
+                        buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((m_end) <= (m_end + mic_len) && (m_end + mic_len) <= (__b).len()) }; m_end..m_end + mic_len }]
                             .iter()
-                            .zip(cbuf[tag_off..tag_off + mic_len].iter())
+                            .zip(cbuf[{ let __b=&(cbuf); unsafe { core::hint::assert_unchecked((tag_off) <= (tag_off + mic_len) && (tag_off + mic_len) <= (__b).len()) }; tag_off..tag_off + mic_len }].iter())
                             .all(|(a, b)| *a == *b)
                     }
                 },
@@ -570,7 +570,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     let tag_off = self.crypt_enc_len.get() - AES128_BLOCK_SIZE;
                     // FLUX-TODO addr=0x1d968 flavor=slice_end
                     flux_support::assert(mic_len <= self.saved_tag.get().len() && tag_off + mic_len <= cbuf.len());
-                    self.saved_tag.get()[..mic_len]
+                    self.saved_tag.get()[{ let __b=&(self.saved_tag.get()); unsafe { core::hint::assert_unchecked((mic_len) <= (__b).len()) }; ..mic_len }]
                         .iter()
                         .zip(cbuf[tag_off..tag_off + mic_len].iter_mut())
                         .for_each(|(a, b)| *b ^= *a);
@@ -581,9 +581,9 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
                     flux_support::assert(mic_len > 0 && m_off + m_len + mic_len <= buf.len() && tag_off + mic_len <= cbuf.len());
                     // FLUX-TODO addr=0x1d942 flavor=slice_order
                     flux_support::assert(tag_off + mic_len <= cbuf.len());
-                    buf[m_off + m_len..m_off + m_len + mic_len]
+                    buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((m_off + m_len) <= (m_off + m_len + mic_len) && (m_off + m_len + mic_len) <= (__b).len()) }; m_off + m_len..m_off + m_len + mic_len }]
                         .iter()
-                        .zip(cbuf[tag_off..tag_off + mic_len].iter())
+                        .zip(cbuf[{ let __b=&(cbuf); unsafe { core::hint::assert_unchecked((tag_off) <= (tag_off + mic_len) && (tag_off + mic_len) <= (__b).len()) }; tag_off..tag_off + mic_len }].iter())
                         .all(|(a, b)| *a == *b)
                 },
             )
@@ -607,7 +607,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
             let mut cbuf_block = [0u8; AES128_BLOCK_SIZE];
             // FLUX-TODO addr=0x13e92 flavor=slice_order
             flux_support::assert(auth_len >= AES128_BLOCK_SIZE && auth_len <= cbuf.len());
-            cbuf_block.copy_from_slice(&cbuf[auth_len - AES128_BLOCK_SIZE..auth_len]);
+            cbuf_block.copy_from_slice(&cbuf[{ let __b=&(cbuf); unsafe { core::hint::assert_unchecked((auth_len - AES128_BLOCK_SIZE) <= (auth_len) && (auth_len) <= (__b).len()) }; auth_len - AES128_BLOCK_SIZE..auth_len }]);
             self.saved_tag.set(cbuf_block);
             cbuf[auth_len - AES128_BLOCK_SIZE..auth_len]
                 .iter_mut()
@@ -663,7 +663,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> VirtualAES128CCM<'a,
             &self.nonce.get(),
             mic_len,
             &buf[a_off..m_off],
-            &buf[m_off..m_off + m_len],
+            &buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((m_off) <= (m_off + m_len) && (m_off + m_len) <= (__b).len()) }; m_off..m_off + m_len }],
         );
         if res != Ok(()) {
             return Err((res.unwrap_err(), buf));
@@ -868,7 +868,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
                             for i in 0..AES128_BLOCK_SIZE {
                                 // FLUX-TODO addr=0x1d95e flavor=bounds
                                 flux_support::assert(auth_last + i < cbuf.len() && enc_last + i < cbuf.len());
-                                cbuf[auth_last + i] = cbuf[enc_last + i];
+                                cbuf[{ let __b=&(cbuf); unsafe { core::hint::assert_unchecked((auth_last + i) < __b.len()) }; auth_last + i }] = cbuf[{ let __b=&(cbuf); unsafe { core::hint::assert_unchecked((enc_last + i) < __b.len()) }; enc_last + i }];
                             }
 
                             // Then repopulate the plaintext data field
@@ -878,7 +878,7 @@ impl<'a, A: AES128<'a> + AES128Ctr + AES128CBC + AES128ECB> symmetric_encryption
                                 // FLUX-TODO addr=0x1d934 flavor=slice_end
                                 flux_support::assert(m_off + m_len <= buf.len());
                                 cbuf[auth_len..auth_len + m_len]
-                                    .copy_from_slice(&buf[m_off..m_off + m_len]);
+                                    .copy_from_slice(&buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((m_off) <= (m_off + m_len) && (m_off + m_len) <= (__b).len()) }; m_off..m_off + m_len }]);
                             });
                             cbuf[auth_len + m_len..enc_len]
                                 .iter_mut()

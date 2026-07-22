@@ -121,7 +121,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
                         for (i, c) in src[start..end].iter().enumerate() {
                             // FLUX-TODO addr=0x15360 flavor=bounds
                             flux_support::assert(i < kwbuf.len());
-                            kwbuf[i] = c.get();
+                            kwbuf[{ let __b=&(kwbuf); unsafe { core::hint::assert_unchecked((i) < __b.len()) }; i }] = c.get();
                         }
                         end - start
                     })
@@ -140,7 +140,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
             // FLUX-TODO addr=0x1534a flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master
-                .read_write_bytes(self.kernel_write.take().unwrap(), None, write_len)
+                .read_write_bytes(self.kernel_write.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), None, write_len)
         } else if write_len == 0 {
             let read_len = self
                 .kernel_write
@@ -172,7 +172,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
             // FLUX-TODO addr=0x15356 flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
-                self.kernel_write.take().unwrap(),
+                self.kernel_write.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                 self.kernel_read.take(),
                 read_len,
             )
@@ -180,7 +180,7 @@ impl<'a, S: SpiMasterDevice<'a>> Spi<'a, S> {
             // FLUX-TODO addr=0x15350 flavor=unwrap_option
             flux_support::assert(self.kernel_write.is_some());
             self.spi_master.read_write_bytes(
-                self.kernel_write.take().unwrap(),
+                self.kernel_write.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                 self.kernel_read.take(),
                 write_len,
             )

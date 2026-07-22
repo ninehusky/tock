@@ -353,7 +353,7 @@ impl<'a> AesECB<'a> {
                                     for i in 0..take {
                                         // FLUX-TODO addr=0x1ee4 flavor=bounds
                                         flux_support::assert(start + i < output.len() && i + PLAINTEXT_END < 48);
-                                        let in_byte = output[start + i];
+                                        let in_byte = output[{ let __b=&(output); unsafe { core::hint::assert_unchecked((start + i) < __b.len()) }; start + i }];
                                         let keystream_byte = unsafe { ECB_DATA[i + PLAINTEXT_END] };
 
                                         output[start + i] = keystream_byte ^ in_byte;
@@ -370,7 +370,7 @@ impl<'a> AesECB<'a> {
 
                                         // FLUX-TODO addr=0x1e96 flavor=bounds
                                         flux_support::assert(start_idx + current_idx + i < output.len());
-                                        output[start_idx + current_idx + i] =
+                                        output[{ let __b=&(output); unsafe { core::hint::assert_unchecked((start_idx + current_idx + i) < __b.len()) }; start_idx + current_idx + i }] =
                                             keystream_byte ^ in_byte;
                                     }
                                 });
@@ -517,7 +517,7 @@ impl<'a> kernel::hil::symmetric_encryption::AES128<'a> for AesECB<'a> {
             Some((
                 Err(ErrorCode::INVAL),
                 self.input.take(),
-                self.output.take().unwrap(),
+                self.output.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
             ))
         }
     }

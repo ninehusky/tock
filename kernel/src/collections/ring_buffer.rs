@@ -55,7 +55,7 @@ impl<'a, T: Copy> RingBuffer<'a, T> {
         if self.head < self.tail {
             // FLUX-TODO addr=0x12ca6 flavor=slice_end
             flux_support::assert(self.tail <= self.ring.len());
-            (Some(&self.ring[self.head..self.tail]), None)
+            (Some(&self.ring[{ let __b=&(self.ring); unsafe { core::hint::assert_unchecked((self.head) <= (self.tail) && (self.tail) <= (__b).len()) }; self.head..self.tail }]), None)
         } else if self.head > self.tail {
             // The extern spec for split_at requires
             // in-boundsness.
@@ -121,7 +121,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
         } else {
             // FLUX-TODO addr=0x105f2 flavor=bounds
             flux_support::assert(self.tail < self.ring.len());
-            self.ring[self.tail] = val;
+            self.ring[{ let __b=&(self.ring); unsafe { core::hint::assert_unchecked((self.tail) < __b.len()) }; self.tail }] = val;
             self.tail = (self.tail + 1) % self.ring.len();
             true
         }
@@ -165,7 +165,7 @@ impl<T: Copy> queue::Queue<T> for RingBuffer<'_, T> {
             //     0x10a48, 0x2c26,
             // ]
             flux_support::assert(self.head < self.ring.len());
-            let val = self.ring[self.head];
+            let val = self.ring[{ let __b=&(self.ring); unsafe { core::hint::assert_unchecked((self.head) < __b.len()) }; self.head }];
             self.head = (self.head + 1) % self.ring.len();
             Some(val)
         } else {

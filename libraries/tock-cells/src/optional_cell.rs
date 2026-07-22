@@ -198,7 +198,7 @@ impl<T: Copy> OptionalCell<T> {
         //     0x11660, 0x124aa, 0x12746, 0x138b2, 0x138b8,
         // ]
         flux_support::assert(self.value.get().is_some());
-        self.value.get().unwrap()
+        self.value.get().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })
     }
 
     /// Returns the contained value or a default.

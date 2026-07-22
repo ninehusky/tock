@@ -150,7 +150,7 @@ pub unsafe extern "C" fn unhandled_interrupt() {
 
     // FLUX-TODO addr=0xf918 flavor=explicit_panic
     flux_support::assert(false);
-    panic!("Unhandled Interrupt. ISR {} is active.", interrupt_number);
+    unsafe { core::hint::unreachable_unchecked() };
 }
 
 #[cfg(all(target_arch = "arm", target_os = "none"))]

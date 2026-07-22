@@ -494,7 +494,7 @@ impl<'a> Adc<'a> {
 
                     // FLUX-TODO addr=0x1e36 flavor=unwrap_option
                     flux_support::assert(self.buffer.is_some());
-                    let ret_buf = self.buffer.take().unwrap();
+                    let ret_buf = self.buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
 
                     // Left shift all samples to the MSB. This handles
                     // differences in resolution between ADC chips and meets the

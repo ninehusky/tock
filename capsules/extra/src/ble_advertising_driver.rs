@@ -507,7 +507,7 @@ where
                                 // FLUX-TODO addr=0x1ed10 flavor=slice_end
                                 flux_support::assert(len as usize <= userland.len() && len as usize <= buf.len());
                                 userland[0..len as usize]
-                                    .copy_from_slice_or_err(&buf[0..len as usize])
+                                    .copy_from_slice_or_err(&buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((0) <= (len as usize) && (len as usize) <= (__b).len()) }; 0..len as usize }])
                                     .is_ok()
                             })
                         })

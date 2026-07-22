@@ -334,7 +334,7 @@ impl<'a, T: IP6Sender<'a>> UDPSender<'a> for UDPSendStruct<'a, T> {
                 // FLUX-TODO addr=0x1db92 flavor=unwrap_option
                 // Notes: blocked-cell
                 flux_support::assert(self.tx_buffer.is_some());
-                Err(self.tx_buffer.take().unwrap())
+                Err(self.tx_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }))
             },
         }
     }

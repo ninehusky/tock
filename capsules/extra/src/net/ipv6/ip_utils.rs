@@ -121,7 +121,7 @@ impl IPAddr {
             let mask = 0xff_u8 << (8 - remaining);
             // FLUX-TODO addr=0xd6c6 flavor=bounds
             flux_support::assert(full_bytes < self.0.len());
-            self.0[full_bytes] &= !mask;
+            self.0[{ let __b=&(self.0); unsafe { core::hint::assert_unchecked((full_bytes) < __b.len()) }; full_bytes }] &= !mask;
             flux_support::assert(full_bytes < self.0.len() && full_bytes < prefix.len());
             self.0[full_bytes] |= mask & prefix[full_bytes];
         }
@@ -186,12 +186,12 @@ pub fn compute_udp_checksum(
         while i < ((udp_length - 8) as usize) {
             // FLUX-TODO addr=0xb5d8 flavor=bounds
             flux_support::assert(i < payload.len());
-            let msb_dat: u16 = ((payload[i]) as u16) << 8;
+            let msb_dat: u16 = ((payload[{ let __b=&(payload); unsafe { core::hint::assert_unchecked((i) < __b.len()) }; i }]) as u16) << 8;
             let mut lsb_dat: u16 = 0;
             if i + 1 < udp_length as usize - 8 {
                 // FLUX-TODO addr=0xb5e0 flavor=bounds
                 flux_support::assert(i + 1 < payload.len());
-                lsb_dat = payload[i + 1] as u16;
+                lsb_dat = payload[{ let __b=&(payload); unsafe { core::hint::assert_unchecked((i + 1) < __b.len()) }; i + 1 }] as u16;
             }
             let temp_dat: u16 = msb_dat + lsb_dat;
             sum += temp_dat as u32;

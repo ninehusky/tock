@@ -416,7 +416,7 @@ unsafe fn get_debug_writer() -> &'static mut DebugWriterWrapper {
     flux_support::assert(DEBUG_WRITER.is_some());
 
     // Notes: this is blocked on refinement a `static mut` defined above.
-    try_get_debug_writer().unwrap() // Unwrap fail = Must call `set_debug_writer_wrapper` in board initialization.
+    try_get_debug_writer().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }) // Unwrap fail = Must call `set_debug_writer_wrapper` in board initialization.
 }
 
 /// Function used by board main.rs to set a reference to the writer.

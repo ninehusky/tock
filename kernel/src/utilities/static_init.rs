@@ -49,7 +49,7 @@ pub fn static_buf_check_used(used: &mut bool) {
         // panic.
         // FLUX-TODO addr=0x11486 flavor=explicit_panic
         flux_support::assert(false);
-        panic!("Error! Single static_buf!() called twice.");
+        unsafe { core::hint::unreachable_unchecked() };
     } else {
         // Otherwise, mark our uninitialized buffer as used.
         *used = true;

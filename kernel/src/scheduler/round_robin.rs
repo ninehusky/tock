@@ -109,7 +109,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
                     // flux_support::assert(head_opt.is_some());
                     // FLUX-TODO addr=0x1e30 flavor=unwrap_option
                     flux_support::assert(head_opt.is_some());
-                    self.processes.push_tail(head_opt.unwrap());
+                    self.processes.push_tail(head_opt.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }));
                 }
                 None => {
                     self.processes.push_tail(self.processes.pop_head().unwrap());
@@ -150,7 +150,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
     fn result(&self, result: StoppedExecutingReason, execution_time_us: Option<u32>) {
         // FLUX-OPT addr=0x1de2 flavor=unwrap_option
         flux_support::assert(execution_time_us.is_some());
-        let execution_time_us = execution_time_us.unwrap(); // should never fail
+        let execution_time_us = execution_time_us.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }); // should never fail
         let reschedule = match result {
             StoppedExecutingReason::KernelPreemption => {
                 let t = self.time_remaining.get();
@@ -172,7 +172,7 @@ impl<'a, C: Chip> Scheduler<C> for RoundRobinSched<'a> {
             // Needs same refinement shape as the one mentioned above for the other unwrap_option on `head_opt`.
             // flux_support::assert(head_opt.is_some());
             flux_support::assert(head_opt.is_some());
-            self.processes.push_tail(head_opt.unwrap());
+            self.processes.push_tail(head_opt.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }));
         }
     }
 }

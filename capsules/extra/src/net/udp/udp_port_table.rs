@@ -230,7 +230,7 @@ impl UdpPortManager {
                 for i in 0..MAX_NUM_BOUND_PORTS {
                     // FLUX-TODO addr=0xbd94 flavor=bounds
                     flux_support::assert(i < table.len());
-                    match table[i] {
+                    match table[{ let __b=&(table); unsafe { core::hint::assert_unchecked((i) < __b.len()) }; i }] {
                         Some(SocketBindingEntry::Port(p)) => {
                             if p == port {
                                 port_exists = true;

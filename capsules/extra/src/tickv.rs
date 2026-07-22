@@ -250,7 +250,7 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
             .flash
             .read_page(
                 self.region_offset + region_number,
-                self.flash_read_buffer.take().unwrap(),
+                self.flash_read_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
             )
             .is_err()
         {
@@ -263,7 +263,7 @@ impl<'a, F: Flash, const PAGE_SIZE: usize> tickv::flash_controller::FlashControl
     fn write(&self, address: usize, buf: &[u8]) -> Result<(), tickv::error_codes::ErrorCode> {
         // FLUX-TODO addr=0x165e2 flavor=unwrap_option
         flux_support::assert(self.flash_read_buffer.is_some());
-        let data_buf = self.flash_read_buffer.take().unwrap();
+        let data_buf = self.flash_read_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
 
         for (i, d) in buf.iter().enumerate() {
             // FLUX-TODO addr=0x165ee flavor=bounds
@@ -357,8 +357,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
                 // FLUX-TODO addr=0x18db8 flavor=unwrap_option
                 flux_support::assert(self.key_buffer.is_some());
                 match self.get_value(
-                    self.key_buffer.take().unwrap(),
-                    self.value_buffer.take().unwrap(),
+                    self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
+                    self.value_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                 ) {
                     Err((key, value, error)) => {
                         self.client.map(move |cb| {
@@ -374,8 +374,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
                 // FLUX-TODO addr=0x18db2 flavor=unwrap_option
                 flux_support::assert(self.key_buffer.is_some());
                 match self.append_key(
-                    self.key_buffer.take().unwrap(),
-                    self.value_buffer.take().unwrap(),
+                    self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
+                    self.value_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                 ) {
                     Err((key, value, error)) => {
                         self.client.map(move |cb| {
@@ -388,7 +388,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> TicKVSystem<'a, F, 
             Operation::InvalidateKey => {
                 // FLUX-TODO addr=0x18dac flavor=unwrap_option
                 flux_support::assert(self.key_buffer.is_some());
-                match self.invalidate_key(self.key_buffer.take().unwrap()) {
+                match self.invalidate_key(self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() })) {
                     Err((key, error)) => {
                         self.client.map(move |cb| {
                             cb.invalidate_key_complete(Err(error), key);
@@ -430,7 +430,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> hasher::Client<8>
         self.client.map(move |cb| {
             // FLUX-TODO addr=0x1d06a flavor=unwrap_option
             flux_support::assert(self.unhashed_key_buffer.is_some());
-            cb.generate_key_complete(Ok(()), self.unhashed_key_buffer.take().unwrap(), digest);
+            cb.generate_key_complete(Ok(()), self.unhashed_key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }), digest);
         });
 
         self.hasher.clear_data();
@@ -483,7 +483,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                             flux_support::assert(self.value_buffer.is_some());
                             cb.get_value_complete(
                                 Ok(()),
-                                self.key_buffer.take().unwrap(),
+                                self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                                 self.value_buffer.take().unwrap(),
                             );
                         });
@@ -503,8 +503,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                             flux_support::assert(self.value_buffer.is_some());
                             cb.get_value_complete(
                                 Err(ErrorCode::SIZE),
-                                self.key_buffer.take().unwrap(),
-                                self.value_buffer.take().unwrap(),
+                                self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
+                                self.value_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                             );
                         });
                     }
@@ -528,8 +528,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                             flux_support::assert(self.value_buffer.is_some());
                             cb.get_value_complete(
                                 Err(get_tock_err),
-                                self.key_buffer.take().unwrap(),
-                                self.value_buffer.take().unwrap(),
+                                self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
+                                self.value_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                             );
                         });
                     }
@@ -565,8 +565,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                             flux_support::assert(self.value_buffer.is_some());
                             cb.append_key_complete(
                                 Err(tock_hil_error),
-                                self.key_buffer.take().unwrap(),
-                                self.value_buffer.take().unwrap(),
+                                self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
+                                self.value_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                             );
                         });
                     }
@@ -596,7 +596,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                         flux_support::assert(self.key_buffer.is_some());
                         cb.invalidate_key_complete(
                             Err(tock_hil_error),
-                            self.key_buffer.take().unwrap(),
+                            self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                         );
                     });
                 }
@@ -612,7 +612,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                 _ => {}
             },
             // FLUX-TODO addr=0x1d2de flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
         }
     }
 
@@ -637,8 +637,8 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                     flux_support::assert(self.value_buffer.is_some());
                     cb.append_key_complete(
                         Ok(()),
-                        self.key_buffer.take().unwrap(),
-                        self.value_buffer.take().unwrap(),
+                        self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
+                        self.value_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }),
                     );
                 });
             }
@@ -647,11 +647,11 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                 self.client.map(|cb| {
                     // FLUX-TODO addr=0x1d3f6 flavor=unwrap_option
                     flux_support::assert(self.key_buffer.is_some());
-                    cb.invalidate_key_complete(Ok(()), self.key_buffer.take().unwrap());
+                    cb.invalidate_key_complete(Ok(()), self.key_buffer.take().unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }));
                 });
             }
             // FLUX-TODO addr=0x1d3ea flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
         }
     }
 
@@ -689,7 +689,7 @@ impl<'a, F: Flash, H: Hasher<'a, 8>, const PAGE_SIZE: usize> flash::Client<F>
                 _ => {}
             },
             // FLUX-TODO addr=0x1d4a4 flavor=explicit_panic
-            _ => { flux_support::assert(false); unreachable!() },
+            _ => { flux_support::assert(false); unsafe { core::hint::unreachable_unchecked() } },
         }
     }
 }

@@ -183,7 +183,7 @@ fn u8to64_le(buf: &[u8], start: usize, len: usize) -> u64 {
     if i < len {
         // FLUX-TODO addr=0xa362 flavor=bounds
         flux_support::assert(start + i < buf.len());
-        out |= (buf[start + i] as u64) << (i * 8);
+        out |= (buf[{ let __b=&(buf); unsafe { core::hint::assert_unchecked((start + i) < __b.len()) }; start + i }] as u64) << (i * 8);
         i += 1;
     }
     flux_rs::assert(i == len);

@@ -274,7 +274,7 @@ impl<
             .map_or(Err(ErrorCode::RESERVE), |txbuffer| {
                 // FLUX-TODO addr=0x166c8 flavor=bounds
                 flux_support::assert(txbuffer.len() > 0);
-                txbuffer[0] = Opcodes::WREN as u8;
+                txbuffer[{ let __b=&(txbuffer); unsafe { core::hint::assert_unchecked((0) < __b.len()) }; 0 }] = Opcodes::WREN as u8;
                 if let Err((err, txbuffer, _)) = self.spi.read_write_bytes(txbuffer, None, 1) {
                     self.txbuffer.replace(txbuffer);
                     Err(err)
@@ -318,7 +318,7 @@ impl<
                                 // FLUX-TODO addr=0x16552 flavor=bounds
                                 flux_support::assert(txbuffer.len() > 3);
 
-                                txbuffer[0] = Opcodes::READ as u8;
+                                txbuffer[{ let __b=&(txbuffer); unsafe { core::hint::assert_unchecked((0) < __b.len()) }; 0 }] = Opcodes::READ as u8;
                                 txbuffer[1] = ((sector_index * SECTOR_SIZE) >> 16) as u8;
                                 txbuffer[2] = ((sector_index * SECTOR_SIZE) >> 8) as u8;
                                 txbuffer[3] = ((sector_index * SECTOR_SIZE) >> 0) as u8;
@@ -339,7 +339,7 @@ impl<
                                     // FLUX-TODO addr=0x1654a flavor=unwrap_option
                                     flux_support::assert(rxbuffer.is_some());
 
-                                    self.rxbuffer.replace(rxbuffer.unwrap());
+                                    self.rxbuffer.replace(rxbuffer.unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() }));
                                     Err(err)
                                 } else {
                                     Ok(())
@@ -624,7 +624,7 @@ impl<
             self.rxbuffer.take().map(move |read_buffer| {
                 // FLUX-TODO addr=0x1eb72 flavor=bounds
                 flux_support::assert(write_buffer.len() > 0);
-                write_buffer[0] = Opcodes::RDSR as u8;
+                write_buffer[{ let __b=&(write_buffer); unsafe { core::hint::assert_unchecked((0) < __b.len()) }; 0 }] = Opcodes::RDSR as u8;
                 let _ = self
                     .spi
                     .read_write_bytes(write_buffer, Some(read_buffer), 2);
