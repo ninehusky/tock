@@ -35,6 +35,7 @@ include = [
     "def:service_pending_interrupts",  # chip.rs
     "def:status_epin",         # usbd.rs
     "def:transmit_in",         # usbd.rs (also covered as a substring of transmit_in_ep0; explicit)
+    "def:TxPower",             # nrf5x::constants::TxPower — embedded as Cell<TxPower> in ble_radio::Radio; must be on the include surface now that flux is enabled on nrf5x (else E0999 -> body skipped/SILENT)
 ]
 
 [dependencies]

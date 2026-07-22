@@ -15,6 +15,7 @@ include = [
     "def:handle_interrupt",
     "def:rx",
     "def:service_interrupt",   # interrupt_service.rs — holds FLUX-TODO-BLOCKED marker
+    "def:TxPower",             # nrf5x::constants::TxPower — embedded as Cell<TxPower> in the radios; must be on the include surface now that flux is enabled on nrf5x (else E0999 -> body skipped/SILENT)
 ]
 
 [dependencies]
