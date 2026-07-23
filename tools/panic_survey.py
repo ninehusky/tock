@@ -31,10 +31,15 @@ FILE_LINE_RE = re.compile(r'^(.*?):(\d+)(?:\s+\(discriminator \d+\))?$')
 # Build + disassemble
 # ---------------------------------------------------------------------------
 
-def run_build(repo_root: Path) -> None:
-    board_dir = repo_root / 'boards' / 'nordic' / 'nrf52840dk'
-    print(f"Running `make release` in {board_dir} …", file=sys.stderr)
-    subprocess.check_call(['make', 'release'], cwd=board_dir)
+def run_build(repo_root: Path, build_cmd=None, build_dir=None) -> None:
+    # Default: Tock's nrf52840dk board. Override with --build-cmd/--build-dir
+    # to survey any other embedded-Rust project.
+    work = Path(build_dir) if build_dir else (repo_root / 'boards' / 'nordic' / 'nrf52840dk')
+    cmd = build_cmd if build_cmd else ['make', 'release']
+    if isinstance(cmd, str):
+        cmd = cmd.split()
+    print(f"Running `{' '.join(cmd)}` in {work} …", file=sys.stderr)
+    subprocess.check_call(cmd, cwd=work)
 
 
 def regenerate_dis(objdump: str, elf: Path, dis: Path) -> None:
@@ -195,28 +200,33 @@ def classify_sink(sink: str) -> str:
     return "other"
 
 
+# Project-local path -> module-bucket map. Default is Tock's workspace layout;
+# override for any other project via `--crate-prefixes needle=bucket,...`
+# (or set CRATE_MARKERS programmatically). Only affects local-vs-stdlib LABELING,
+# never which panic sites are found. First matching substring wins, so order
+# most-specific first.
+CRATE_MARKERS = [
+    ("capsules/core/",  "capsules/core"),
+    ("capsules/extra/", "capsules/extra"),
+    ("kernel/src/",     "kernel"),
+    ("kernel/",         "kernel"),
+    ("chips/",          "chips"),
+    ("arch/",           "arch"),
+    ("libraries/",      "libraries"),
+    ("boards/",         "boards"),
+]
+
+
 def classify_module(path: str) -> str:
     """Path-prefix classifier for the innermost-frame file."""
     if not path or path in ("??", "?"):
         return "unknown"
     # Stdlib / toolchain paths come out either absolute (/rustc/...) or with
-    # embedded /library/core/src/... segments.
+    # embedded /library/core/src/... segments. Project-independent.
     if path.startswith("/rustc/") or "/library/core/" in path or "/library/alloc/" in path \
             or "/compiler-builtins" in path or "/library/std/" in path:
         return "stdlib"
-    # Tock paths from the workspace root. addr2line emits paths either as
-    # absolute (containing /tock/...) or as repo-relative. Match on substring.
-    markers = [
-        ("capsules/core/",  "capsules/core"),
-        ("capsules/extra/", "capsules/extra"),
-        ("kernel/src/",     "kernel"),
-        ("kernel/",         "kernel"),
-        ("chips/",          "chips"),
-        ("arch/",           "arch"),
-        ("libraries/",      "libraries"),
-        ("boards/",         "boards"),
-    ]
-    for needle, bucket in markers:
+    for needle, bucket in CRATE_MARKERS:
         if needle in path:
             return bucket
     return "other"
@@ -315,10 +325,27 @@ def main() -> int:
     ap.add_argument('--addr2line',default='/opt/homebrew/Cellar/binutils/2.46.0/bin/addr2line', type=Path)
     ap.add_argument('--out',      default=here / 'panic_survey.json', type=Path)
     ap.add_argument('--force-dis', action='store_true', help='Regenerate .dis even if newer than ELF.')
+    # Portability: survey any embedded-Rust ELF, not just Tock.
+    ap.add_argument('--crate-prefixes', default=None,
+                    help='Override local-path classifier: comma-separated needle=bucket pairs, '
+                         'most-specific first (e.g. "examples/=app,src/=app,smoltcp-/=smoltcp"). '
+                         'Only relabels local-vs-stdlib; does not change which sites are found.')
+    ap.add_argument('--build-cmd', default=None,
+                    help='Build command to run when not --skip-build (default: "make release").')
+    ap.add_argument('--build-dir', default=None,
+                    help='Directory to run --build-cmd in (default: Tock nrf52840dk board dir).')
     args = ap.parse_args()
 
+    if args.crate_prefixes:
+        global CRATE_MARKERS
+        CRATE_MARKERS = []
+        for pair in args.crate_prefixes.split(','):
+            if '=' in pair:
+                needle, bucket = pair.split('=', 1)
+                CRATE_MARKERS.append((needle.strip(), bucket.strip()))
+
     if not args.skip_build:
-        run_build(repo_root)
+        run_build(repo_root, build_cmd=args.build_cmd, build_dir=args.build_dir)
 
     if not args.elf.exists():
         print(f"ERROR: ELF not found at {args.elf}. Run without --skip-build, or pass --elf.", file=sys.stderr)
