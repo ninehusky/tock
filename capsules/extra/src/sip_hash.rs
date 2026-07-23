@@ -27,7 +27,7 @@
 //! option.
 
 use core::cell::Cell;
-use core::{cmp, mem};
+use core::mem;
 use kernel::deferred_call::{DeferredCall, DeferredCallClient};
 use kernel::hil::hasher::{Client, Hasher, SipHash};
 use kernel::utilities::cells::{OptionalCell, TakeCell};
@@ -50,13 +50,18 @@ pub struct SipHasher24<'a> {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[flux_rs::refined_by(ntail: int)]
+// `ntail` counts the valid bytes buffered in the 8-byte `tail`; it is always
+// flushed before it reaches 8, so it stays in `0..8`.
+#[flux_rs::invariant(ntail < 8)]
 struct SipHasher {
     k0: u64,
     k1: u64,
     length: usize, // how many bytes we've processed
     state: State,  // hash State
     tail: u64,     // unprocessed bytes le
-    ntail: usize,  // how many bytes in tail are valid
+    #[field(usize[ntail])]
+    ntail: usize, // how many bytes in tail are valid
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -149,8 +154,13 @@ macro_rules! compress {
 
 fn read_le_u64(input: &[u8]) -> u64 {
     let mut eight_buf: [u8; 8] = [0; 8];
-    for i in 0..8 {
+    // for i in 0..8 {
+    //     eight_buf[i] = *input.get(i).unwrap_or(&0);
+    // }
+    let mut i = 0;
+    while i < 8 {
         eight_buf[i] = *input.get(i).unwrap_or(&0);
+        i += 1;
     }
     u64::from_le_bytes(eight_buf)
 }
@@ -162,6 +172,16 @@ fn read_le_u16(input: &[u8]) -> u16 {
 
     let (int_bytes, _rest) = input.split_at(mem::size_of::<u16>());
     u16::from_le_bytes(int_bytes.try_into().unwrap())
+}
+
+// `x & 0x7 == x % 8`. Exposing the `% 8` value (rather than just `< 8`) lets the
+// chunk loops below relate `len - left` to a multiple of 8. Flux cannot reason
+// about the bitwise `&`, so this identity is trusted.
+#[inline]
+#[flux_rs::trusted(reason = "bitwise mask: x & 0x7 == x % 8")]
+#[flux_rs::sig(fn(x: usize) -> usize[x % 8])]
+fn low3(x: usize) -> usize {
+    x & 0x7
 }
 
 #[inline]
@@ -210,7 +230,7 @@ impl<'a> Hasher<'a, 8> for SipHasher24<'a> {
         if hasher.ntail != 0 {
             needed = 8 - hasher.ntail;
             hasher.tail |=
-                u8to64_le(data.as_slice(), 0, cmp::min(length, needed)) << (8 * hasher.ntail);
+                u8to64_le(data.as_slice(), 0, flux_support::min_usize(length, needed)) << (8 * hasher.ntail);
             if length < needed {
                 hasher.ntail += length;
                 return Ok(length);
@@ -225,10 +245,18 @@ impl<'a> Hasher<'a, 8> for SipHasher24<'a> {
 
         // Buffered tail is now flushed, process new input.
         let len = length - needed;
-        let left = len & 0x7;
+        let left = low3(len);
 
         let mut i = needed;
         while i < len - left {
+            // `i` steps by 8 from `needed`, and `len - left` is a multiple of 8
+            // (`left == len % 8`), so the loop exits with `i == length - left`.
+            // The alignment invariant keeps the upper bound `i <= length - left`
+            // inductive, so `u8to64_le(_, i, left)` below stays in bounds.
+            flux_rs::defs! {
+                invariant qualifier SipAddAlign(i: int, needed: int) { i % 8 == needed % 8 }
+                invariant qualifier SipAddBound(i: int, length: int, left: int) { i <= length - left }
+            }
             let mi = read_le_u64(&data[i..]);
 
             hasher.state.v3 ^= mi;
@@ -266,7 +294,7 @@ impl<'a> Hasher<'a, 8> for SipHasher24<'a> {
         if hasher.ntail != 0 {
             needed = 8 - hasher.ntail;
             hasher.tail |=
-                u8to64_le(data.as_slice(), 0, cmp::min(length, needed)) << (8 * hasher.ntail);
+                u8to64_le(data.as_slice(), 0, flux_support::min_usize(length, needed)) << (8 * hasher.ntail);
             if length < needed {
                 hasher.ntail += length;
                 return Ok(length);
@@ -281,10 +309,17 @@ impl<'a> Hasher<'a, 8> for SipHasher24<'a> {
 
         // Buffered tail is now flushed, process new input.
         let len = length - needed;
-        let left = len & 0x7;
+        let left = low3(len);
 
         let mut i = needed;
         while i < len - left {
+            // See `add_data`: alignment (`i % 8 == needed % 8`) keeps the upper
+            // bound `i <= length - left` inductive so the tail `u8to64_le` call
+            // stays in bounds.
+            flux_rs::defs! {
+                invariant qualifier SipMutAlign(i: int, needed: int) { i % 8 == needed % 8 }
+                invariant qualifier SipMutBound(i: int, length: int, left: int) { i <= length - left }
+            }
             let mi = read_le_u64(&data[i..]);
 
             hasher.state.v3 ^= mi;
