@@ -11,14 +11,6 @@ edition.workspace = true
 [package.metadata.flux]
 enabled = true
 check_overflow = "lazy"
-include = [
-    "def:copy_plaintext",
-    "def:crypt",
-    "def:handle_interrupt",
-    "def:disable_interrupts",
-    "def:enable_interrupts",
-    "src/pinmux.rs",
-]
 
 [dependencies]
 kernel = { path = "../../kernel" }
