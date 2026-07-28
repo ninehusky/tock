@@ -1188,8 +1188,6 @@ impl<'a> Usbd<'a> {
         if events_to_process.is_set(Interrupt::ENDISOIN) {
             self.handle_endisoin();
         }
-        // Note: isochronous endpoint receives a dedicated ENDISOOUT interrupt instead.
-        // `while` not `for`, as above.
         let mut ep = 0;
         while ep < NUM_ENDPOINTS {
             if events_to_process.is_set(inter_endepout(ep)) {
@@ -1267,7 +1265,6 @@ impl<'a> Usbd<'a> {
             );
             result.modify(Interrupt::ENDISOIN::SET);
         }
-        // `while` not `for`, as above.
         let mut ep = 0;
         while ep < 8 {
             if Usbd::take_event(&self.registers.event_endepout[ep]) {
