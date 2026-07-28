@@ -30,12 +30,39 @@ const MAX_PORT_SET_SIZE: usize = 8;
 use kernel::capabilities::NetworkCapabilityCreationCapability;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[flux_rs::refined_by()]
 pub enum AddrRange {
+    #[flux_rs::variant(AddrRange)]
     Any, // Any address
+    #[flux_rs::variant(AddrRange)]
     NoAddrs,
+    #[flux_rs::variant(([IPAddr; _]) -> AddrRange)]
     AddrSet([IPAddr; MAX_ADDR_SET_SIZE]),
+    #[flux_rs::variant((IPAddr) -> AddrRange)]
     Addr(IPAddr),
+    // The `<= 128` invariant is for `prefix_full_bytes`
+    #[flux_rs::variant((IPAddr, usize{v: v <= 128}) -> AddrRange)]
     Subnet(IPAddr, usize), // address, prefix length (max 128)
+}
+
+/// An IPv6 prefix length split into whole bytes and leftover bits.
+#[flux_rs::refined_by(full: int, rem: int)]
+#[flux_rs::invariant(full <= 16 && rem < 8 && (rem != 0 => full < 16))]
+struct PrefixSplit {
+    #[field(usize[full])]
+    full_bytes: usize,
+    #[field(usize[rem])]
+    remainder_bits: usize,
+}
+
+/// Trusted for one arithmetic step: I wonder why Z3 chokes on this?
+#[flux_rs::trusted(reason = "arithmetic: p <= 128 && p % 8 != 0 => p <= 127 => p / 8 <= 15")]
+#[flux_rs::sig(fn(p: usize{p <= 128}) -> PrefixSplit)]
+fn split_prefix(prefix_len: usize) -> PrefixSplit {
+    PrefixSplit {
+        full_bytes: prefix_len / 8,
+        remainder_bits: prefix_len % 8,
+    }
 }
 
 impl AddrRange {
@@ -46,25 +73,17 @@ impl AddrRange {
             AddrRange::AddrSet(allowed_addrs) => allowed_addrs.iter().any(|&a| a == addr),
             AddrRange::Addr(allowed_addr) => addr == *allowed_addr, //TODO: refs?
             AddrRange::Subnet(allowed_addr, prefix_len) => {
-                // Per the AddrRange::Subnet convention (see enum definition),
-                // prefix_len is at most 128. TODO: encode this as an enum
-                // invariant once we refine AddrRange.
-                flux_support::assume(*prefix_len <= 128);
-                let full_bytes: usize = prefix_len / 8;
-                let remainder_bits: usize = prefix_len % 8;
+                // Same two values as before; `split_prefix` additionally carries
+                // `remainder_bits != 0 => full_bytes < 16`.
+                let split = split_prefix(*prefix_len);
+                let full_bytes = split.full_bytes;
+                let remainder_bits = split.remainder_bits;
                 // initial bytes -- TODO: edge case
                 if allowed_addr.0[0..full_bytes] != addr.0[0..full_bytes] {
                     false
                 } else if remainder_bits == 0 {
                     true //this case is necessary bc right shifting a u8 by 8 bits is UB
                 } else {
-                    // TODO: get petros to look at this -- perhaps we can use Lean to prove this?
-                    // remainder_bits != 0 here, so prefix_len is not a multiple of 8.
-                    // Combined with prefix_len <= 128, that means prefix_len <= 127,
-                    // hence full_bytes = prefix_len / 8 <= 15 < 16. Flux's solver
-                    // doesn't carry the modular-arithmetic step, so we assume the
-                    // (mathematically derivable) bound directly.
-                    flux_support::assume(full_bytes < 16);
                     // FLUX-TODO addr=0x19e98 flavor=bounds
                     flux_support::assert(full_bytes < addr.0.len() && full_bytes < allowed_addr.0.len());
                     addr.0[full_bytes] >> (8 - remainder_bits)
