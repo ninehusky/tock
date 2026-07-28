@@ -91,9 +91,8 @@ fn usize_from_u8_slice(slice: &[u8], index: usize) -> Result<usize, ErrorCode> {
     ))
 }
 
-// Trust only the cross-target length-match: src is `&val.to_le_bytes()` =
-// `[u8; size_of::<usize>()]`, which equals 4 on the 32-bit Cortex-M target but
-// is 8 on the 64-bit host Flux runs against.
+// TODO: double-check this.
+#[flux_rs::trusted(reason = "trusted-hw: cortex-M has usize size of 4 bytes, which differs from modern machines")]
 #[flux_rs::sig(fn(val: usize, dest: &mut [u8]{n: n == 4}))]
 fn copy_le_into(val: usize, dest: &mut [u8]) {
     dest.copy_from_slice(&val.to_le_bytes());
@@ -457,9 +456,13 @@ impl<A: CortexMVariant> kernel::syscall::UserspaceKernelBoundary for SysCall<A> 
             write_usize_to_u8_slice(state.yield_pc, out, YIELDPC_IDX);
             write_usize_to_u8_slice(state.psr, out, PSR_IDX);
             write_usize_to_u8_slice(state.psp, out, PSP_IDX);
-            for (i, v) in state.regs.iter().enumerate() {
-                write_usize_to_u8_slice(*v, out, REGS_IDX + i);
+            let mut i = 0;
+            while i < state.regs.len() {
+                let v = state.regs[i];
+                write_usize_to_u8_slice(v, out, REGS_IDX + i);
+                i += 1;
             }
+
             // + 3 for yield_pc, psr, psp
             Ok((state.regs.len() + 3 + METADATA_LEN) * USIZE_SZ)
         } else {
