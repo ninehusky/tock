@@ -527,7 +527,7 @@ impl<'a> SyscallDriver for UDPDriver<'a> {
                             Ok(Some(requested_addr))
                         })
                     })
-                    .unwrap_or_else(|err| Err(err.into()));
+                    .unwrap_or_else(|err| Err(Result::<(), ErrorCode>::from(err)));
                 match err {
                     Ok(requested_addr_opt) => {
                         requested_addr_opt.map_or(CommandReturn::success(), |requested_addr| {

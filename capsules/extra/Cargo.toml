@@ -20,6 +20,7 @@ flux_support = { path = "../../flux_support" }
 enabled = true
 check_overflow = "lazy"
 include = [
+    "src/net/udp/driver.rs",
     "src/ble_advertising_driver.rs",
     "src/ieee802154/driver.rs",
     "src/ieee802154/framer.rs",

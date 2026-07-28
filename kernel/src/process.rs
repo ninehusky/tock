@@ -915,6 +915,7 @@ pub enum Error {
 }
 
 impl From<Error> for Result<(), ErrorCode> {
+    #[flux_rs::sig(fn(Error) -> Result<(), ErrorCode>[false])]
     fn from(err: Error) -> Result<(), ErrorCode> {
         match err {
             Error::OutOfMemory => Err(ErrorCode::NOMEM),
