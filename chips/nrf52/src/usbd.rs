@@ -1175,10 +1175,12 @@ impl<'a> Usbd<'a> {
             self.handle_started();
         }
         // Note: isochronous endpoint receives a dedicated ENDISOIN interrupt instead.
-        for ep in 0..NUM_ENDPOINTS {
+        let mut ep = 0;
+        while ep < NUM_ENDPOINTS {
             if events_to_process.is_set(inter_endepin(ep)) {
                 self.handle_endepin(ep);
             }
+            ep += 1;
         }
         if events_to_process.is_set(Interrupt::EP0DATADONE) {
             self.handle_ep0datadone();
@@ -1186,11 +1188,12 @@ impl<'a> Usbd<'a> {
         if events_to_process.is_set(Interrupt::ENDISOIN) {
             self.handle_endisoin();
         }
-        // Note: isochronous endpoint receives a dedicated ENDISOOUT interrupt instead.
-        for ep in 0..NUM_ENDPOINTS {
+        let mut ep = 0;
+        while ep < NUM_ENDPOINTS {
             if events_to_process.is_set(inter_endepout(ep)) {
                 self.handle_endepout(ep);
             }
+            ep += 1;
         }
         if events_to_process.is_set(Interrupt::ENDISOOUT) {
             self.handle_endisoout();
@@ -1236,7 +1239,8 @@ impl<'a> Usbd<'a> {
             );
             result.modify(Interrupt::STARTED::SET);
         }
-        for ep in 0..8 {
+        let mut ep = 0;
+        while ep < 8 {
             if Usbd::take_event(&self.registers.event_endepin[ep]) {
                 debug_events!(
                     "- event: endepin[{}]{}",
@@ -1245,6 +1249,7 @@ impl<'a> Usbd<'a> {
                 );
                 result.modify(inter_endepin(ep).val(1));
             }
+            ep += 1;
         }
         if Usbd::take_event(&self.registers.event_ep0datadone) {
             debug_events!(
@@ -1260,7 +1265,8 @@ impl<'a> Usbd<'a> {
             );
             result.modify(Interrupt::ENDISOIN::SET);
         }
-        for ep in 0..8 {
+        let mut ep = 0;
+        while ep < 8 {
             if Usbd::take_event(&self.registers.event_endepout[ep]) {
                 debug_events!(
                     "- event: endepout[{}]{}",
@@ -1269,6 +1275,7 @@ impl<'a> Usbd<'a> {
                 );
                 result.modify(inter_endepout(ep).val(1));
             }
+            ep += 1;
         }
         if Usbd::take_event(&self.registers.event_endisoout) {
             debug_events!(

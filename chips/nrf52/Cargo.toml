@@ -12,6 +12,8 @@ edition.workspace = true
 enabled = true
 check_overflow = "lazy"
 include = [
+    "def:active_events",  # issue #95 cone
+
     "def:inter_endepin",
     "def:inter_endepout",
     "def:ctrl_state",
