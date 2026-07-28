@@ -69,15 +69,19 @@ const REGS_RANGE: Range<usize> = REGS_IDX..REGS_IDX + 8;
 
 const USIZE_SZ: usize = size_of::<usize>();
 
-#[flux_rs::trusted(reason = "trusted-hw: cortex-M has usize size of 4 bytes, which differs from modern machines")]
+// This is trusted because Flux is running on a 64-bit machine, which mismatches the target architecture.
+// From `https://doc.rust-lang.org/reference/types/numeric.html#r-type.numeric.int.size.usize`:
+// > The usize type is an unsigned integer type with the same number of bits as the platform’s pointer type. 
+// Cortex-M is a 32-bit architecture, so `usize` is 4 bytes.
+#[flux_rs::trusted(reason = "trusted-hw: cortex-M has usize size of 4 bytes: `size_of::<usize>() == 4`")]
 #[flux_rs::sig(fn() -> usize[4])]
-fn my_usize_range() -> usize {
+fn cortexm_usize_size() -> usize {
     4
 }
 
 #[flux_rs::sig(fn(usize[@i]) -> Range<usize>[i * 4, (i + 1) * 4] requires i < 256)]
 fn usize_byte_range(index: usize) -> Range<usize> {
-    index * my_usize_range()..(index + 1) * my_usize_range()
+    index * cortexm_usize_size()..(index + 1) * cortexm_usize_size()
 }
 
 fn usize_from_u8_slice(slice: &[u8], index: usize) -> Result<usize, ErrorCode> {
@@ -91,8 +95,6 @@ fn usize_from_u8_slice(slice: &[u8], index: usize) -> Result<usize, ErrorCode> {
     ))
 }
 
-// TODO: double-check this.
-#[flux_rs::trusted(reason = "trusted-hw: cortex-M has usize size of 4 bytes, which differs from modern machines")]
 #[flux_rs::sig(fn(val: usize, dest: &mut [u8]{n: n == 4}))]
 fn copy_le_into(val: usize, dest: &mut [u8]) {
     dest.copy_from_slice(&val.to_le_bytes());
