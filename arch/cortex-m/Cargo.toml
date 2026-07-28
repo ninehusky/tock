@@ -17,6 +17,8 @@ include = [
     "def:usize_byte_range",
     "def:unhandled_interrupt",
     "def:print_cortexm_state",
+    "def:copy_le_into",
+    "def:store_context",
 ]
 
 [dependencies]
